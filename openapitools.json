@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
+  "spaces": 2,
+  "generator-cli": {
+    "version": "7.16.0",
+    "generators": {
+      "api": {
+        "generatorName": "typescript-fetch",
+        "output": "./generated-contracts",
+        "inputSpec": "https://api.defi.b2binpay.com/api/docs-api-user-json",
+        "additionalProperties": {
+          "fileNaming": "kebab-case",
+          "serviceSuffix": "ApiService",
+          "apiModulePrefix": "",
+          "configurationPrefix": "Api",
+          "modelPropertyNaming": "camelCase",
+          "useSingleRequestParameter": true
+        },
+        "skipValidateSpec": true
+      }
+    }
+  }
+}

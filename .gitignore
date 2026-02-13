@@ -1,6 +1,17 @@
 # compiled output
 /node_modules
+dist
+
+# IDE
 /.idea
+
+# environment
 .env
 .env.*
-dist
+!.env.example
+
+# misc
+settings.local.json
+.claude/
+*.log
+.DS_Store

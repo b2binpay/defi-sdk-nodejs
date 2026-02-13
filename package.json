@@ -1,0 +1,61 @@
+{
+  "name": "@b2binpay/defi-sdk",
+  "version": "0.0.1",
+  "description": "TypeScript SDK for the B2BinPay DeFi API with blockchain transaction utilities built on viem",
+  "private": false,
+  "license": "MIT",
+  "author": "B2BinPay (https://b2binpay.com)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/b2binpay/defi-sdk-nodejs.git"
+  },
+  "homepage": "https://github.com/b2binpay/defi-sdk-nodejs#readme",
+  "bugs": {
+    "url": "https://github.com/b2binpay/defi-sdk-nodejs/issues"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "lint": "biome check",
+    "lint:fix": "biome check --fix",
+    "prepublishOnly": "npm run build",
+    "generate:api": "rm -rf ./generated-contracts && openapi-generator-cli generate --openapitools ./openapitools.json",
+    "example:get-account-info": "tsx examples/get-account-info.ts",
+    "example:create-invoice": "tsx examples/create-invoice.ts",
+    "example:get-invoice-details": "tsx examples/get-invoice-details.ts",
+    "example:create-payout": "tsx examples/create-payout.ts",
+    "example:claim-deposits": "tsx examples/claim-deposits.ts",
+    "example:queue-sign": "tsx examples/queue-sign.ts",
+    "example:queue-execute": "tsx examples/queue-execute.ts",
+    "example:queue-execute-batch": "tsx examples/queue-execute-batch.ts"
+  },
+  "dependencies": {
+    "viem": "^2.40.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.2",
+    "@openapitools/openapi-generator-cli": "^2.25.2",
+    "@types/node": "^24.10.1",
+    "dotenv": "^17.2.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "README.md"
+  ],
+  "engines": {
+    "node": "^22.16.0",
+    "npm": "^10.9.2"
+  }
+}
