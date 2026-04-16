@@ -40,13 +40,13 @@ export interface InvoicesResponseDto {
      */
     page: number;
     /**
-     * Number of items per page
+     * Number of items per page (max 100)
      * @type {number}
      * @memberof InvoicesResponseDto
      */
     pageSize: number;
     /**
-     * List of invoices
+     * 
      * @type {Array<InvoiceResponseDto>}
      * @memberof InvoicesResponseDto
      */

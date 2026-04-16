@@ -13,13 +13,6 @@
  */
 
 import { mapValues } from '../runtime';
-import type { CreateMultisigConfigChangeOperationDtoCallsInner } from './create-multisig-config-change-operation-dto-calls-inner';
-import {
-    CreateMultisigConfigChangeOperationDtoCallsInnerFromJSON,
-    CreateMultisigConfigChangeOperationDtoCallsInnerFromJSONTyped,
-    CreateMultisigConfigChangeOperationDtoCallsInnerToJSON,
-    CreateMultisigConfigChangeOperationDtoCallsInnerToJSONTyped,
-} from './create-multisig-config-change-operation-dto-calls-inner';
 import type { UniversalAddress } from './universal-address';
 import {
     UniversalAddressFromJSON,
@@ -27,6 +20,13 @@ import {
     UniversalAddressToJSON,
     UniversalAddressToJSONTyped,
 } from './universal-address';
+import type { CallDto } from './call-dto';
+import {
+    CallDtoFromJSON,
+    CallDtoFromJSONTyped,
+    CallDtoToJSON,
+    CallDtoToJSONTyped,
+} from './call-dto';
 
 /**
  * 
@@ -48,10 +48,10 @@ export interface CreateMultisigConfigChangeOperationDto {
     threshold: number;
     /**
      * 
-     * @type {Array<CreateMultisigConfigChangeOperationDtoCallsInner>}
+     * @type {Array<CallDto>}
      * @memberof CreateMultisigConfigChangeOperationDto
      */
-    calls: Array<CreateMultisigConfigChangeOperationDtoCallsInner>;
+    calls: Array<CallDto>;
 }
 
 /**
@@ -76,7 +76,7 @@ export function CreateMultisigConfigChangeOperationDtoFromJSONTyped(json: any, i
         
         'approvers': ((json['approvers'] as Array<any>).map(UniversalAddressFromJSON)),
         'threshold': json['threshold'],
-        'calls': ((json['calls'] as Array<any>).map(CreateMultisigConfigChangeOperationDtoCallsInnerFromJSON)),
+        'calls': ((json['calls'] as Array<any>).map(CallDtoFromJSON)),
     };
 }
 
@@ -93,7 +93,7 @@ export function CreateMultisigConfigChangeOperationDtoToJSONTyped(value?: Create
         
         'approvers': ((value['approvers'] as Array<any>).map(UniversalAddressToJSON)),
         'threshold': value['threshold'],
-        'calls': ((value['calls'] as Array<any>).map(CreateMultisigConfigChangeOperationDtoCallsInnerToJSON)),
+        'calls': ((value['calls'] as Array<any>).map(CallDtoToJSON)),
     };
 }
 

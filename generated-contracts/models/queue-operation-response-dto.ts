@@ -27,6 +27,13 @@ import {
     CallDtoToJSON,
     CallDtoToJSONTyped,
 } from './call-dto';
+import type { QueueOperationResponseDtoDappMetadata } from './queue-operation-response-dto-dapp-metadata';
+import {
+    QueueOperationResponseDtoDappMetadataFromJSON,
+    QueueOperationResponseDtoDappMetadataFromJSONTyped,
+    QueueOperationResponseDtoDappMetadataToJSON,
+    QueueOperationResponseDtoDappMetadataToJSONTyped,
+} from './queue-operation-response-dto-dapp-metadata';
 
 /**
  * 
@@ -83,17 +90,17 @@ export interface QueueOperationResponseDto {
      */
     signaturesCollected: number;
     /**
-     * Blockchain transaction hash
-     * @type {string}
-     * @memberof QueueOperationResponseDto
-     */
-    txHash: string | null;
-    /**
      * Number of signatures required
      * @type {number}
      * @memberof QueueOperationResponseDto
      */
     signaturesRequired: number;
+    /**
+     * Blockchain transaction hash
+     * @type {string}
+     * @memberof QueueOperationResponseDto
+     */
+    txHash: string | null;
     /**
      * Whether current user has signed
      * @type {boolean}
@@ -148,6 +155,18 @@ export interface QueueOperationResponseDto {
      * @memberof QueueOperationResponseDto
      */
     signatures: Array<OperationSignatureDto>;
+    /**
+     * Operation expiry timestamp (for DAPP_TRANSACTION operations)
+     * @type {string}
+     * @memberof QueueOperationResponseDto
+     */
+    expiresAt?: string | null;
+    /**
+     * 
+     * @type {QueueOperationResponseDtoDappMetadata}
+     * @memberof QueueOperationResponseDto
+     */
+    dappMetadata?: QueueOperationResponseDtoDappMetadata | null;
 }
 
 
@@ -157,7 +176,8 @@ export interface QueueOperationResponseDto {
 export const QueueOperationResponseDtoOperationTypeEnum = {
     MultisigConfigChange: 'MULTISIG_CONFIG_CHANGE',
     Reject: 'REJECT',
-    Payout: 'PAYOUT'
+    Payout: 'PAYOUT',
+    DappTransaction: 'DAPP_TRANSACTION'
 } as const;
 export type QueueOperationResponseDtoOperationTypeEnum = typeof QueueOperationResponseDtoOperationTypeEnum[keyof typeof QueueOperationResponseDtoOperationTypeEnum];
 
@@ -167,7 +187,6 @@ export type QueueOperationResponseDtoOperationTypeEnum = typeof QueueOperationRe
 export const QueueOperationResponseDtoStatusEnum = {
     Pending: 'PENDING',
     Ready: 'READY',
-    Executing: 'EXECUTING',
     Executed: 'EXECUTED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
@@ -187,8 +206,8 @@ export function instanceOfQueueOperationResponseDto(value: object): value is Que
     if (!('calls' in value) || value['calls'] === undefined) return false;
     if (!('payload' in value) || value['payload'] === undefined) return false;
     if (!('signaturesCollected' in value) || value['signaturesCollected'] === undefined) return false;
-    if (!('txHash' in value) || value['txHash'] === undefined) return false;
     if (!('signaturesRequired' in value) || value['signaturesRequired'] === undefined) return false;
+    if (!('txHash' in value) || value['txHash'] === undefined) return false;
     if (!('userSigned' in value) || value['userSigned'] === undefined) return false;
     if (!('canSign' in value) || value['canSign'] === undefined) return false;
     if (!('canExecute' in value) || value['canExecute'] === undefined) return false;
@@ -219,8 +238,8 @@ export function QueueOperationResponseDtoFromJSONTyped(json: any, ignoreDiscrimi
         'calls': ((json['calls'] as Array<any>).map(CallDtoFromJSON)),
         'payload': json['payload'],
         'signaturesCollected': json['signaturesCollected'],
-        'txHash': json['txHash'],
         'signaturesRequired': json['signaturesRequired'],
+        'txHash': json['txHash'],
         'userSigned': json['userSigned'],
         'canSign': json['canSign'],
         'canExecute': json['canExecute'],
@@ -230,6 +249,8 @@ export function QueueOperationResponseDtoFromJSONTyped(json: any, ignoreDiscrimi
         'createdAt': json['createdAt'],
         'createdBy': json['createdBy'],
         'signatures': ((json['signatures'] as Array<any>).map(OperationSignatureDtoFromJSON)),
+        'expiresAt': json['expiresAt'] == null ? undefined : json['expiresAt'],
+        'dappMetadata': json['dappMetadata'] == null ? undefined : QueueOperationResponseDtoDappMetadataFromJSON(json['dappMetadata']),
     };
 }
 
@@ -252,8 +273,8 @@ export function QueueOperationResponseDtoToJSONTyped(value?: QueueOperationRespo
         'calls': ((value['calls'] as Array<any>).map(CallDtoToJSON)),
         'payload': value['payload'],
         'signaturesCollected': value['signaturesCollected'],
-        'txHash': value['txHash'],
         'signaturesRequired': value['signaturesRequired'],
+        'txHash': value['txHash'],
         'userSigned': value['userSigned'],
         'canSign': value['canSign'],
         'canExecute': value['canExecute'],
@@ -263,6 +284,8 @@ export function QueueOperationResponseDtoToJSONTyped(value?: QueueOperationRespo
         'createdAt': value['createdAt'],
         'createdBy': value['createdBy'],
         'signatures': ((value['signatures'] as Array<any>).map(OperationSignatureDtoToJSON)),
+        'expiresAt': value['expiresAt'],
+        'dappMetadata': QueueOperationResponseDtoDappMetadataToJSON(value['dappMetadata']),
     };
 }
 

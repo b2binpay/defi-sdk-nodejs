@@ -17,9 +17,9 @@ import * as runtime from '../runtime';
 import type {
   AccountDetailsDto,
   AccountResponseDto,
+  AssetBalanceShortResponseDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
-  CallbackSecretResponseDto,
   CurrenciesControllerFindAllV1IsNativeParameter,
   DeploymentParamsResponseDto,
   NonceInfoResponseDto,
@@ -31,12 +31,12 @@ import {
     AccountDetailsDtoToJSON,
     AccountResponseDtoFromJSON,
     AccountResponseDtoToJSON,
+    AssetBalanceShortResponseDtoFromJSON,
+    AssetBalanceShortResponseDtoToJSON,
     AssetBalancesResponseDtoFromJSON,
     AssetBalancesResponseDtoToJSON,
     BalanceSummaryResponseDtoFromJSON,
     BalanceSummaryResponseDtoToJSON,
-    CallbackSecretResponseDtoFromJSON,
-    CallbackSecretResponseDtoToJSON,
     CurrenciesControllerFindAllV1IsNativeParameterFromJSON,
     CurrenciesControllerFindAllV1IsNativeParameterToJSON,
     DeploymentParamsResponseDtoFromJSON,
@@ -61,10 +61,6 @@ export interface AccountsControllerFindUserAccountsV1Request {
     isHidden?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
 }
 
-export interface AccountsControllerGenerateCallbackSecretV1Request {
-    accountId: string;
-}
-
 export interface AccountsControllerGetAssetBalancesV1Request {
     accountId: string;
     baseCurrency: AccountsControllerGetAssetBalancesV1BaseCurrencyEnum;
@@ -87,6 +83,15 @@ export interface AccountsControllerGetBalanceSummaryV1Request {
 
 export interface AccountsControllerGetDeploymentInfoV1Request {
     accountId: string;
+}
+
+export interface AccountsControllerGetShortAssetBalancesV1Request {
+    accountId: string;
+    chainId: string;
+    currencyIds?: Array<string>;
+    isScam?: CurrenciesControllerFindAllV1IsNativeParameter;
+    isVerified?: CurrenciesControllerFindAllV1IsNativeParameter;
+    isHidden?: CurrenciesControllerFindAllV1IsNativeParameter;
 }
 
 export interface AccountsControllerUpdateAccountV1Request {
@@ -221,49 +226,6 @@ export class AccountsApi extends runtime.BaseAPI {
      */
     async accountsControllerFindUserAccountsV1(requestParameters: AccountsControllerFindUserAccountsV1Request = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AccountResponseDto>> {
         const response = await this.accountsControllerFindUserAccountsV1Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Generates a new callback secret for the account. The secret is returned only once and instantly invalidates the old secret.
-     * Generate callback secret
-     */
-    async accountsControllerGenerateCallbackSecretV1Raw(requestParameters: AccountsControllerGenerateCallbackSecretV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CallbackSecretResponseDto>> {
-        if (requestParameters['accountId'] == null) {
-            throw new runtime.RequiredError(
-                'accountId',
-                'Required parameter "accountId" was null or undefined when calling accountsControllerGenerateCallbackSecretV1().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.apiKey) {
-            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
-        }
-
-
-        let urlPath = `/api/v1/accounts/{accountId}/callback-secret`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'POST',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => CallbackSecretResponseDtoFromJSON(jsonValue));
-    }
-
-    /**
-     * Generates a new callback secret for the account. The secret is returned only once and instantly invalidates the old secret.
-     * Generate callback secret
-     */
-    async accountsControllerGenerateCallbackSecretV1(requestParameters: AccountsControllerGenerateCallbackSecretV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CallbackSecretResponseDto> {
-        const response = await this.accountsControllerGenerateCallbackSecretV1Raw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -469,6 +431,76 @@ export class AccountsApi extends runtime.BaseAPI {
      */
     async accountsControllerGetDeploymentInfoV1(requestParameters: AccountsControllerGetDeploymentInfoV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DeploymentParamsResponseDto> {
         const response = await this.accountsControllerGetDeploymentInfoV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Returns asset balances without conversion and pagination. Response is a flat array of items.
+     * Get asset balances (short)
+     */
+    async accountsControllerGetShortAssetBalancesV1Raw(requestParameters: AccountsControllerGetShortAssetBalancesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AssetBalanceShortResponseDto>>> {
+        if (requestParameters['accountId'] == null) {
+            throw new runtime.RequiredError(
+                'accountId',
+                'Required parameter "accountId" was null or undefined when calling accountsControllerGetShortAssetBalancesV1().'
+            );
+        }
+
+        if (requestParameters['chainId'] == null) {
+            throw new runtime.RequiredError(
+                'chainId',
+                'Required parameter "chainId" was null or undefined when calling accountsControllerGetShortAssetBalancesV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['currencyIds'] != null) {
+            queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['isScam'] != null) {
+            queryParameters['isScam'] = requestParameters['isScam'];
+        }
+
+        if (requestParameters['isVerified'] != null) {
+            queryParameters['isVerified'] = requestParameters['isVerified'];
+        }
+
+        if (requestParameters['isHidden'] != null) {
+            queryParameters['isHidden'] = requestParameters['isHidden'];
+        }
+
+        if (requestParameters['chainId'] != null) {
+            queryParameters['chainId'] = requestParameters['chainId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/accounts/{accountId}/balances`;
+        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AssetBalanceShortResponseDtoFromJSON));
+    }
+
+    /**
+     * Returns asset balances without conversion and pagination. Response is a flat array of items.
+     * Get asset balances (short)
+     */
+    async accountsControllerGetShortAssetBalancesV1(requestParameters: AccountsControllerGetShortAssetBalancesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AssetBalanceShortResponseDto>> {
+        const response = await this.accountsControllerGetShortAssetBalancesV1Raw(requestParameters, initOverrides);
         return await response.value();
     }
 

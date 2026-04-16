@@ -1,3 +1,4 @@
+import type { Address, Hex } from 'viem';
 import type {
   AccountsControllerGetAssetBalancesV1BaseCurrencyEnum,
   AccountsControllerGetAssetBalancesV1SortByEnum,
@@ -30,10 +31,16 @@ import {
   InvoicesApi,
   PayoutsApi,
   QueueOperationsApi,
+  ResponseError,
+  SmartContractVersionsApi,
   TransactionsApi,
 } from '../../generated-contracts';
+import { type AbiCacheEntry, AbiProvider } from '../abi-provider';
+import { TRON_CHAIN_IDS } from '../blockchain/tron-chains';
+import { formatCreditsWarning, parseCreditsError } from '../errors';
+import { packSignatures } from '../utils/transactions/signatures';
+import { TRON_ADDRESS_PREFIX, tronToEvmHex } from '../utils/tron-validation';
 import type {
-  Account,
   AccountDeployment,
   AccountDetails,
   AssetBalanceList,
@@ -64,7 +71,6 @@ import type {
   TransactionStatus,
 } from './models';
 import {
-  mapAccount,
   mapAccountDetails,
   mapAssetBalanceList,
   mapBalanceSummary,
@@ -90,6 +96,7 @@ export interface DefiClientOptions {
   defaultHeaders?: HTTPHeaders;
   credentials?: RequestCredentials;
   queryParamsStringify?: (params: Record<string, unknown>) => string;
+  abiCacheDir?: string;
 }
 
 type ChainIdentifier = number | string;
@@ -114,18 +121,21 @@ export interface CreatePayoutParams extends ChainScopedParams {
   recipient: string;
   trackingId?: string;
   callbackUrl?: string;
-  nonce?: number;
+  nonce?: string;
 }
 
 export interface GetDeploymentQueueParams extends ChainScopedParams {
-  statuses?: Array<'PENDING' | 'READY' | 'EXECUTING' | 'EXECUTED' | 'FAILED'>;
+  statuses?: Array<'PENDING' | 'READY' | 'EXECUTED' | 'FAILED' | 'CANCELLED'>;
   page?: number;
   pageSize?: number;
 }
 
 export interface SubmitOperationSignatureParams extends ChainScopedParams {
   operationId: string;
+  /** Raw ECDSA signature (hex). Will be packed automatically based on contract version. */
   signature: string;
+  /** Signer address. Required for v1.1.0+ contracts to pack the signature. */
+  signerAddress: string;
 }
 
 export interface ExecuteOperationParams extends ChainScopedParams {
@@ -273,7 +283,13 @@ export class DefiClient {
   private readonly payoutsApi: PayoutsApi;
   private readonly queueOperationsApi: QueueOperationsApi;
   private readonly transactionsApi: TransactionsApi;
-  private defaultAccountId?: string;
+  private readonly smartContractVersionsApi: SmartContractVersionsApi;
+  private readonly abiProvider: AbiProvider;
+  private accountInfoPromise?: Promise<{
+    accountId: string;
+    smartContractVersionId: string;
+    details: AccountDetails;
+  }>;
   private selectedDeployment?: AccountDeployment;
   private selectedChainId?: string;
 
@@ -306,44 +322,38 @@ export class DefiClient {
     this.payoutsApi = new PayoutsApi(this.config);
     this.queueOperationsApi = new QueueOperationsApi(this.config);
     this.transactionsApi = new TransactionsApi(this.config);
+    this.smartContractVersionsApi = new SmartContractVersionsApi(this.config);
+    this.abiProvider = new AbiProvider(this.smartContractVersionsApi, options.abiCacheDir);
+  }
+
+  async getContractAbi(versionId?: string): Promise<AbiCacheEntry> {
+    const resolvedVersionId = versionId ?? (await this.resolveSmartContractVersionId());
+    return this.abiProvider.getAbi(resolvedVersionId);
   }
 
   async getAssetBalances(params: GetAssetBalancesParams): Promise<AssetBalanceList> {
     const accountId = await this.resolveAccountId();
     const chainId = params.chainId ?? (await this.resolveDeployment()).chainId;
 
-    const response = await this.accountsApi.accountsControllerGetAssetBalancesV1({
-      accountId,
-      baseCurrency: params.baseCurrency as AccountsControllerGetAssetBalancesV1BaseCurrencyEnum,
-      chainId: chainId.toString(),
-      sortBy: params.sortBy as AccountsControllerGetAssetBalancesV1SortByEnum | undefined,
-      sortOrder: params.sortOrder as AccountsControllerGetAssetBalancesV1SortOrderEnum | undefined,
-      currencyIds: params.currencyIds,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+    const response = await this.callApi(() =>
+      this.accountsApi.accountsControllerGetAssetBalancesV1({
+        accountId,
+        baseCurrency: params.baseCurrency as AccountsControllerGetAssetBalancesV1BaseCurrencyEnum,
+        chainId: chainId.toString(),
+        sortBy: params.sortBy as AccountsControllerGetAssetBalancesV1SortByEnum | undefined,
+        sortOrder: params.sortOrder as AccountsControllerGetAssetBalancesV1SortOrderEnum | undefined,
+        currencyIds: params.currencyIds,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
 
     return mapAssetBalanceList(response);
   }
 
-  async getAccounts(): Promise<Account[]> {
-    const accounts = await this.accountsApi.accountsControllerFindUserAccountsV1();
-    const firstAccount = accounts[0];
-
-    if (!firstAccount) {
-      throw new Error('No accounts are linked to this API key.');
-    }
-
-    this.defaultAccountId = firstAccount.id;
-    return accounts.map(mapAccount);
-  }
-
   async getAccount(): Promise<AccountDetails> {
-    const resolvedAccountId = await this.resolveAccountId();
-    const accountDetails = await this.accountsApi.accountsControllerFindAccountByIdV1({
-      accountId: resolvedAccountId,
-    });
-    return mapAccountDetails(accountDetails);
+    const info = await this.resolveAccountInfo();
+    return info.details;
   }
 
   async getDeployments(accountDetails?: AccountDetails): Promise<AccountDeployment[]> {
@@ -383,16 +393,18 @@ export class DefiClient {
 
   async getAccountBalanceSummary(params: GetAccountBalanceSummaryParams): Promise<BalanceSummary> {
     const resolvedAccountId = await this.resolveAccountId();
-    const summary = await this.accountsApi.accountsControllerGetBalanceSummaryV1({
-      accountId: resolvedAccountId,
-      baseCurrency: params.baseCurrency as AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum,
-      chainId: params.chainId.toString(),
-    });
+    const summary = await this.callApi(() =>
+      this.accountsApi.accountsControllerGetBalanceSummaryV1({
+        accountId: resolvedAccountId,
+        baseCurrency: params.baseCurrency as AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum,
+        chainId: params.chainId.toString(),
+      }),
+    );
     return mapBalanceSummary(summary);
   }
 
   async getCurrencies(): Promise<Currency[]> {
-    const currencies = await this.currenciesApi.currenciesControllerFindAllV1();
+    const currencies = await this.callApi(() => this.currenciesApi.currenciesControllerFindAllV1());
     return currencies.map(mapCurrency);
   }
 
@@ -415,7 +427,16 @@ export class DefiClient {
         return true;
       }
 
-      return currency.chainId === targetChain;
+      if (currency.chainId !== targetChain) {
+        return false;
+      }
+
+      // On TVM chains, exclude currencies with EVM-style addresses (0x...) — stale data
+      if (TRON_CHAIN_IDS.has(Number(targetChain)) && currency.address?.startsWith('0x')) {
+        return false;
+      }
+
+      return true;
     });
 
     if (matches.length === 0) {
@@ -452,21 +473,23 @@ export class DefiClient {
   async getInvoices(params: GetInvoicesParams): Promise<InvoiceList> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.invoicesApi.invoicesControllerFindInvoicesByDeploymentV1({
-      deploymentId,
-      id: params.id,
-      createdFrom: params.createdFrom,
-      createdTo: params.createdTo,
-      updatedFrom: params.updatedFrom,
-      updatedTo: params.updatedTo,
-      currencyIds: params.currencyIds,
-      statuses: params.statuses as InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum[] | undefined,
-      trackingId: params.trackingId,
-      sortBy: params.sortBy as InvoicesControllerFindInvoicesByDeploymentV1SortByEnum | undefined,
-      sortOrder: params.sortOrder as InvoicesControllerFindInvoicesByDeploymentV1SortOrderEnum | undefined,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+    const response = await this.callApi(() =>
+      this.invoicesApi.invoicesControllerFindInvoicesByDeploymentV1({
+        deploymentId,
+        id: params.id,
+        createdFrom: params.createdFrom,
+        createdTo: params.createdTo,
+        updatedFrom: params.updatedFrom,
+        updatedTo: params.updatedTo,
+        currencyIds: params.currencyIds,
+        statuses: params.statuses as InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum[] | undefined,
+        trackingId: params.trackingId,
+        sortBy: params.sortBy as InvoicesControllerFindInvoicesByDeploymentV1SortByEnum | undefined,
+        sortOrder: params.sortOrder as InvoicesControllerFindInvoicesByDeploymentV1SortOrderEnum | undefined,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
 
     return mapInvoiceList(response);
   }
@@ -474,10 +497,12 @@ export class DefiClient {
   async getInvoice(params: GetInvoiceParams): Promise<InvoiceDetails> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.invoicesApi.invoicesControllerFindInvoiceByIdV1({
-      deploymentId,
-      invoiceId: params.invoiceId,
-    });
+    const response = await this.callApi(() =>
+      this.invoicesApi.invoicesControllerFindInvoiceByIdV1({
+        deploymentId,
+        invoiceId: params.invoiceId,
+      }),
+    );
 
     return mapInvoiceDetails(response);
   }
@@ -485,17 +510,19 @@ export class DefiClient {
   async createInvoice(params: CreateInvoiceParams): Promise<Invoice> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.invoicesApi.invoicesControllerCreateInvoiceV1({
-      deploymentId,
-      createInvoiceDto: {
-        requestedAmount: params.requestedAmount ?? null,
-        trackingId: params.trackingId ?? null,
-        callbackUrl: params.callbackUrl ?? null,
-        paymentPageButtonUrl: params.paymentPageButtonUrl ?? null,
-        paymentPageButtonText: params.paymentPageButtonText ?? null,
-        currencyIds: params.currencyIds,
-      },
-    });
+    const response = await this.callApi(() =>
+      this.invoicesApi.invoicesControllerCreateInvoiceV1({
+        deploymentId,
+        createInvoiceDto: {
+          requestedAmount: params.requestedAmount ?? null,
+          trackingId: params.trackingId ?? null,
+          callbackUrl: params.callbackUrl ?? null,
+          paymentPageButtonUrl: params.paymentPageButtonUrl ?? null,
+          paymentPageButtonText: params.paymentPageButtonText ?? null,
+          currencyIds: params.currencyIds,
+        },
+      }),
+    );
 
     return mapInvoice(response);
   }
@@ -504,11 +531,13 @@ export class DefiClient {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
     const payload = this.buildInvoiceUpdatePayload(params);
 
-    const response = await this.invoicesApi.invoicesControllerUpdateInvoiceV1({
-      deploymentId,
-      invoiceId: params.invoiceId,
-      updateInvoiceDto: payload,
-    });
+    const response = await this.callApi(() =>
+      this.invoicesApi.invoicesControllerUpdateInvoiceV1({
+        deploymentId,
+        invoiceId: params.invoiceId,
+        updateInvoiceDto: payload,
+      }),
+    );
 
     return mapInvoice(response);
   }
@@ -516,18 +545,20 @@ export class DefiClient {
   async createPayout(params: CreatePayoutParams): Promise<Payout> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.payoutsApi.payoutsControllerCreateV1({
-      deploymentId,
-      createPayoutDto: {
+    const response = await this.callApi(() =>
+      this.payoutsApi.payoutsControllerCreateV1({
         deploymentId,
-        currencyId: params.currencyId,
-        amount: params.amount,
-        toAddress: params.recipient,
-        trackingId: params.trackingId,
-        callbackUrl: params.callbackUrl,
-        nonce: params.nonce?.toString(),
-      },
-    });
+        createPayoutDto: {
+          deploymentId,
+          currencyId: params.currencyId,
+          amount: params.amount,
+          toAddress: params.recipient,
+          trackingId: params.trackingId,
+          callbackUrl: params.callbackUrl,
+          nonce: params.nonce,
+        },
+      }),
+    );
 
     return mapPayout(response);
   }
@@ -535,23 +566,25 @@ export class DefiClient {
   async getPayouts(params: GetPayoutsParams): Promise<PayoutList> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.payoutsApi.payoutsControllerFindAllV1({
-      deploymentId,
-      id: params.id,
-      createdFrom: params.createdFrom,
-      createdTo: params.createdTo,
-      updatedFrom: params.updatedFrom,
-      updatedTo: params.updatedTo,
-      currencyIds: params.currencyIds,
-      statuses: params.statuses as PayoutsControllerFindAllV1StatusesEnum[] | undefined,
-      trackingId: params.trackingId,
-      createdBy: params.createdBy,
-      toAddress: params.toAddress,
-      sortBy: params.sortBy as PayoutsControllerFindAllV1SortByEnum | undefined,
-      sortOrder: params.sortOrder as PayoutsControllerFindAllV1SortOrderEnum | undefined,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+    const response = await this.callApi(() =>
+      this.payoutsApi.payoutsControllerFindAllV1({
+        deploymentId,
+        id: params.id,
+        createdFrom: params.createdFrom,
+        createdTo: params.createdTo,
+        updatedFrom: params.updatedFrom,
+        updatedTo: params.updatedTo,
+        currencyIds: params.currencyIds,
+        statuses: params.statuses as PayoutsControllerFindAllV1StatusesEnum[] | undefined,
+        trackingId: params.trackingId,
+        createdBy: params.createdBy,
+        toAddress: params.toAddress,
+        sortBy: params.sortBy as PayoutsControllerFindAllV1SortByEnum | undefined,
+        sortOrder: params.sortOrder as PayoutsControllerFindAllV1SortOrderEnum | undefined,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
 
     return mapPayoutList(response);
   }
@@ -559,10 +592,12 @@ export class DefiClient {
   async getPayout(params: GetPayoutParams): Promise<PayoutDetail> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.payoutsApi.payoutsControllerFindOneV1({
-      deploymentId,
-      payoutId: params.payoutId,
-    });
+    const response = await this.callApi(() =>
+      this.payoutsApi.payoutsControllerFindOneV1({
+        deploymentId,
+        payoutId: params.payoutId,
+      }),
+    );
 
     return mapPayoutDetail(response);
   }
@@ -571,11 +606,13 @@ export class DefiClient {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
     const payload = this.buildPayoutUpdatePayload(params);
 
-    const response = await this.payoutsApi.payoutsControllerUpdateV1({
-      deploymentId,
-      payoutId: params.payoutId,
-      updatePayoutDto: payload,
-    });
+    const response = await this.callApi(() =>
+      this.payoutsApi.payoutsControllerUpdateV1({
+        deploymentId,
+        payoutId: params.payoutId,
+        updatePayoutDto: payload,
+      }),
+    );
 
     return mapPayout(response);
   }
@@ -583,12 +620,14 @@ export class DefiClient {
   async getDeploymentQueue(params: GetDeploymentQueueParams): Promise<DeploymentQueue> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.queueOperationsApi.queueOperationsControllerGetDeploymentQueueV1({
-      deploymentId,
-      page: params.page,
-      pageSize: params.pageSize,
-      statuses: params.statuses,
-    });
+    const response = await this.callApi(() =>
+      this.queueOperationsApi.queueOperationsControllerGetDeploymentQueueV1({
+        deploymentId,
+        page: params.page,
+        pageSize: params.pageSize,
+        statuses: params.statuses,
+      }),
+    );
 
     return mapDeploymentQueue(response);
   }
@@ -596,24 +635,28 @@ export class DefiClient {
   async getTransactions(params: GetTransactionsParams): Promise<TransactionList> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.transactionsApi.transactionsControllerGetTransactionsV1({
-      deploymentId,
-      id: params.id,
-      operationId: params.operationId,
-      operationTypes: params.operationTypes as TransactionsControllerGetTransactionsV1OperationTypesEnum[] | undefined,
-      statuses: params.statuses as TransactionsControllerGetTransactionsV1StatusesEnum[] | undefined,
-      txHash: params.txHash,
-      currencyIds: params.currencyIds,
-      createdFrom: params.createdFrom,
-      createdTo: params.createdTo,
-      updatedFrom: params.updatedFrom,
-      updatedTo: params.updatedTo,
-      isClaimed: params.isClaimed,
-      sortBy: params.sortBy as TransactionsControllerGetTransactionsV1SortByEnum | undefined,
-      sortOrder: params.sortOrder as TransactionsControllerGetTransactionsV1SortOrderEnum | undefined,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+    const response = await this.callApi(() =>
+      this.transactionsApi.transactionsControllerGetTransactionsV1({
+        deploymentId,
+        id: params.id,
+        operationId: params.operationId,
+        operationTypes: params.operationTypes as
+          | TransactionsControllerGetTransactionsV1OperationTypesEnum[]
+          | undefined,
+        statuses: params.statuses as TransactionsControllerGetTransactionsV1StatusesEnum[] | undefined,
+        txHash: params.txHash,
+        currencyIds: params.currencyIds,
+        createdFrom: params.createdFrom,
+        createdTo: params.createdTo,
+        updatedFrom: params.updatedFrom,
+        updatedTo: params.updatedTo,
+        isClaimed: params.isClaimed,
+        sortBy: params.sortBy as TransactionsControllerGetTransactionsV1SortByEnum | undefined,
+        sortOrder: params.sortOrder as TransactionsControllerGetTransactionsV1SortOrderEnum | undefined,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
 
     return mapTransactionList(response);
   }
@@ -621,24 +664,39 @@ export class DefiClient {
   async getTransaction(params: GetTransactionParams): Promise<TransactionDetails> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.transactionsApi.transactionsControllerGetTransactionDetailsV1({
-      deploymentId,
-      transactionId: params.transactionId,
-    });
+    const response = await this.callApi(() =>
+      this.transactionsApi.transactionsControllerGetTransactionDetailsV1({
+        deploymentId,
+        transactionId: params.transactionId,
+      }),
+    );
 
     return mapTransactionDetails(response);
   }
 
   async submitOperationSignature(params: SubmitOperationSignatureParams): Promise<Signature> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
+    const contractAbi = await this.getContractAbi();
 
-    const response = await this.queueOperationsApi.queueOperationsControllerSubmitSignatureV1({
-      deploymentId,
-      operationId: params.operationId,
-      submitSignatureDto: {
-        signature: params.signature,
-      },
-    });
+    // Normalize Tron base58 addresses to 0x hex for signature packing
+    const signerAddress = params.signerAddress.startsWith(TRON_ADDRESS_PREFIX)
+      ? (tronToEvmHex(params.signerAddress) as Address)
+      : (params.signerAddress as Address);
+
+    const packedSignature = packSignatures(
+      [{ user: signerAddress, sign: params.signature as Hex }],
+      contractAbi.version,
+    );
+
+    const response = await this.callApi(() =>
+      this.queueOperationsApi.queueOperationsControllerSubmitSignatureV1({
+        deploymentId,
+        operationId: params.operationId,
+        submitSignatureDto: {
+          signature: packedSignature,
+        },
+      }),
+    );
 
     return mapSignature(response);
   }
@@ -646,19 +704,21 @@ export class DefiClient {
   async getClaims(params: GetClaimsParams): Promise<ClaimsResponse> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
-    const response = await this.claimsApi.claimsControllerGetClaimsV1({
-      deploymentId,
-      createdFrom: params.createdFrom,
-      createdTo: params.createdTo,
-      updatedFrom: params.updatedFrom,
-      updatedTo: params.updatedTo,
-      currencyIds: params.currencyIds,
-      invoiceId: params.invoiceId,
-      sortBy: params.sortBy as ClaimsControllerGetClaimsV1SortByEnum | undefined,
-      sortOrder: params.sortOrder as ClaimsControllerGetClaimsV1SortOrderEnum | undefined,
-      page: params.page,
-      pageSize: params.pageSize,
-    });
+    const response = await this.callApi(() =>
+      this.claimsApi.claimsControllerGetClaimsV1({
+        deploymentId,
+        createdFrom: params.createdFrom,
+        createdTo: params.createdTo,
+        updatedFrom: params.updatedFrom,
+        updatedTo: params.updatedTo,
+        currencyIds: params.currencyIds,
+        invoiceId: params.invoiceId,
+        sortBy: params.sortBy as ClaimsControllerGetClaimsV1SortByEnum | undefined,
+        sortOrder: params.sortOrder as ClaimsControllerGetClaimsV1SortOrderEnum | undefined,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
 
     return mapClaimsResponse(response);
   }
@@ -666,9 +726,11 @@ export class DefiClient {
   async getClaimableCurrencies(chainId?: ChainIdentifier): Promise<Currency[]> {
     const deploymentId = await this.resolveDeploymentId(chainId);
 
-    const response = await this.claimsApi.claimsControllerGetClaimableCurrenciesV1({
-      deploymentId,
-    });
+    const response = await this.callApi(() =>
+      this.claimsApi.claimsControllerGetClaimableCurrenciesV1({
+        deploymentId,
+      }),
+    );
 
     return response.map(mapCurrency);
   }
@@ -740,20 +802,51 @@ export class DefiClient {
     return payload as UpdatePayoutDto;
   }
 
-  private async resolveAccountId(): Promise<string> {
-    if (this.defaultAccountId) {
-      return this.defaultAccountId;
+  private resolveAccountInfo(): Promise<{
+    accountId: string;
+    smartContractVersionId: string;
+    details: AccountDetails;
+  }> {
+    if (!this.accountInfoPromise) {
+      this.accountInfoPromise = this.fetchAccountInfo();
     }
+    return this.accountInfoPromise;
+  }
 
-    const accounts = await this.getAccounts();
+  private async fetchAccountInfo(): Promise<{
+    accountId: string;
+    smartContractVersionId: string;
+    details: AccountDetails;
+  }> {
+    const accounts = await this.callApi(() => this.accountsApi.accountsControllerFindUserAccountsV1());
     const firstAccount = accounts[0];
 
     if (!firstAccount) {
       throw new Error('No accounts are linked to this API key.');
     }
 
-    this.defaultAccountId = firstAccount.id;
-    return firstAccount.id;
+    const raw = await this.callApi(() =>
+      this.accountsApi.accountsControllerFindAccountByIdV1({
+        accountId: firstAccount.id,
+      }),
+    );
+    const details = mapAccountDetails(raw);
+
+    return {
+      accountId: firstAccount.id,
+      smartContractVersionId: raw.account.smartContractVersionId,
+      details,
+    };
+  }
+
+  private async resolveAccountId(): Promise<string> {
+    const info = await this.resolveAccountInfo();
+    return info.accountId;
+  }
+
+  private async resolveSmartContractVersionId(): Promise<string> {
+    const info = await this.resolveAccountInfo();
+    return info.smartContractVersionId;
   }
 
   private async resolveDeployment(chainId?: ChainIdentifier): Promise<AccountDeployment> {
@@ -775,5 +868,20 @@ export class DefiClient {
 
   private normalizeChainId(chainId: ChainIdentifier): string {
     return typeof chainId === 'number' ? chainId.toString() : chainId;
+  }
+
+  private async callApi<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err instanceof ResponseError) {
+        const creditsError = await parseCreditsError(err);
+        if (creditsError) {
+          console.warn(formatCreditsWarning(creditsError.required, creditsError.available));
+          throw creditsError;
+        }
+      }
+      throw err;
+    }
   }
 }

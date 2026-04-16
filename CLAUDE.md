@@ -40,13 +40,18 @@ src/
 │   ├── defi-client.ts - Main DefiClient class with convenience methods
 │   └── models/    - Type definitions and mappers for API responses
 ├── blockchain/    - Blockchain-specific clients
-│   └── multisig-client.ts - MultisigBlockchainClient for EIP-712 and transactions
+│   ├── multisig-client.ts       - MultisigBlockchainClient (EVM, EIP-712)
+│   ├── tron-multisig-client.ts  - TronMultisigBlockchainClient (TVM, TIP-712)
+│   ├── get-chain.ts             - Chain resolver utilities
+│   └── tron-chains.ts           - TRON chain configs (Mainnet, Shasta)
 └── utils/         - Utilities
-    ├── transactions/ - Transaction builders and EIP-712 helpers
-    └── validation.ts - Address validation utilities
+    ├── transactions/ - EIP-712 / TIP-712 builders, signature packing
+    ├── validation.ts - EVM address validation
+    ├── tron-validation.ts - TRON address validation
+    └── tron-types.ts  - Branded TronAddress type
 
 generated-contracts/ - OpenAPI-generated DTOs and API classes (DO NOT EDIT)
-examples/           - Runnable example scripts
+examples/           - Runnable example scripts (EVM and TRON)
 docs/              - Extended documentation (overview, API client, transactions, contributing)
 ```
 
@@ -56,53 +61,63 @@ docs/              - Extended documentation (overview, API client, transactions,
 The main entry point for REST API interactions. Instantiate with `baseUrl` and `apiKey`:
 ```ts
 const client = new DefiClient({
-  baseUrl: 'https://api.example.com',
+  baseUrl: 'https://api.defi.b2binpay.com',
   apiKey: process.env.API_KEY!,
+  abiCacheDir: '.abi-cache', // optional disk cache for contract ABIs
 });
 ```
 
 **Important patterns:**
-- **Account selection**: The API key maps to a single account, so `accountId` is auto-resolved internally. Call `getAccount()` to fetch account details.
-- **Chain selection**: Call `await client.selectChain(chainId)` to cache the deployment for a chain. Subsequent invoice/payout/claim methods use this cached deployment unless `chainId` is explicitly passed per method.
-- **Automatic header injection**: The client automatically adds `x-api-key` header to all requests.
+- **Account resolution**: API key maps to one account — `accountId` is never required.
+- **Chain selection**: `selectChain(chainId)` caches the deployment; subsequent invoice/payout/claim calls omit `chainId`.
+- **ABI caching**: `getContractAbi()` fetches and caches the multisig ABI (memory + optional disk). Pass result to blockchain clients.
 
-Key methods include:
-- `getAccounts()`, `getAccount()`, `getDeployments()`
-- `selectChain(chainId)` - Cache deployment for chain-scoped operations
+Key methods:
+- `getAccounts()`, `getAccount()`, `getDeployments()`, `selectChain()`, `getContractAbi()`
 - `getAccountBalanceSummary()`, `getAssetBalances()`
 - `createInvoice()`, `getInvoices()`, `getInvoice()`, `updateInvoice()`
-- `createPayout()`, `getPayouts()`, `getPayout()`
+- `createPayout()`, `getPayouts()`, `getPayout()`, `updatePayout()`
 - `getClaims()`, `getClaimableCurrencies()`
-- `findCurrencyBySymbol()`, `getNativeCurrency()`
+- `getTransactions()`, `getTransaction()`
+- `findCurrencyBySymbol()`, `getNativeCurrency()`, `getCurrencies()`
 - `getDeploymentQueue()`, `submitOperationSignature()`
 
 #### MultisigBlockchainClient (`src/blockchain/multisig-client.ts`)
-Handles blockchain-specific operations for multisig contracts:
-- `createExecuteTypedData()` - Build EIP-712 typed data for signing operations
-- `buildExecuteTransaction()` - Prepare execute transaction for one or more operations
-- `buildClaimCalldata()` - Generate calldata for claim/claimTo functions
+EVM multisig operations (EIP-712 signing, execute transactions, claim calldata):
+- `createExecuteTypedData({ contractAddress, operation })` - Build EIP-712 typed data
+- `buildExecuteTransaction({ contractAddress, operations })` - Encode execute() call
+- `buildClaimCalldata({ erc20, depositAccountIds, to? })` - Generate claim calldata
 
-Requires a `viem` `PublicClient` instance for reading contract state and chain ID.
+Requires a viem `PublicClient` and `AbiCacheEntry` from `client.getContractAbi()`.
+
+#### TronMultisigBlockchainClient (`src/blockchain/tron-multisig-client.ts`)
+TVM multisig operations (TIP-712 signing, execute/claim transactions):
+- `createExecuteTypedData({ contractAddress, operation })` - Build TIP-712 typed data
+- `buildExecuteTransaction({ contractAddress, callerAddress, operations })` - Encode Tron execute
+- `buildClaimTransaction({ contractAddress, callerAddress, erc20, depositIds })` - Encode Tron claim
+
+Requires a `TronWeb` instance, `AbiCacheEntry`, and `defaultFeeLimit` (in SUN).
 
 #### Transaction Utilities (`src/utils/transactions/`)
-- `eip712.ts` - EIP-712 domain/message builders for multisig execute operations
-- `builders.ts` - Transaction builders for execute operations
-
-These are consumed by `MultisigBlockchainClient` but can also be used directly.
+- `eip712.ts` - EIP-712 builders for EVM (createExecuteTypedData, buildExecuteTypedMessage, signExecuteTypedData)
+- `tron-tip712.ts` - TIP-712 builders for TVM (buildTronExecuteTypedData, prepareTronTypedDataForSigning)
+- `builders.ts` - Low-level transaction encoders (buildExecuteOperationsTransaction, packSignatures, packTronSignatures)
 
 ### Typical Workflow
 
-1. **Authentication**: Create `DefiClient` with API key
-2. **Chain Selection**: Call `client.selectChain(chainId)` to set active chain
-3. **API Operations**: Use client methods for invoices, payouts, claims
-4. **Blockchain Operations**:
-   - Create `MultisigBlockchainClient` with `PublicClient`
+1. **Authentication**: Create `DefiClient` with API key and base URL
+2. **Chain Selection**: `client.selectChain(chainId)` to cache deployment
+3. **ABI**: `client.getContractAbi()` to fetch contract ABI (required for blockchain clients)
+4. **Blockchain Operations** (EVM):
+   - Create `MultisigBlockchainClient` with `publicClient` and `contractAbi`
    - Build EIP-712 typed data with `createExecuteTypedData()`
    - Sign with wallet's `signTypedData()`
-   - Submit signature via `client.submitOperationSignature()`
+   - Submit via `client.submitOperationSignature()` (auto-packs)
    - Execute via `buildExecuteTransaction()` and broadcast
+5. **Blockchain Operations** (TRON):
+   - Same flow with `TronMultisigBlockchainClient` and TronWeb
 
-See `examples/queue-sign.ts` and `examples/queue-execute.ts` for complete flows.
+See `examples/evm-full-flow.ts` and `examples/tron-full-flow.ts` for complete flows.
 
 ### Generated vs Hand-Written Code
 
@@ -133,13 +148,14 @@ See `examples/queue-sign.ts` and `examples/queue-execute.ts` for complete flows.
 
 ## Testing Strategy
 
-No test suite is currently present. When adding tests:
-- Test files should be `*.test.ts`
+Run tests with `npx jest --passWithNoTests`. Config: `jest.config.mjs`.
+
+- Test files: `*.spec.ts` or `*.test.ts`
 - `noExplicitAny` linting rule is disabled for test files (see `biome.json` overrides)
 
 ## Publishing
 
-- Version is set to `"auto"` in `package.json` - likely managed by CI
+- Version is set to `"auto"` in `package.json` — managed by CI
 - `npm run prepublishOnly` runs build automatically
 - Exported files: `dist/`, `docs/`, `README.md`
 - Entry points defined in `exports` field for CommonJS/ESM compatibility

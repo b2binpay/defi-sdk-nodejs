@@ -46,7 +46,7 @@ export interface AssetBalancesResponseDto {
      */
     pageSize: number;
     /**
-     * List of asset balances
+     * 
      * @type {Array<AssetBalanceDto>}
      * @memberof AssetBalancesResponseDto
      */

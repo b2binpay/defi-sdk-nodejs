@@ -1,9 +1,9 @@
-import type { Account, Address, Hex, PublicClient, TypedDataDomain } from 'viem';
+import type { Abi, Account, Address, Hex, PublicClient, TypedDataDomain } from 'viem';
 import { encodeFunctionData } from 'viem';
-import type { CallDto, QueueOperationResponseDto } from '../../generated-contracts';
-import { MULTI_SIG_WALLET_ABI } from '../abi';
+import type { QueueOperationResponseDto } from '../../generated-contracts';
+import type { AbiCacheEntry } from '../abi-provider';
 import type { PreparedTransaction } from '../utils/transactions/builders';
-import { buildExecuteOperationsTransaction } from '../utils/transactions/builders';
+import { buildExecuteOperationsTransaction, ensureHexPrefix, normalizeCalls } from '../utils/transactions/builders';
 import type { ExecuteTypedDataPayload } from '../utils/transactions/eip712';
 import {
   buildExecuteTypedData,
@@ -14,6 +14,7 @@ import {
 export interface MultisigBlockchainClientOptions {
   chainId: string;
   publicClient: PublicClient;
+  contractAbi: AbiCacheEntry;
 }
 
 export interface CreateExecuteTypedDataArgs {
@@ -32,17 +33,18 @@ export interface SignExecuteTypedDataArgs {
 export class MultisigBlockchainClient {
   private readonly publicClientInstance: PublicClient;
   private readonly chainIdNumber: number;
+  private readonly abi: Abi;
 
   constructor(options: MultisigBlockchainClientOptions) {
     this.chainIdNumber = Number(options.chainId);
-
     this.publicClientInstance = options.publicClient;
+    this.abi = options.contractAbi.abi;
   }
 
   async createExecuteTypedData(args: CreateExecuteTypedDataArgs): Promise<ExecuteTypedDataPayload> {
     if (args.domainOverride) {
       const message = buildExecuteTypedMessage({
-        calls: this.normalizeCalls(args.operation.calls),
+        calls: normalizeCalls(args.operation.calls),
         nonce: args.operation.nonce,
       });
 
@@ -53,6 +55,7 @@ export class MultisigBlockchainClient {
       contractAddress: args.contractAddress,
       operation: args.operation,
       publicClient: this.publicClientInstance,
+      abi: this.abi,
     });
   }
 
@@ -64,23 +67,16 @@ export class MultisigBlockchainClient {
       contractAddress: params.contractAddress as Address,
       chainId: this.chainIdNumber,
       operations: params.operations,
+      abi: this.abi,
     });
   }
 
   buildClaimCalldata(params: { erc20: Address; depositAccountIds: Array<string>; to?: Address }): Hex {
-    const depositIds = params.depositAccountIds.map((id) => `0x${id.replace(/^0x/, '')}` as `0x${string}`);
+    const depositIds = params.depositAccountIds.map(ensureHexPrefix);
     return encodeFunctionData({
-      abi: MULTI_SIG_WALLET_ABI,
+      abi: this.abi,
       functionName: params.to ? 'claimTo' : 'claim',
       args: params.to ? [params.erc20, params.to, depositIds] : [params.erc20, depositIds],
     });
-  }
-
-  private normalizeCalls(calls: CallDto[]): Array<{ to: string; value: string | number | bigint; data: string }> {
-    return calls.map((call) => ({
-      to: call.to,
-      value: call.value ?? '0',
-      data: call.data ?? '0x',
-    }));
   }
 }

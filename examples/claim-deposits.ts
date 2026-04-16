@@ -9,7 +9,7 @@ import 'dotenv/config';
 import { type Address, createPublicClient, createWalletClient, http, zeroAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { DefiClient, MultisigBlockchainClient } from '../src';
-import { getChainById } from '../src/blockchain/get-chain';
+import { getEvmChainById } from '../src/blockchain/get-chain';
 import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
@@ -48,7 +48,7 @@ runMain(async () => {
   const invoicesToClaim = claims.items.filter((item) => item.currency.id === currency.id);
   const depositAccountIds = invoicesToClaim.map((item) => item.invoiceNonce);
 
-  const chain = getChainById(chainId, rpcUrl);
+  const chain = getEvmChainById(chainId, rpcUrl);
   const publicClient = createPublicClient({
     chain,
     transport: http(rpcUrl),
@@ -60,9 +60,12 @@ runMain(async () => {
     account: wallet,
     transport: http(rpcUrl),
   });
+  const contractAbi = await client.getContractAbi();
+
   const multisigClient = new MultisigBlockchainClient({
     chainId,
     publicClient,
+    contractAbi,
   });
 
   const erc20Address = currency.address ?? zeroAddress;

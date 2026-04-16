@@ -49,7 +49,6 @@ export type {
   TransactionDetails,
   TransactionInvoice,
   TransactionList,
-  User,
 } from './models';
 export {
   AssetSortField,

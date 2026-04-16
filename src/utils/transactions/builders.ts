@@ -1,6 +1,5 @@
-import { type Address, concatHex, encodeFunctionData, type Hex } from 'viem';
-import type { QueueOperationResponseDto } from '../../../generated-contracts';
-import { MULTI_SIG_WALLET_ABI } from '../../abi/multi-sig-wallet';
+import { type Abi, type Address, concatHex, encodeFunctionData, type Hex } from 'viem';
+import type { CallDto, QueueOperationResponseDto } from '../../../generated-contracts';
 
 export interface PreparedTransaction {
   readonly to: Address;
@@ -16,12 +15,29 @@ export interface ExecuteQueueOperationInput {
   readonly operations: Array<QueueOperationResponseDto>;
   readonly contractAddress: Address;
   readonly chainId: number;
+  readonly abi: Abi;
+}
+
+/** Ensures a hex string has a `0x` prefix. Idempotent. */
+export function ensureHexPrefix(value: string): Hex {
+  return (value.startsWith('0x') ? value : `0x${value}`) as Hex;
+}
+
+/** Normalizes raw `CallDto` from the API into a typed structure with defaults. */
+export function normalizeCalls(calls: CallDto[]): Array<{ to: string; value: string | number | bigint; data: string }> {
+  return calls.map((call) => ({
+    to: call.to,
+    value: call.value ?? '0',
+    data: call.data ?? '0x',
+  }));
 }
 
 /**
  * Builds a multisig execute transaction payload for one or more queue operations.
  */
 export function buildExecuteOperationsTransaction(input: ExecuteQueueOperationInput): PreparedTransaction {
+  const abi = input.abi;
+
   const operations = input.operations.map((operation) => ({
     calls: operation.calls.map((call) => ({
       to: call.to as Address,
@@ -33,7 +49,7 @@ export function buildExecuteOperationsTransaction(input: ExecuteQueueOperationIn
   }));
 
   const data = encodeFunctionData({
-    abi: MULTI_SIG_WALLET_ABI,
+    abi,
     functionName: 'execute',
     args: [operations],
   });

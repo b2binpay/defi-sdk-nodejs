@@ -1,5 +1,8 @@
 import { ResponseError } from '../generated-contracts';
 
+/** Default Tron fee limit in SUN (150 TRX). Used by example scripts when constructing TronMultisigBlockchainClient. */
+export const DEFAULT_FEE_LIMIT = 150_000_000;
+
 export type EnvRecord<TKeys extends readonly string[]> = {
   [K in TKeys[number]]: string;
 };

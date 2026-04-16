@@ -34,7 +34,7 @@ export interface CreatePayoutDto {
      */
     deploymentId: string;
     /**
-     * 
+     * The unique ID of the currency, ("{chainId}" or "{chainId}-{contractAddress}")
      * @type {string}
      * @memberof CreatePayoutDto
      */

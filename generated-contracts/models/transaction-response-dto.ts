@@ -54,7 +54,7 @@ export interface TransactionResponseDto {
      */
     txHash: string;
     /**
-     * The unique ID of the currency, ("{chainId}-{contractAddress}")
+     * The unique ID of the currency, ("{chainId}" or "{chainId}-{contractAddress}")
      * @type {string}
      * @memberof TransactionResponseDto
      */
@@ -199,7 +199,8 @@ export const TransactionResponseDtoOperationTypeEnum = {
     SetConfig: 'set_config',
     Claim: 'claim',
     Payout: 'payout',
-    Reject: 'reject'
+    Reject: 'reject',
+    DappTransaction: 'dapp_transaction'
 } as const;
 export type TransactionResponseDtoOperationTypeEnum = typeof TransactionResponseDtoOperationTypeEnum[keyof typeof TransactionResponseDtoOperationTypeEnum];
 
