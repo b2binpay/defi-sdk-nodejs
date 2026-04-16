@@ -23,7 +23,6 @@ import type {
   TransactionInvoiceResponseDto,
   TransactionListResponseDto,
   TransactionResponseDto,
-  UserResponseDto,
 } from '../../../generated-contracts';
 import type {
   Account,
@@ -59,12 +58,9 @@ import type {
   TransactionList,
   TransactionOperationType,
   TransactionStatus,
-  User,
 } from './types';
 
 const clone = <T>(value: T): T => ({ ...value });
-
-export const mapUser = (dto: UserResponseDto): User => clone(dto);
 
 export const mapAccount = (dto: AccountResponseDto): Account => clone(dto);
 

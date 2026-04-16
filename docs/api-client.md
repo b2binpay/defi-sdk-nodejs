@@ -1,74 +1,217 @@
 # API Client
 
-The API layer is implemented in `src/api/defi-client.ts` and wraps the generated contracts to present a developer-friendly interface for authentication and API calls.
+`DefiClient` (`src/api/defi-client.ts`) is the main entry point for all REST API interactions. It wraps the generated OpenAPI client with a developer-friendly interface.
 
 ## Configuration
 
 ```ts
+import { DefiClient } from '@b2binpay/defi-sdk';
+
 const client = new DefiClient({
-  baseUrl: 'https://api.example.com',
+  baseUrl: 'https://api.defi.b2binpay.com',
   apiKey: process.env.API_KEY!,
-  defaultHeaders: { 'x-app-version': '1.0.0' },
 });
 ```
 
-Supported options:
-- `baseUrl` (required): REST endpoint (without trailing slash).
-- `apiKey` (required): value sent as the `x-api-key` header on every request.
-- `fetchApi`: Custom fetch implementation (useful for SSR or testing).
-- `middleware`: OpenAPI middleware applied to every request.
-- `defaultHeaders`, `credentials`, `queryParamsStringify`: Fine-grained HTTP control.
+All constructor options:
+
+| Option                 | Required | Description                                             |
+|------------------------|----------|---------------------------------------------------------|
+| `baseUrl`              | yes      | REST endpoint base URL                                  |
+| `apiKey`               | yes      | Sent as `x-api-key` header on every request             |
+| `fetchApi`             | no       | Custom fetch implementation (useful for testing or SSR) |
+| `middleware`           | no       | OpenAPI middleware applied to every request             |
+| `defaultHeaders`       | no       | Extra headers merged into every request                 |
+| `credentials`          | no       | Fetch `credentials` setting                             |
+| `queryParamsStringify` | no       | Custom query parameter serializer                       |
+| `abiCacheDir`          | no       | Directory for persistent ABI disk cache                 |
 
 ## Authentication
 
-`DefiClient` authenticates purely via API key. Provide the key at construction time and every request will include `x-api-key: <value>`. There is no nonce/signature exchange or access/refresh token management in the SDK anymore.
+`DefiClient` authenticates purely via API key. Every request automatically includes the `x-api-key` header — no token exchange, nonce signing, or refresh is required.
 
-## Account Management
-- `getAccounts()` retrieves all accounts linked to the authenticated user (the first entry is cached automatically).
-- `getAccount()` fetches account details as an `AccountDetailsDto`, exposing the primary `account` metadata plus network `deployments`.
-- `getDeployments(accountDetails?)` returns the list of deployments for the account; pass cached account details to avoid re-fetching if you already have them.
-- `selectChain(chainId)` resolves and stores the deployment for a chain so downstream calls (invoices, payouts, claims, etc.) can omit chain/deployment identifiers.
-- `getSelectedDeployment()` returns the cached deployment (or `undefined` if none was selected yet).
-- `getAccountBalanceSummary({ chainId, baseCurrency })` retrieves balances; `baseCurrency` must be a value from `FiatCurrency`.
-- `getAssetBalances({ chainId?, baseCurrency, ...filters })` returns paginated asset balances with optional sorting/filtering by asset id or balance.
-- `getDeploymentByChain(chainId, accountDetails?)` resolves the `AccountDeploymentDto` for the requested chain without affecting the cached selection (pass cached account details to avoid re-fetching).
+Each API key is scoped to a single account. The SDK resolves and caches the account internally; you never need to pass `accountId` to any method.
 
-Each API key is scoped to a single account, so the SDK auto-selects it internally and never requires an `accountId`.
+## Account & Deployment Management
 
-## Currencies & Payouts
-- `getCurrencies()` returns the list of supported currencies (native coins have `address === null`).
-- `getNativeCurrency(chainId)` returns the native coin entry for a chain (i.e., the currency with `address === null`).
-- `findCurrencyBySymbol({ symbol, chainId? })` searches currencies by ticker symbol (optionally constrained by chain, or falling back to the selected chain if one is cached); throws if zero or multiple matches exist.
-- `createPayout({ currencyId, amount, recipient, ... })` creates a payout request and enqueues a multisig operation for the selected chain (optionally override via `chainId`; amount is passed through as-is to the REST API).
-- `getPayouts({ ...filters, chainId? })` lists payouts with rich filtering (status, creator, address, etc.).
-- `getPayout({ payoutId, chainId? })` retrieves on-chain and API metadata for a specific payout.
-- `updatePayout({ payoutId, ...patch, chainId? })` patches tracking or callback metadata without re-creating the payout.
-- `getDeploymentQueue({ chainId?, ... })` fetches pending operations for signature/execution.
-- `submitOperationSignature({ operationId, signature, chainId? })` uploads an off-chain signature for an operation.
+```ts
+// Fetch account details (account metadata + deployments)
+const accountDetails = await client.getAccount();
 
-## Invoice Management
-- `getInvoices({ ...filters, chainId? })` paginates invoices by status, date range, currency, or tracking ID.
-- `getInvoice({ invoiceId, chainId? })` returns the full invoice details payload.
-- `createInvoice({ requestedAmount, currencyIds, ... , chainId? })` creates an invoice for a chain/currency pair with optional callbacks.
-- `updateInvoice({ invoiceId, ...patch, chainId? })` updates request amount, callback URLs, currency selections, or status (e.g., to cancel an invoice, set `status: InvoiceStatus.Cancelled`).
+// Resolve deployments
+const deployments = await client.getDeployments(accountDetails);
 
-## Transactions & Claims
-- `getTransactions({ ...filters, chainId? })` exposes the transaction ledger with filters for operation type, status, currency, block hash, etc.
-- `getTransaction({ transactionId, chainId? })` hydrates a specific transaction with decoded metadata.
-- `getClaims({ ...filters, chainId? })` lists claimable deposits grouped by invoice and currency.
-- `getClaimableCurrencies(chainId?)` surfaces currencies that currently have claimable balances.
-- On-chain claim broadcasting is app-controlled; use `MultisigBlockchainClient.buildClaimCalldata` (see `examples/claim-deposits.ts`) to assemble calldata for `MultiSigWallet.claim`/`claimTo`, then broadcast the transaction yourself.
+// Cache the deployment for a chain — subsequent chain-scoped calls omit chainId
+const deployment = await client.selectChain(1);
 
-## Blockchain Client & Builders
-- `MultisigBlockchainClient` (in `src/blockchain`) encapsulates RPC access for multisig operations.
-- `createExecuteTypedData({ contractAddress, operation, domainOverride? })` returns the EIP-712 payload ready for `signTypedData`.
-- `buildExecuteTransaction({ contractAddress, operations })` builds a `MultiSigWallet.execute` transaction (single or batch) using queue operations.
-- `buildClaimCalldata({ erc20, depositAccountIds, to? })` generates calldata for `claim`/`claimTo` functions.
+// Retrieve the cached deployment without selecting a new one
+const cached = client.getSelectedDeployment();
 
-The lower-level builders in `src/utils/transactions` are also exported if you want to construct transactions without instantiating a client. This separation keeps API usage decoupled from blockchain access so the blockchain client can be used independently of how requests are authenticated.
+// Resolve a specific deployment without affecting the cache
+const sepolia = await client.getDeploymentByChain(11155111);
+```
+
+## Contract ABI
+
+`getContractAbi` fetches the multisig contract ABI for the selected deployment. The contract version (v1.0.0, v1.1.0, …) is auto-detected from the deployment and determines the signature packing format used by `submitOperationSignature`. The result is cached in memory; pass `abiCacheDir` at construction to also persist it to disk across restarts.
+
+```ts
+// Uses the version associated with the selected deployment (call selectChain first)
+const contractAbi = await client.getContractAbi();
+
+// Or request a specific version explicitly
+const contractAbi = await client.getContractAbi('1.0.0');
+```
+
+Pass the result directly to `MultisigBlockchainClient` or `TronMultisigBlockchainClient`.
+
+## Balances & Assets
+
+```ts
+import { FiatCurrency, AssetSortField, SortOrder } from '@b2binpay/defi-sdk';
+
+// Fiat-converted totals for a chain
+const summary = await client.getAccountBalanceSummary({ chainId: 1, baseCurrency: FiatCurrency.Usd });
+
+// Paginated asset balances
+const assets = await client.getAssetBalances({
+  chainId: 1,
+  baseCurrency: FiatCurrency.Usd,
+  sortField: AssetSortField.Balance,
+  sortOrder: SortOrder.Desc,
+  pageSize: 20,
+});
+```
+
+## Currencies
+
+```ts
+// All supported currencies on all chains
+const currencies = await client.getCurrencies();
+
+// Native coin for a chain (address === null)
+const eth = await client.getNativeCurrency(1);
+
+// Lookup by ticker (throws if zero or multiple matches)
+const usdt = await client.findCurrencyBySymbol({ symbol: 'USDT', chainId: 1 });
+```
+
+> **Note (TRON):** On TRON, `getCurrencies()` may return stale EVM-format entries. Use `getNativeCurrency(chainId)` to get TRX reliably.
+
+## Invoices
+
+```ts
+import { InvoiceStatus } from '@b2binpay/defi-sdk';
+
+// Create
+const invoice = await client.createInvoice({
+  requestedAmount: '100',
+  currencyIds: [usdt.id],
+  callbackUrl: 'https://merchant.example/webhook',
+  trackingId: 'order-42',
+  // chainId: 1  — uses selected chain if omitted
+});
+
+// List with filters
+const open = await client.getInvoices({
+  statuses: [InvoiceStatus.Created],
+  pageSize: 20,
+  createdFrom: new Date('2024-01-01'),
+});
+
+// Fetch details
+const details = await client.getInvoice({ invoiceId: invoice.id });
+
+// Update (cancel, patch amount or callback URL)
+await client.updateInvoice({
+  invoiceId: invoice.id,
+  status: InvoiceStatus.Cancelled,
+});
+```
+
+## Payouts
+
+```ts
+import { PayoutStatus } from '@b2binpay/defi-sdk';
+
+// Create — enqueues a multisig operation
+const payout = await client.createPayout({
+  currencyId: usdt.id,
+  amount: '50',
+  recipient: '0xRecipientAddress',
+  trackingId: 'payout-001',
+  callbackUrl: 'https://merchant.example/webhook',
+});
+
+// List
+const payouts = await client.getPayouts({ statuses: [PayoutStatus.Created] });
+
+// Fetch with on-chain metadata
+const details = await client.getPayout({ payoutId: payout.id });
+
+// Update metadata
+await client.updatePayout({ payoutId: payout.id, trackingId: 'payout-001-v2' });
+```
+
+## Deployment Queue & Signatures
+
+```ts
+import { QueueOperationStatus } from '@b2binpay/defi-sdk';
+
+// Fetch pending/ready operations
+const queue = await client.getDeploymentQueue({});
+const pending = queue.items.filter((op) => op.status === QueueOperationStatus.Pending);
+
+// Submit a signature (raw ECDSA hex — packed automatically by the SDK)
+await client.submitOperationSignature({
+  operationId: operation.executeOperationId,
+  signature: rawSignature,
+  signerAddress: account.address, // required for v1.1.0 contracts
+});
+```
+
+> **Signature packing:** The SDK automatically packs signatures to the format expected by the contract version. For v1.1.0 contracts, `signerAddress` is required. Pass the raw ECDSA hex from `signTypedData` — do not pre-pack.
+
+## Transactions
+
+```ts
+import { TransactionOperationType } from '@b2binpay/defi-sdk';
+
+const txList = await client.getTransactions({
+  operationTypes: [TransactionOperationType.Payout],
+  pageSize: 20,
+});
+
+const tx = await client.getTransaction({ transactionId: txList.items[0].id });
+console.log('Claimed:', tx.isClaimed);
+```
+
+## Claims
+
+```ts
+// List claimable deposits
+const claims = await client.getClaims({ pageSize: 50 });
+
+// Currencies with claimable balances
+const claimable = await client.getClaimableCurrencies();
+```
+
+Broadcasting claim transactions is done off-chain through `MultisigBlockchainClient.buildClaimCalldata` (EVM) or `TronMultisigBlockchainClient.buildClaimTransaction` (TRON). See [`examples/claim-deposits.ts`](../examples/claim-deposits.ts) and [`examples/tron-claim-deposits.ts`](../examples/tron-claim-deposits.ts).
 
 ## Error Handling
-All generated API methods throw `ResponseError` when the server responds with non-2xx status codes. Catch these errors to read the JSON body for additional context, as demonstrated in `examples/get-account-info.ts`.
 
-## Validation Helpers
-Use `validateAddress({ address, networkChainId, currency, assets })` from `src/utils/validation` (re-exported via `@b2binpay/defi-sdk`) before submitting payouts or invoices. The helper enforces checksum address formatting, verifies currency/network combinations, and ensures the currency is part of the provided asset list, returning `{ isValid, errors, normalizedAddress }`.
+All API methods throw `ResponseError` on non-2xx responses. Parse the response body for details:
+
+```ts
+import { ResponseError } from '@b2binpay/defi-sdk';
+
+try {
+  await client.createPayout({ ... });
+} catch (err) {
+  if (err instanceof ResponseError) {
+    const body = await err.response.json();
+    console.error('API error:', body);
+  }
+  throw err;
+}
+```

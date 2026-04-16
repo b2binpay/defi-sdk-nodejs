@@ -20,7 +20,7 @@ import { mapValues } from '../runtime';
  */
 export interface CurrencyResponseDto {
     /**
-     * The unique ID of the currency, ("{chainId}-{contractAddress}")
+     * The unique ID of the currency, ("{chainId}" or "{chainId}-{contractAddress}")
      * @type {string}
      * @memberof CurrencyResponseDto
      */
@@ -67,6 +67,12 @@ export interface CurrencyResponseDto {
      * @memberof CurrencyResponseDto
      */
     isVerified: boolean;
+    /**
+     * Token logo URL from CoinMarketCap CDN
+     * @type {string}
+     * @memberof CurrencyResponseDto
+     */
+    logoUrl: string | null;
 }
 
 /**
@@ -81,6 +87,7 @@ export function instanceOfCurrencyResponseDto(value: object): value is CurrencyR
     if (!('decimals' in value) || value['decimals'] === undefined) return false;
     if (!('isScam' in value) || value['isScam'] === undefined) return false;
     if (!('isVerified' in value) || value['isVerified'] === undefined) return false;
+    if (!('logoUrl' in value) || value['logoUrl'] === undefined) return false;
     return true;
 }
 
@@ -102,6 +109,7 @@ export function CurrencyResponseDtoFromJSONTyped(json: any, ignoreDiscriminator:
         'decimals': json['decimals'],
         'isScam': json['isScam'],
         'isVerified': json['isVerified'],
+        'logoUrl': json['logoUrl'],
     };
 }
 
@@ -124,6 +132,7 @@ export function CurrencyResponseDtoToJSONTyped(value?: CurrencyResponseDto | nul
         'decimals': value['decimals'],
         'isScam': value['isScam'],
         'isVerified': value['isVerified'],
+        'logoUrl': value['logoUrl'],
     };
 }
 

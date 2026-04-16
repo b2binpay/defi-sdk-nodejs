@@ -1,7 +1,6 @@
-import type { Address, Hex, PublicClient, SignTypedDataParameters, TypedData, TypedDataDomain } from 'viem';
+import type { Abi, Address, Hex, PublicClient, SignTypedDataParameters, TypedData, TypedDataDomain } from 'viem';
 import type { Account } from 'viem/accounts';
 import type { CallDto, QueueOperationResponseDto } from '../../../generated-contracts';
-import { MULTI_SIG_WALLET_ABI } from '../../abi';
 
 export const EXECUTE_EIP712_TYPES = {
   Execute: [
@@ -63,6 +62,7 @@ export interface CreateExecuteTypedDataParams {
   operation: QueueOperationResponseDto;
   contractAddress: Address;
   publicClient: PublicClient;
+  abi: Abi;
   domainOverride?: TypedDataDomain;
 }
 
@@ -81,6 +81,7 @@ export async function createExecuteTypedData(params: CreateExecuteTypedDataParam
     (await fetchExecuteTypedDataDomain({
       contractAddress: params.contractAddress,
       publicClient: params.publicClient,
+      abi: params.abi,
     }));
 
   return buildExecuteTypedData({ domain, message });
@@ -89,21 +90,22 @@ export async function createExecuteTypedData(params: CreateExecuteTypedDataParam
 export interface FetchExecuteTypedDataDomainParams {
   contractAddress: Address;
   publicClient: PublicClient;
+  abi: Abi;
 }
 
 export async function fetchExecuteTypedDataDomain(params: FetchExecuteTypedDataDomainParams): Promise<TypedDataDomain> {
-  const { contractAddress, publicClient } = params;
+  const { contractAddress, publicClient, abi } = params;
 
-  const domainTuple = await publicClient.readContract({
+  const domainTuple = (await publicClient.readContract({
     address: contractAddress,
-    abi: MULTI_SIG_WALLET_ABI,
+    abi,
     functionName: 'eip712Domain',
-  });
+  })) as readonly [Hex, string, string, bigint, Address, Hex, readonly bigint[]];
 
-  const domainName = domainTuple[1] as string;
-  const domainVersion = domainTuple[2] as string;
-  const domainChainId = domainTuple[3] as bigint;
-  const verifyingContract = domainTuple[4] as Address;
+  const domainName = domainTuple[1];
+  const domainVersion = domainTuple[2];
+  const domainChainId = domainTuple[3];
+  const verifyingContract = domainTuple[4];
 
   return {
     name: domainName,

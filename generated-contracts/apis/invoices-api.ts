@@ -16,29 +16,20 @@
 import * as runtime from '../runtime';
 import type {
   CreateInvoiceDto,
-  CurrenciesControllerFindAllV1IsNativeParameter,
   InvoiceDetailsDto,
   InvoiceResponseDto,
   InvoicesResponseDto,
-  PublicInvoiceResponseDto,
-  PublicTransactionListResponseDto,
   UpdateInvoiceDto,
 } from '../models/index';
 import {
     CreateInvoiceDtoFromJSON,
     CreateInvoiceDtoToJSON,
-    CurrenciesControllerFindAllV1IsNativeParameterFromJSON,
-    CurrenciesControllerFindAllV1IsNativeParameterToJSON,
     InvoiceDetailsDtoFromJSON,
     InvoiceDetailsDtoToJSON,
     InvoiceResponseDtoFromJSON,
     InvoiceResponseDtoToJSON,
     InvoicesResponseDtoFromJSON,
     InvoicesResponseDtoToJSON,
-    PublicInvoiceResponseDtoFromJSON,
-    PublicInvoiceResponseDtoToJSON,
-    PublicTransactionListResponseDtoFromJSON,
-    PublicTransactionListResponseDtoToJSON,
     UpdateInvoiceDtoFromJSON,
     UpdateInvoiceDtoToJSON,
 } from '../models/index';
@@ -73,27 +64,6 @@ export interface InvoicesControllerUpdateInvoiceV1Request {
     deploymentId: string;
     invoiceId: string;
     updateInvoiceDto: UpdateInvoiceDto;
-}
-
-export interface PublicInvoicesControllerGetPublicInvoiceTransactionsV1Request {
-    publicId: string;
-    txHash?: string;
-    currencyIds?: Array<string>;
-    statuses?: Array<PublicInvoicesControllerGetPublicInvoiceTransactionsV1StatusesEnum>;
-    operationTypes?: Array<PublicInvoicesControllerGetPublicInvoiceTransactionsV1OperationTypesEnum>;
-    createdFrom?: string;
-    createdTo?: string;
-    page?: number;
-    pageSize?: number;
-    id?: string;
-    updatedFrom?: string;
-    updatedTo?: string;
-    operationId?: string;
-    isClaimed?: CurrenciesControllerFindAllV1IsNativeParameter;
-}
-
-export interface PublicInvoicesControllerGetPublicInvoiceV1Request {
-    publicId: string;
 }
 
 /**
@@ -357,144 +327,6 @@ export class InvoicesApi extends runtime.BaseAPI {
         return await response.value();
     }
 
-    /**
-     * Get list of transactions for a public invoice without authentication
-     * Get public invoice transactions
-     */
-    async publicInvoicesControllerGetPublicInvoiceTransactionsV1Raw(requestParameters: PublicInvoicesControllerGetPublicInvoiceTransactionsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicTransactionListResponseDto>> {
-        if (requestParameters['publicId'] == null) {
-            throw new runtime.RequiredError(
-                'publicId',
-                'Required parameter "publicId" was null or undefined when calling publicInvoicesControllerGetPublicInvoiceTransactionsV1().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['txHash'] != null) {
-            queryParameters['txHash'] = requestParameters['txHash'];
-        }
-
-        if (requestParameters['currencyIds'] != null) {
-            queryParameters['currencyIds'] = requestParameters['currencyIds'];
-        }
-
-        if (requestParameters['statuses'] != null) {
-            queryParameters['statuses'] = requestParameters['statuses'];
-        }
-
-        if (requestParameters['operationTypes'] != null) {
-            queryParameters['operationTypes'] = requestParameters['operationTypes'];
-        }
-
-        if (requestParameters['createdFrom'] != null) {
-            queryParameters['createdFrom'] = requestParameters['createdFrom'];
-        }
-
-        if (requestParameters['createdTo'] != null) {
-            queryParameters['createdTo'] = requestParameters['createdTo'];
-        }
-
-        if (requestParameters['page'] != null) {
-            queryParameters['page'] = requestParameters['page'];
-        }
-
-        if (requestParameters['pageSize'] != null) {
-            queryParameters['pageSize'] = requestParameters['pageSize'];
-        }
-
-        if (requestParameters['id'] != null) {
-            queryParameters['id'] = requestParameters['id'];
-        }
-
-        if (requestParameters['updatedFrom'] != null) {
-            queryParameters['updatedFrom'] = requestParameters['updatedFrom'];
-        }
-
-        if (requestParameters['updatedTo'] != null) {
-            queryParameters['updatedTo'] = requestParameters['updatedTo'];
-        }
-
-        if (requestParameters['operationId'] != null) {
-            queryParameters['operationId'] = requestParameters['operationId'];
-        }
-
-        if (requestParameters['isClaimed'] != null) {
-            queryParameters['isClaimed'] = requestParameters['isClaimed'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.apiKey) {
-            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
-        }
-
-
-        let urlPath = `/api/v1/public/invoices/{publicId}/transactions`;
-        urlPath = urlPath.replace(`{${"publicId"}}`, encodeURIComponent(String(requestParameters['publicId'])));
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => PublicTransactionListResponseDtoFromJSON(jsonValue));
-    }
-
-    /**
-     * Get list of transactions for a public invoice without authentication
-     * Get public invoice transactions
-     */
-    async publicInvoicesControllerGetPublicInvoiceTransactionsV1(requestParameters: PublicInvoicesControllerGetPublicInvoiceTransactionsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicTransactionListResponseDto> {
-        const response = await this.publicInvoicesControllerGetPublicInvoiceTransactionsV1Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     * Get public invoice information without authentication
-     * Get public invoice details
-     */
-    async publicInvoicesControllerGetPublicInvoiceV1Raw(requestParameters: PublicInvoicesControllerGetPublicInvoiceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PublicInvoiceResponseDto>> {
-        if (requestParameters['publicId'] == null) {
-            throw new runtime.RequiredError(
-                'publicId',
-                'Required parameter "publicId" was null or undefined when calling publicInvoicesControllerGetPublicInvoiceV1().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        if (this.configuration && this.configuration.apiKey) {
-            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
-        }
-
-
-        let urlPath = `/api/v1/public/invoices/{publicId}`;
-        urlPath = urlPath.replace(`{${"publicId"}}`, encodeURIComponent(String(requestParameters['publicId'])));
-
-        const response = await this.request({
-            path: urlPath,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => PublicInvoiceResponseDtoFromJSON(jsonValue));
-    }
-
-    /**
-     * Get public invoice information without authentication
-     * Get public invoice details
-     */
-    async publicInvoicesControllerGetPublicInvoiceV1(requestParameters: PublicInvoicesControllerGetPublicInvoiceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<PublicInvoiceResponseDto> {
-        const response = await this.publicInvoicesControllerGetPublicInvoiceV1Raw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
 }
 
 /**
@@ -523,25 +355,3 @@ export const InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum = {
     Unresolved: 'UNRESOLVED'
 } as const;
 export type InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum = typeof InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum[keyof typeof InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum];
-/**
- * @export
- */
-export const PublicInvoicesControllerGetPublicInvoiceTransactionsV1StatusesEnum = {
-    Pending: 'PENDING',
-    Executed: 'EXECUTED',
-    Confirmed: 'CONFIRMED',
-    Failed: 'FAILED'
-} as const;
-export type PublicInvoicesControllerGetPublicInvoiceTransactionsV1StatusesEnum = typeof PublicInvoicesControllerGetPublicInvoiceTransactionsV1StatusesEnum[keyof typeof PublicInvoicesControllerGetPublicInvoiceTransactionsV1StatusesEnum];
-/**
- * @export
- */
-export const PublicInvoicesControllerGetPublicInvoiceTransactionsV1OperationTypesEnum = {
-    Invoice: 'invoice',
-    DirectDeposit: 'direct_deposit',
-    SetConfig: 'set_config',
-    Claim: 'claim',
-    Payout: 'payout',
-    Reject: 'reject'
-} as const;
-export type PublicInvoicesControllerGetPublicInvoiceTransactionsV1OperationTypesEnum = typeof PublicInvoicesControllerGetPublicInvoiceTransactionsV1OperationTypesEnum[keyof typeof PublicInvoicesControllerGetPublicInvoiceTransactionsV1OperationTypesEnum];

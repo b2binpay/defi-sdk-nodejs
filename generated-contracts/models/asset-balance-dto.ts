@@ -28,7 +28,7 @@ import {
  */
 export interface AssetBalanceDto {
     /**
-     * Asset currency information
+     * 
      * @type {CurrencyResponseDto}
      * @memberof AssetBalanceDto
      */

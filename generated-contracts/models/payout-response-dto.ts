@@ -34,7 +34,7 @@ export interface PayoutResponseDto {
      */
     id: string;
     /**
-     * The unique ID of the currency, ("{chainId}-{contractAddress}")
+     * The unique ID of the currency, ("{chainId}" or "{chainId}-{contractAddress}")
      * @type {string}
      * @memberof PayoutResponseDto
      */

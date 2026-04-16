@@ -57,14 +57,14 @@ export interface QueueOperationsControllerDeleteOperationV1Request {
 
 export interface QueueOperationsControllerGetDeploymentQueueV1Request {
     deploymentId: string;
-    statuses?: Array<QueueOperationsControllerGetDeploymentQueueV1StatusesEnum>;
-    operationTypes?: Array<QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum>;
-    createdAtFrom?: Date;
-    createdAtTo?: Date;
-    createdBy?: string;
-    sortOrder?: QueueOperationsControllerGetDeploymentQueueV1SortOrderEnum;
     page?: number;
     pageSize?: number;
+    statuses?: Array<QueueOperationsControllerGetDeploymentQueueV1StatusesEnum>;
+    operationTypes?: Array<QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum>;
+    createdBy?: string;
+    sortOrder?: QueueOperationsControllerGetDeploymentQueueV1SortOrderEnum;
+    createdAtFrom?: string;
+    createdAtTo?: string;
 }
 
 export interface QueueOperationsControllerGetOperationByIdV1Request {
@@ -259,20 +259,20 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
         if (requestParameters['statuses'] != null) {
             queryParameters['statuses'] = requestParameters['statuses'];
         }
 
         if (requestParameters['operationTypes'] != null) {
             queryParameters['operationTypes'] = requestParameters['operationTypes'];
-        }
-
-        if (requestParameters['createdAtFrom'] != null) {
-            queryParameters['createdAtFrom'] = (requestParameters['createdAtFrom'] as any).toISOString();
-        }
-
-        if (requestParameters['createdAtTo'] != null) {
-            queryParameters['createdAtTo'] = (requestParameters['createdAtTo'] as any).toISOString();
         }
 
         if (requestParameters['createdBy'] != null) {
@@ -283,12 +283,12 @@ export class QueueOperationsApi extends runtime.BaseAPI {
             queryParameters['sortOrder'] = requestParameters['sortOrder'];
         }
 
-        if (requestParameters['page'] != null) {
-            queryParameters['page'] = requestParameters['page'];
+        if (requestParameters['createdAtFrom'] != null) {
+            queryParameters['createdAtFrom'] = requestParameters['createdAtFrom'];
         }
 
-        if (requestParameters['pageSize'] != null) {
-            queryParameters['pageSize'] = requestParameters['pageSize'];
+        if (requestParameters['createdAtTo'] != null) {
+            queryParameters['createdAtTo'] = requestParameters['createdAtTo'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -501,7 +501,6 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 export const QueueOperationsControllerGetDeploymentQueueV1StatusesEnum = {
     Pending: 'PENDING',
     Ready: 'READY',
-    Executing: 'EXECUTING',
     Executed: 'EXECUTED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
@@ -513,7 +512,8 @@ export type QueueOperationsControllerGetDeploymentQueueV1StatusesEnum = typeof Q
 export const QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum = {
     MultisigConfigChange: 'MULTISIG_CONFIG_CHANGE',
     Reject: 'REJECT',
-    Payout: 'PAYOUT'
+    Payout: 'PAYOUT',
+    DappTransaction: 'DAPP_TRANSACTION'
 } as const;
 export type QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum = typeof QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum[keyof typeof QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum];
 /**

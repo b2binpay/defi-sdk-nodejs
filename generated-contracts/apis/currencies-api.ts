@@ -166,7 +166,8 @@ export class CurrenciesApi extends runtime.BaseAPI {
  */
 export const CurrenciesControllerFindAllV1SortByEnum = {
     CreatedAt: 'createdAt',
-    UpdatedAt: 'updatedAt'
+    UpdatedAt: 'updatedAt',
+    CmcId: 'cmcId'
 } as const;
 export type CurrenciesControllerFindAllV1SortByEnum = typeof CurrenciesControllerFindAllV1SortByEnum[keyof typeof CurrenciesControllerFindAllV1SortByEnum];
 /**

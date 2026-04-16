@@ -28,59 +28,17 @@ import {
  */
 export interface InvoiceResponseDto {
     /**
-     * Entity unique identifier
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    id: string;
-    /**
-     * Invoice public identifier (Snowflake ID)
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    publicId: string;
-    /**
-     * Invoice payment address
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    invoiceAddress: string;
-    /**
      * Requested payment amount
      * @type {string}
      * @memberof InvoiceResponseDto
      */
     requestedAmount: string | null;
     /**
-     * Paid amount in crypto; null for multi-currency invoices (see paidAmountBaseCurrency)
-     * @type {string}
+     * Available currencies for this invoice
+     * @type {Array<CurrencyResponseDto>}
      * @memberof InvoiceResponseDto
      */
-    paidAmount: string | null;
-    /**
-     * Paid amount converted to user base currency (2 decimals) for multi-currency invoices; null otherwise
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    paidAmountBaseCurrency: string | null;
-    /**
-     * Invoice status
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    status: InvoiceResponseDtoStatusEnum;
-    /**
-     * Tracking identifier
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    trackingId: string | null;
-    /**
-     * Callback URL for notifications
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    callbackUrl: string | null;
+    availableCurrencies: Array<CurrencyResponseDto>;
     /**
      * Custom payment page button URL
      * @type {string}
@@ -100,29 +58,71 @@ export interface InvoiceResponseDto {
      */
     paymentPageUrl: string;
     /**
+     * Invoice status
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    status: InvoiceResponseDtoStatusEnum;
+    /**
      * Creation timestamp
      * @type {string}
      * @memberof InvoiceResponseDto
      */
     createdAt: string;
     /**
-     * Last update timestamp
-     * @type {string}
-     * @memberof InvoiceResponseDto
-     */
-    updatedAt: string;
-    /**
-     * Available currencies for this invoice
-     * @type {Array<CurrencyResponseDto>}
-     * @memberof InvoiceResponseDto
-     */
-    availableCurrencies: Array<CurrencyResponseDto>;
-    /**
      * Whether the entity relates to Tron (TVM)
      * @type {boolean}
      * @memberof InvoiceResponseDto
      */
     isTron: boolean;
+    /**
+     * Entity unique identifier
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    id: string;
+    /**
+     * Invoice public identifier (Snowflake ID)
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    publicId: string;
+    /**
+     * Invoice payment address
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    invoiceAddress: string;
+    /**
+     * Paid amount in crypto; null for multi-currency invoices (see paidAmountBaseCurrency)
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    paidAmount: string | null;
+    /**
+     * Paid amount converted to user base currency (2 decimals) for multi-currency invoices; null otherwise
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    paidAmountBaseCurrency: string | null;
+    /**
+     * Tracking identifier
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    trackingId: string | null;
+    /**
+     * Callback URL for notifications
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    callbackUrl: string | null;
+    /**
+     * Last update timestamp
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    updatedAt: string;
 }
 
 
@@ -141,22 +141,22 @@ export type InvoiceResponseDtoStatusEnum = typeof InvoiceResponseDtoStatusEnum[k
  * Check if a given object implements the InvoiceResponseDto interface.
  */
 export function instanceOfInvoiceResponseDto(value: object): value is InvoiceResponseDto {
-    if (!('id' in value) || value['id'] === undefined) return false;
-    if (!('publicId' in value) || value['publicId'] === undefined) return false;
-    if (!('invoiceAddress' in value) || value['invoiceAddress'] === undefined) return false;
     if (!('requestedAmount' in value) || value['requestedAmount'] === undefined) return false;
-    if (!('paidAmount' in value) || value['paidAmount'] === undefined) return false;
-    if (!('paidAmountBaseCurrency' in value) || value['paidAmountBaseCurrency'] === undefined) return false;
-    if (!('status' in value) || value['status'] === undefined) return false;
-    if (!('trackingId' in value) || value['trackingId'] === undefined) return false;
-    if (!('callbackUrl' in value) || value['callbackUrl'] === undefined) return false;
+    if (!('availableCurrencies' in value) || value['availableCurrencies'] === undefined) return false;
     if (!('paymentPageButtonUrl' in value) || value['paymentPageButtonUrl'] === undefined) return false;
     if (!('paymentPageButtonText' in value) || value['paymentPageButtonText'] === undefined) return false;
     if (!('paymentPageUrl' in value) || value['paymentPageUrl'] === undefined) return false;
+    if (!('status' in value) || value['status'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
-    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
-    if (!('availableCurrencies' in value) || value['availableCurrencies'] === undefined) return false;
     if (!('isTron' in value) || value['isTron'] === undefined) return false;
+    if (!('id' in value) || value['id'] === undefined) return false;
+    if (!('publicId' in value) || value['publicId'] === undefined) return false;
+    if (!('invoiceAddress' in value) || value['invoiceAddress'] === undefined) return false;
+    if (!('paidAmount' in value) || value['paidAmount'] === undefined) return false;
+    if (!('paidAmountBaseCurrency' in value) || value['paidAmountBaseCurrency'] === undefined) return false;
+    if (!('trackingId' in value) || value['trackingId'] === undefined) return false;
+    if (!('callbackUrl' in value) || value['callbackUrl'] === undefined) return false;
+    if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     return true;
 }
 
@@ -170,22 +170,22 @@ export function InvoiceResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
     }
     return {
         
-        'id': json['id'],
-        'publicId': json['publicId'],
-        'invoiceAddress': json['invoiceAddress'],
         'requestedAmount': json['requestedAmount'],
-        'paidAmount': json['paidAmount'],
-        'paidAmountBaseCurrency': json['paidAmountBaseCurrency'],
-        'status': json['status'],
-        'trackingId': json['trackingId'],
-        'callbackUrl': json['callbackUrl'],
+        'availableCurrencies': ((json['availableCurrencies'] as Array<any>).map(CurrencyResponseDtoFromJSON)),
         'paymentPageButtonUrl': json['paymentPageButtonUrl'],
         'paymentPageButtonText': json['paymentPageButtonText'],
         'paymentPageUrl': json['paymentPageUrl'],
+        'status': json['status'],
         'createdAt': json['createdAt'],
-        'updatedAt': json['updatedAt'],
-        'availableCurrencies': ((json['availableCurrencies'] as Array<any>).map(CurrencyResponseDtoFromJSON)),
         'isTron': json['isTron'],
+        'id': json['id'],
+        'publicId': json['publicId'],
+        'invoiceAddress': json['invoiceAddress'],
+        'paidAmount': json['paidAmount'],
+        'paidAmountBaseCurrency': json['paidAmountBaseCurrency'],
+        'trackingId': json['trackingId'],
+        'callbackUrl': json['callbackUrl'],
+        'updatedAt': json['updatedAt'],
     };
 }
 
@@ -200,22 +200,22 @@ export function InvoiceResponseDtoToJSONTyped(value?: InvoiceResponseDto | null,
 
     return {
         
-        'id': value['id'],
-        'publicId': value['publicId'],
-        'invoiceAddress': value['invoiceAddress'],
         'requestedAmount': value['requestedAmount'],
-        'paidAmount': value['paidAmount'],
-        'paidAmountBaseCurrency': value['paidAmountBaseCurrency'],
-        'status': value['status'],
-        'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
+        'availableCurrencies': ((value['availableCurrencies'] as Array<any>).map(CurrencyResponseDtoToJSON)),
         'paymentPageButtonUrl': value['paymentPageButtonUrl'],
         'paymentPageButtonText': value['paymentPageButtonText'],
         'paymentPageUrl': value['paymentPageUrl'],
+        'status': value['status'],
         'createdAt': value['createdAt'],
-        'updatedAt': value['updatedAt'],
-        'availableCurrencies': ((value['availableCurrencies'] as Array<any>).map(CurrencyResponseDtoToJSON)),
         'isTron': value['isTron'],
+        'id': value['id'],
+        'publicId': value['publicId'],
+        'invoiceAddress': value['invoiceAddress'],
+        'paidAmount': value['paidAmount'],
+        'paidAmountBaseCurrency': value['paidAmountBaseCurrency'],
+        'trackingId': value['trackingId'],
+        'callbackUrl': value['callbackUrl'],
+        'updatedAt': value['updatedAt'],
     };
 }
 

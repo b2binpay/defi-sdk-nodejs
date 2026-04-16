@@ -46,7 +46,7 @@ export interface DeploymentQueueResponseDto {
      */
     pageSize: number;
     /**
-     * Array of queue operations
+     * 
      * @type {Array<QueueOperationResponseDto>}
      * @memberof DeploymentQueueResponseDto
      */

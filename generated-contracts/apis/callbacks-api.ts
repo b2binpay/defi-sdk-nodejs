@@ -16,16 +16,26 @@
 import * as runtime from '../runtime';
 import type {
   GetCallbacksResponseDto,
+  ResendCallbacksBodyDto,
+  ResendCallbacksResponseDto,
 } from '../models/index';
 import {
     GetCallbacksResponseDtoFromJSON,
     GetCallbacksResponseDtoToJSON,
+    ResendCallbacksBodyDtoFromJSON,
+    ResendCallbacksBodyDtoToJSON,
+    ResendCallbacksResponseDtoFromJSON,
+    ResendCallbacksResponseDtoToJSON,
 } from '../models/index';
 
 export interface CallbacksControllerGetCallbacksV1Request {
     operationId: string;
     page?: number;
     pageSize?: number;
+}
+
+export interface CallbacksControllerResendCallbacksV1Request {
+    resendCallbacksBodyDto: ResendCallbacksBodyDto;
 }
 
 /**
@@ -84,6 +94,51 @@ export class CallbacksApi extends runtime.BaseAPI {
      */
     async callbacksControllerGetCallbacksV1(requestParameters: CallbacksControllerGetCallbacksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetCallbacksResponseDto> {
         const response = await this.callbacksControllerGetCallbacksV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Re-queue failed callbacks for delivery by resetting their status. Only FAILED callbacks owned by the current user are eligible.
+     * Resend failed callbacks
+     */
+    async callbacksControllerResendCallbacksV1Raw(requestParameters: CallbacksControllerResendCallbacksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ResendCallbacksResponseDto>> {
+        if (requestParameters['resendCallbacksBodyDto'] == null) {
+            throw new runtime.RequiredError(
+                'resendCallbacksBodyDto',
+                'Required parameter "resendCallbacksBodyDto" was null or undefined when calling callbacksControllerResendCallbacksV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/callbacks/resend`;
+
+        const response = await this.request({
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ResendCallbacksBodyDtoToJSON(requestParameters['resendCallbacksBodyDto']),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ResendCallbacksResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Re-queue failed callbacks for delivery by resetting their status. Only FAILED callbacks owned by the current user are eligible.
+     * Resend failed callbacks
+     */
+    async callbacksControllerResendCallbacksV1(requestParameters: CallbacksControllerResendCallbacksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ResendCallbacksResponseDto> {
+        const response = await this.callbacksControllerResendCallbacksV1Raw(requestParameters, initOverrides);
         return await response.value();
     }
 

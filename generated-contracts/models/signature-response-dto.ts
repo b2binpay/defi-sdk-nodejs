@@ -28,12 +28,6 @@ import {
  */
 export interface SignatureResponseDto {
     /**
-     * Queue operation unique identifier
-     * @type {string}
-     * @memberof SignatureResponseDto
-     */
-    operationId: string;
-    /**
      * Number of signatures collected
      * @type {number}
      * @memberof SignatureResponseDto
@@ -63,18 +57,24 @@ export interface SignatureResponseDto {
      * @memberof SignatureResponseDto
      */
     signatures: Array<OperationSignatureDto>;
+    /**
+     * Queue operation unique identifier
+     * @type {string}
+     * @memberof SignatureResponseDto
+     */
+    operationId: string;
 }
 
 /**
  * Check if a given object implements the SignatureResponseDto interface.
  */
 export function instanceOfSignatureResponseDto(value: object): value is SignatureResponseDto {
-    if (!('operationId' in value) || value['operationId'] === undefined) return false;
     if (!('signaturesCollected' in value) || value['signaturesCollected'] === undefined) return false;
     if (!('signaturesRequired' in value) || value['signaturesRequired'] === undefined) return false;
     if (!('canExecute' in value) || value['canExecute'] === undefined) return false;
     if (!('userSigned' in value) || value['userSigned'] === undefined) return false;
     if (!('signatures' in value) || value['signatures'] === undefined) return false;
+    if (!('operationId' in value) || value['operationId'] === undefined) return false;
     return true;
 }
 
@@ -88,12 +88,12 @@ export function SignatureResponseDtoFromJSONTyped(json: any, ignoreDiscriminator
     }
     return {
         
-        'operationId': json['operationId'],
         'signaturesCollected': json['signaturesCollected'],
         'signaturesRequired': json['signaturesRequired'],
         'canExecute': json['canExecute'],
         'userSigned': json['userSigned'],
         'signatures': ((json['signatures'] as Array<any>).map(OperationSignatureDtoFromJSON)),
+        'operationId': json['operationId'],
     };
 }
 
@@ -108,12 +108,12 @@ export function SignatureResponseDtoToJSONTyped(value?: SignatureResponseDto | n
 
     return {
         
-        'operationId': value['operationId'],
         'signaturesCollected': value['signaturesCollected'],
         'signaturesRequired': value['signaturesRequired'],
         'canExecute': value['canExecute'],
         'userSigned': value['userSigned'],
         'signatures': ((value['signatures'] as Array<any>).map(OperationSignatureDtoToJSON)),
+        'operationId': value['operationId'],
     };
 }
 

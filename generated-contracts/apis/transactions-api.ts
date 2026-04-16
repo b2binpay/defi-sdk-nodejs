@@ -240,7 +240,8 @@ export const TransactionsControllerGetTransactionsV1OperationTypesEnum = {
     SetConfig: 'set_config',
     Claim: 'claim',
     Payout: 'payout',
-    Reject: 'reject'
+    Reject: 'reject',
+    DappTransaction: 'dapp_transaction'
 } as const;
 export type TransactionsControllerGetTransactionsV1OperationTypesEnum = typeof TransactionsControllerGetTransactionsV1OperationTypesEnum[keyof typeof TransactionsControllerGetTransactionsV1OperationTypesEnum];
 /**

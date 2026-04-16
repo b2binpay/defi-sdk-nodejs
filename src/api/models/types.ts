@@ -20,7 +20,6 @@ import type {
   TransactionInvoiceResponseDto,
   TransactionListResponseDto,
   TransactionResponseDto,
-  UserResponseDto,
 } from '../../../generated-contracts';
 
 export enum FiatCurrency {
@@ -29,7 +28,6 @@ export enum FiatCurrency {
   Cny = 'cny',
 }
 
-export type User = UserResponseDto;
 export type Account = AccountResponseDto;
 
 export interface AccountDetails {
@@ -136,12 +134,12 @@ export enum QueueOperationType {
   MultisigConfigChange = 'MULTISIG_CONFIG_CHANGE',
   Reject = 'REJECT',
   Payout = 'PAYOUT',
+  DappTransaction = 'DAPP_TRANSACTION',
 }
 
 export enum QueueOperationStatus {
   Pending = 'PENDING',
   Ready = 'READY',
-  Executing = 'EXECUTING',
   Executed = 'EXECUTED',
   Failed = 'FAILED',
   Cancelled = 'CANCELLED',
@@ -162,6 +160,7 @@ export interface ExecuteBatchOperationsResult {
   success: boolean;
 }
 
+/** @deprecated Use `operationType` to determine transaction direction instead. */
 export enum TransactionDirection {
   In = 'IN',
   Out = 'OUT',
@@ -195,6 +194,7 @@ export type Transaction = Omit<
   TransactionResponseDto,
   'direction' | 'status' | 'operationType' | 'currency' | 'invoice'
 > & {
+  /** @deprecated Use `operationType` to determine transaction direction instead. */
   direction: TransactionDirection;
   status: TransactionStatus;
   operationType: TransactionOperationType;
