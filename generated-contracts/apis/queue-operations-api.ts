@@ -12,33 +12,42 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  CreateMultisigConfigChangeOperationDto,
-  CreateRejectOperationDto,
-  DeploymentQueueResponseDto,
-  QueueOperationResponseDto,
-  SignatureResponseDto,
-  SubmitSignatureDto,
-  UpdateOperationNonceDto,
-} from '../models/index';
 import {
+    type CreateMultisigConfigChangeOperationDto,
     CreateMultisigConfigChangeOperationDtoFromJSON,
     CreateMultisigConfigChangeOperationDtoToJSON,
+} from '../models/create-multisig-config-change-operation-dto';
+import {
+    type CreateRejectOperationDto,
     CreateRejectOperationDtoFromJSON,
     CreateRejectOperationDtoToJSON,
+} from '../models/create-reject-operation-dto';
+import {
+    type DeploymentQueueResponseDto,
     DeploymentQueueResponseDtoFromJSON,
     DeploymentQueueResponseDtoToJSON,
+} from '../models/deployment-queue-response-dto';
+import {
+    type QueueOperationResponseDto,
     QueueOperationResponseDtoFromJSON,
     QueueOperationResponseDtoToJSON,
+} from '../models/queue-operation-response-dto';
+import {
+    type SignatureResponseDto,
     SignatureResponseDtoFromJSON,
     SignatureResponseDtoToJSON,
+} from '../models/signature-response-dto';
+import {
+    type SubmitSignatureDto,
     SubmitSignatureDtoFromJSON,
     SubmitSignatureDtoToJSON,
+} from '../models/submit-signature-dto';
+import {
+    type UpdateOperationNonceDto,
     UpdateOperationNonceDtoFromJSON,
     UpdateOperationNonceDtoToJSON,
-} from '../models/index';
+} from '../models/update-operation-nonce-dto';
 
 export interface QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request {
     deploymentId: string;
@@ -90,10 +99,9 @@ export interface QueueOperationsControllerUpdateOperationNonceV1Request {
 export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
-     * Create account multisig configuration change operation
-     * Create account multisig config operation
+     * Creates request options for queueOperationsControllerCreateMultisigConfigChangeOperationV1 without sending the request
      */
-    async queueOperationsControllerCreateMultisigConfigChangeOperationV1Raw(requestParameters: QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+    async queueOperationsControllerCreateMultisigConfigChangeOperationV1RequestOpts(requestParameters: QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -120,15 +128,24 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations/multisig-config`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: CreateMultisigConfigChangeOperationDtoToJSON(requestParameters['createMultisigConfigChangeOperationDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create account multisig configuration change operation
+     * Create account multisig config operation
+     */
+    async queueOperationsControllerCreateMultisigConfigChangeOperationV1Raw(requestParameters: QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerCreateMultisigConfigChangeOperationV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
     }
@@ -143,10 +160,9 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Reject operation by consuming nonce
-     * Reject operation
+     * Creates request options for queueOperationsControllerCreateRejectOperationV1 without sending the request
      */
-    async queueOperationsControllerCreateRejectOperationV1Raw(requestParameters: QueueOperationsControllerCreateRejectOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+    async queueOperationsControllerCreateRejectOperationV1RequestOpts(requestParameters: QueueOperationsControllerCreateRejectOperationV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -173,15 +189,24 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations/reject`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: CreateRejectOperationDtoToJSON(requestParameters['createRejectOperationDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Reject operation by consuming nonce
+     * Reject operation
+     */
+    async queueOperationsControllerCreateRejectOperationV1Raw(requestParameters: QueueOperationsControllerCreateRejectOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerCreateRejectOperationV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
     }
@@ -196,10 +221,9 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Delete an operation. Only the creator can delete operations in PENDING or READY status.
-     * Delete operation
+     * Creates request options for queueOperationsControllerDeleteOperationV1 without sending the request
      */
-    async queueOperationsControllerDeleteOperationV1Raw(requestParameters: QueueOperationsControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+    async queueOperationsControllerDeleteOperationV1RequestOpts(requestParameters: QueueOperationsControllerDeleteOperationV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -224,15 +248,24 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations/{operationId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"operationId"}}`, encodeURIComponent(String(requestParameters['operationId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Delete an operation. Only the creator can delete operations in PENDING or READY status.
+     * Delete operation
+     */
+    async queueOperationsControllerDeleteOperationV1Raw(requestParameters: QueueOperationsControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.queueOperationsControllerDeleteOperationV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.VoidApiResponse(response);
     }
@@ -246,10 +279,9 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get deployment operations queue
-     * Get queue
+     * Creates request options for queueOperationsControllerGetDeploymentQueueV1 without sending the request
      */
-    async queueOperationsControllerGetDeploymentQueueV1Raw(requestParameters: QueueOperationsControllerGetDeploymentQueueV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeploymentQueueResponseDto>> {
+    async queueOperationsControllerGetDeploymentQueueV1RequestOpts(requestParameters: QueueOperationsControllerGetDeploymentQueueV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -299,14 +331,23 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get deployment operations queue
+     * Get queue
+     */
+    async queueOperationsControllerGetDeploymentQueueV1Raw(requestParameters: QueueOperationsControllerGetDeploymentQueueV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeploymentQueueResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerGetDeploymentQueueV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => DeploymentQueueResponseDtoFromJSON(jsonValue));
     }
@@ -321,10 +362,9 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get detailed information about a specific operation including signature status
-     * Get operation by ID
+     * Creates request options for queueOperationsControllerGetOperationByIdV1 without sending the request
      */
-    async queueOperationsControllerGetOperationByIdV1Raw(requestParameters: QueueOperationsControllerGetOperationByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+    async queueOperationsControllerGetOperationByIdV1RequestOpts(requestParameters: QueueOperationsControllerGetOperationByIdV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -349,15 +389,24 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations/{operationId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"operationId"}}`, encodeURIComponent(String(requestParameters['operationId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get detailed information about a specific operation including signature status
+     * Get operation by ID
+     */
+    async queueOperationsControllerGetOperationByIdV1Raw(requestParameters: QueueOperationsControllerGetOperationByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerGetOperationByIdV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
     }
@@ -372,10 +421,9 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Submit signature for operation
-     * Sign operation
+     * Creates request options for queueOperationsControllerSubmitSignatureV1 without sending the request
      */
-    async queueOperationsControllerSubmitSignatureV1Raw(requestParameters: QueueOperationsControllerSubmitSignatureV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SignatureResponseDto>> {
+    async queueOperationsControllerSubmitSignatureV1RequestOpts(requestParameters: QueueOperationsControllerSubmitSignatureV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -409,16 +457,25 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations/{operationId}/sign`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"operationId"}}`, encodeURIComponent(String(requestParameters['operationId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: SubmitSignatureDtoToJSON(requestParameters['submitSignatureDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Submit signature for operation
+     * Sign operation
+     */
+    async queueOperationsControllerSubmitSignatureV1Raw(requestParameters: QueueOperationsControllerSubmitSignatureV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SignatureResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerSubmitSignatureV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => SignatureResponseDtoFromJSON(jsonValue));
     }
@@ -433,10 +490,9 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Change operation nonce and reset all collected signatures
-     * Change operation nonce
+     * Creates request options for queueOperationsControllerUpdateOperationNonceV1 without sending the request
      */
-    async queueOperationsControllerUpdateOperationNonceV1Raw(requestParameters: QueueOperationsControllerUpdateOperationNonceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+    async queueOperationsControllerUpdateOperationNonceV1RequestOpts(requestParameters: QueueOperationsControllerUpdateOperationNonceV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -470,16 +526,25 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/operations/{operationId}/nonce`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"operationId"}}`, encodeURIComponent(String(requestParameters['operationId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
             body: UpdateOperationNonceDtoToJSON(requestParameters['updateOperationNonceDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Change operation nonce and reset all collected signatures
+     * Change operation nonce
+     */
+    async queueOperationsControllerUpdateOperationNonceV1Raw(requestParameters: QueueOperationsControllerUpdateOperationNonceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerUpdateOperationNonceV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
     }

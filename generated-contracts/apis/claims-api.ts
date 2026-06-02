@@ -12,24 +12,27 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  ClaimsResponseDto,
-  CurrencyResponseDto,
-  TransactionsControllerGetTransactionsV1CurrencyIsScamParameter,
-  TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter,
-} from '../models/index';
 import {
+    type ClaimsResponseDto,
     ClaimsResponseDtoFromJSON,
     ClaimsResponseDtoToJSON,
+} from '../models/claims-response-dto';
+import {
+    type CurrencyResponseDto,
     CurrencyResponseDtoFromJSON,
     CurrencyResponseDtoToJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsScamParameterFromJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsScamParameterToJSON,
+} from '../models/currency-response-dto';
+import {
+    type TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter,
     TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterFromJSON,
     TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterToJSON,
-} from '../models/index';
+} from '../models/transactions-controller-get-transactions-v1-currency-is-verified-parameter';
+import {
+    type TransactionsControllerGetTransactionsV1IsClaimedParameter,
+    TransactionsControllerGetTransactionsV1IsClaimedParameterFromJSON,
+    TransactionsControllerGetTransactionsV1IsClaimedParameterToJSON,
+} from '../models/transactions-controller-get-transactions-v1-is-claimed-parameter';
 
 export interface ClaimsControllerGetClaimableCurrenciesV1Request {
     deploymentId: string;
@@ -37,19 +40,19 @@ export interface ClaimsControllerGetClaimableCurrenciesV1Request {
 
 export interface ClaimsControllerGetClaimsV1Request {
     deploymentId: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: ClaimsControllerGetClaimsV1SortByEnum;
+    sortOrder?: ClaimsControllerGetClaimsV1SortOrderEnum;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
     updatedTo?: string;
     currencyIds?: Array<string>;
-    currencyIsScam?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
-    currencyIsVerified?: TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter;
-    currencyIsHidden?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
     invoiceId?: string;
-    sortBy?: ClaimsControllerGetClaimsV1SortByEnum;
-    sortOrder?: ClaimsControllerGetClaimsV1SortOrderEnum;
-    page?: number;
-    pageSize?: number;
+    currencyIsScam?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
+    currencyIsVerified?: TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter;
+    currencyIsHidden?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
 }
 
 /**
@@ -58,10 +61,9 @@ export interface ClaimsControllerGetClaimsV1Request {
 export class ClaimsApi extends runtime.BaseAPI {
 
     /**
-     * Returns all currencies that have non-zero claimable balances for the deployment
-     * Get currencies with claimable balances
+     * Creates request options for claimsControllerGetClaimableCurrenciesV1 without sending the request
      */
-    async claimsControllerGetClaimableCurrenciesV1Raw(requestParameters: ClaimsControllerGetClaimableCurrenciesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CurrencyResponseDto>>> {
+    async claimsControllerGetClaimableCurrenciesV1RequestOpts(requestParameters: ClaimsControllerGetClaimableCurrenciesV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -79,14 +81,23 @@ export class ClaimsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/claims/currencies`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns all currencies that have non-zero claimable balances for the deployment
+     * Get currencies with claimable balances
+     */
+    async claimsControllerGetClaimableCurrenciesV1Raw(requestParameters: ClaimsControllerGetClaimableCurrenciesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CurrencyResponseDto>>> {
+        const requestOptions = await this.claimsControllerGetClaimableCurrenciesV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CurrencyResponseDtoFromJSON));
     }
@@ -101,10 +112,9 @@ export class ClaimsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns only uncollected deposits (EXECUTED status with isClaimed=false) grouped by invoice+currency
-     * Get claimable assets
+     * Creates request options for claimsControllerGetClaimsV1 without sending the request
      */
-    async claimsControllerGetClaimsV1Raw(requestParameters: ClaimsControllerGetClaimsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ClaimsResponseDto>> {
+    async claimsControllerGetClaimsV1RequestOpts(requestParameters: ClaimsControllerGetClaimsV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -113,6 +123,22 @@ export class ClaimsApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
+        if (requestParameters['sortBy'] != null) {
+            queryParameters['sortBy'] = requestParameters['sortBy'];
+        }
+
+        if (requestParameters['sortOrder'] != null) {
+            queryParameters['sortOrder'] = requestParameters['sortOrder'];
+        }
 
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
@@ -134,6 +160,10 @@ export class ClaimsApi extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['invoiceId'] != null) {
+            queryParameters['invoiceId'] = requestParameters['invoiceId'];
+        }
+
         if (requestParameters['currencyIsScam'] != null) {
             queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
         }
@@ -146,26 +176,6 @@ export class ClaimsApi extends runtime.BaseAPI {
             queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
-        if (requestParameters['invoiceId'] != null) {
-            queryParameters['invoiceId'] = requestParameters['invoiceId'];
-        }
-
-        if (requestParameters['sortBy'] != null) {
-            queryParameters['sortBy'] = requestParameters['sortBy'];
-        }
-
-        if (requestParameters['sortOrder'] != null) {
-            queryParameters['sortOrder'] = requestParameters['sortOrder'];
-        }
-
-        if (requestParameters['page'] != null) {
-            queryParameters['page'] = requestParameters['page'];
-        }
-
-        if (requestParameters['pageSize'] != null) {
-            queryParameters['pageSize'] = requestParameters['pageSize'];
-        }
-
         const headerParameters: runtime.HTTPHeaders = {};
 
         if (this.configuration && this.configuration.apiKey) {
@@ -174,14 +184,23 @@ export class ClaimsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/claims`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns only uncollected deposits (EXECUTED status with isClaimed=false) grouped by invoice+currency
+     * Get claimable assets
+     */
+    async claimsControllerGetClaimsV1Raw(requestParameters: ClaimsControllerGetClaimsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ClaimsResponseDto>> {
+        const requestOptions = await this.claimsControllerGetClaimsV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ClaimsResponseDtoFromJSON(jsonValue));
     }

@@ -12,27 +12,32 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  CreateInvoiceDto,
-  InvoiceDetailsDto,
-  InvoiceResponseDto,
-  InvoicesResponseDto,
-  UpdateInvoiceDto,
-} from '../models/index';
 import {
+    type CreateInvoiceDto,
     CreateInvoiceDtoFromJSON,
     CreateInvoiceDtoToJSON,
+} from '../models/create-invoice-dto';
+import {
+    type InvoiceDetailsDto,
     InvoiceDetailsDtoFromJSON,
     InvoiceDetailsDtoToJSON,
+} from '../models/invoice-details-dto';
+import {
+    type InvoiceResponseDto,
     InvoiceResponseDtoFromJSON,
     InvoiceResponseDtoToJSON,
+} from '../models/invoice-response-dto';
+import {
+    type InvoicesResponseDto,
     InvoicesResponseDtoFromJSON,
     InvoicesResponseDtoToJSON,
+} from '../models/invoices-response-dto';
+import {
+    type UpdateInvoiceDto,
     UpdateInvoiceDtoFromJSON,
     UpdateInvoiceDtoToJSON,
-} from '../models/index';
+} from '../models/update-invoice-dto';
 
 export interface InvoicesControllerCreateInvoiceV1Request {
     deploymentId: string;
@@ -72,10 +77,9 @@ export interface InvoicesControllerUpdateInvoiceV1Request {
 export class InvoicesApi extends runtime.BaseAPI {
 
     /**
-     * Create new entity
-     * Create
+     * Creates request options for invoicesControllerCreateInvoiceV1 without sending the request
      */
-    async invoicesControllerCreateInvoiceV1Raw(requestParameters: InvoicesControllerCreateInvoiceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoiceResponseDto>> {
+    async invoicesControllerCreateInvoiceV1RequestOpts(requestParameters: InvoicesControllerCreateInvoiceV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -102,15 +106,24 @@ export class InvoicesApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/invoices`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: CreateInvoiceDtoToJSON(requestParameters['createInvoiceDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create new entity
+     * Create
+     */
+    async invoicesControllerCreateInvoiceV1Raw(requestParameters: InvoicesControllerCreateInvoiceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoiceResponseDto>> {
+        const requestOptions = await this.invoicesControllerCreateInvoiceV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InvoiceResponseDtoFromJSON(jsonValue));
     }
@@ -125,10 +138,9 @@ export class InvoicesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get entity by ID
-     * Get by ID
+     * Creates request options for invoicesControllerFindInvoiceByIdV1 without sending the request
      */
-    async invoicesControllerFindInvoiceByIdV1Raw(requestParameters: InvoicesControllerFindInvoiceByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoiceDetailsDto>> {
+    async invoicesControllerFindInvoiceByIdV1RequestOpts(requestParameters: InvoicesControllerFindInvoiceByIdV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -153,15 +165,24 @@ export class InvoicesApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/invoices/{invoiceId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"invoiceId"}}`, encodeURIComponent(String(requestParameters['invoiceId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{invoiceId}', encodeURIComponent(String(requestParameters['invoiceId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get entity by ID
+     * Get by ID
+     */
+    async invoicesControllerFindInvoiceByIdV1Raw(requestParameters: InvoicesControllerFindInvoiceByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoiceDetailsDto>> {
+        const requestOptions = await this.invoicesControllerFindInvoiceByIdV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InvoiceDetailsDtoFromJSON(jsonValue));
     }
@@ -176,10 +197,9 @@ export class InvoicesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get list of entities
-     * Get list
+     * Creates request options for invoicesControllerFindInvoicesByDeploymentV1 without sending the request
      */
-    async invoicesControllerFindInvoicesByDeploymentV1Raw(requestParameters: InvoicesControllerFindInvoicesByDeploymentV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoicesResponseDto>> {
+    async invoicesControllerFindInvoicesByDeploymentV1RequestOpts(requestParameters: InvoicesControllerFindInvoicesByDeploymentV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -245,14 +265,23 @@ export class InvoicesApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/invoices`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get list of entities
+     * Get list
+     */
+    async invoicesControllerFindInvoicesByDeploymentV1Raw(requestParameters: InvoicesControllerFindInvoicesByDeploymentV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoicesResponseDto>> {
+        const requestOptions = await this.invoicesControllerFindInvoicesByDeploymentV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InvoicesResponseDtoFromJSON(jsonValue));
     }
@@ -267,10 +296,9 @@ export class InvoicesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update entity
-     * Update
+     * Creates request options for invoicesControllerUpdateInvoiceV1 without sending the request
      */
-    async invoicesControllerUpdateInvoiceV1Raw(requestParameters: InvoicesControllerUpdateInvoiceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoiceResponseDto>> {
+    async invoicesControllerUpdateInvoiceV1RequestOpts(requestParameters: InvoicesControllerUpdateInvoiceV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -304,16 +332,25 @@ export class InvoicesApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/invoices/{invoiceId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"invoiceId"}}`, encodeURIComponent(String(requestParameters['invoiceId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{invoiceId}', encodeURIComponent(String(requestParameters['invoiceId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: UpdateInvoiceDtoToJSON(requestParameters['updateInvoiceDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update entity
+     * Update
+     */
+    async invoicesControllerUpdateInvoiceV1Raw(requestParameters: InvoicesControllerUpdateInvoiceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InvoiceResponseDto>> {
+        const requestOptions = await this.invoicesControllerUpdateInvoiceV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InvoiceResponseDtoFromJSON(jsonValue));
     }

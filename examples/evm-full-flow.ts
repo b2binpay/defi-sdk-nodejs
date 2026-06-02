@@ -35,6 +35,7 @@ import {
   zeroAddress,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
+import { instanceOfPayoutPayload } from '../generated-contracts';
 import {
   AssetSortField,
   AssetSortOrder,
@@ -43,6 +44,7 @@ import {
   FiatCurrency,
   MultisigBlockchainClient,
   type QueueOperation,
+  QueueOperationStatus,
   type Transaction,
   TransactionOperationType,
   TransactionStatus,
@@ -228,6 +230,29 @@ runMain(async () => {
   // ─── Step 5: Payout ───────────────────────────────────────────────────────────
   console.log('\n═══ Step 5: Create payout ═══');
 
+  const queueBefore = await client.getDeploymentQueue({
+    statuses: [QueueOperationStatus.Pending, QueueOperationStatus.Ready],
+    pageSize: 100,
+  });
+  if (queueBefore.items.length > 0) {
+    console.log(
+      `Found ${queueBefore.items.length} pending/ready queue operation(s); deleting before creating payout...`,
+    );
+    const deletedIds = await client.deleteAllQueueOperations();
+    console.log(`Deleted ${deletedIds.length} operation(s).`);
+
+    const queueAfter = await client.getDeploymentQueue({
+      statuses: [QueueOperationStatus.Pending, QueueOperationStatus.Ready],
+      pageSize: 100,
+    });
+    if (queueAfter.items.length > 0) {
+      const leftover = queueAfter.items.map((op) => `${op.id} (${op.operationType}, ${op.status})`).join(', ');
+      throw new Error(
+        `Queue still has ${queueAfter.items.length} operation(s) after cleanup — resolve them manually before continuing: ${leftover}`,
+      );
+    }
+  }
+
   const payout = await client.createPayout({
     currencyId: nativeCurrency.id,
     amount: PAYOUT_AMOUNT,
@@ -248,7 +273,13 @@ runMain(async () => {
     'payout queue operation',
     async () => {
       const queue = await client.getDeploymentQueue({ pageSize: 100 });
-      const op = queue.items.find((item) => item.operationType === 'PAYOUT' && item.payload?.payoutId === payout.id);
+      const op = queue.items.find(
+        (item) =>
+          item.operationType === 'PAYOUT' &&
+          item.payload != null &&
+          instanceOfPayoutPayload(item.payload) &&
+          item.payload.payoutId === payout.id,
+      );
       return op ?? null;
     },
     pollInterval,
@@ -297,7 +328,7 @@ runMain(async () => {
   const operationsToExecute = await poll<QueueOperation[]>(
     'executable operation',
     async () => {
-      const queue = await client.getDeploymentQueue({ statuses: ['READY'], pageSize: 100 });
+      const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 100 });
 
       const payoutReady = queue.items.some((item) => item.id === payoutOperation.id);
       if (!payoutReady) return null;

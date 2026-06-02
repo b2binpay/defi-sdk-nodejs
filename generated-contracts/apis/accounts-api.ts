@@ -12,42 +12,57 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  AccountDetailsDto,
-  AccountResponseDto,
-  AssetBalanceShortResponseDto,
-  AssetBalancesResponseDto,
-  BalanceSummaryResponseDto,
-  CurrenciesControllerFindAllV1IsNativeParameter,
-  DeploymentParamsResponseDto,
-  NonceInfoResponseDto,
-  TransactionsControllerGetTransactionsV1CurrencyIsScamParameter,
-  UpdateAccountDto,
-} from '../models/index';
 import {
+    type AccountDetailsDto,
     AccountDetailsDtoFromJSON,
     AccountDetailsDtoToJSON,
+} from '../models/account-details-dto';
+import {
+    type AccountResponseDto,
     AccountResponseDtoFromJSON,
     AccountResponseDtoToJSON,
+} from '../models/account-response-dto';
+import {
+    type AssetBalanceShortResponseDto,
     AssetBalanceShortResponseDtoFromJSON,
     AssetBalanceShortResponseDtoToJSON,
+} from '../models/asset-balance-short-response-dto';
+import {
+    type AssetBalancesResponseDto,
     AssetBalancesResponseDtoFromJSON,
     AssetBalancesResponseDtoToJSON,
+} from '../models/asset-balances-response-dto';
+import {
+    type BalanceSummaryResponseDto,
     BalanceSummaryResponseDtoFromJSON,
     BalanceSummaryResponseDtoToJSON,
+} from '../models/balance-summary-response-dto';
+import {
+    type CurrenciesControllerFindAllV1IsNativeParameter,
     CurrenciesControllerFindAllV1IsNativeParameterFromJSON,
     CurrenciesControllerFindAllV1IsNativeParameterToJSON,
+} from '../models/currencies-controller-find-all-v1-is-native-parameter';
+import {
+    type DeploymentParamsResponseDto,
     DeploymentParamsResponseDtoFromJSON,
     DeploymentParamsResponseDtoToJSON,
+} from '../models/deployment-params-response-dto';
+import {
+    type NonceInfoResponseDto,
     NonceInfoResponseDtoFromJSON,
     NonceInfoResponseDtoToJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsScamParameterFromJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsScamParameterToJSON,
+} from '../models/nonce-info-response-dto';
+import {
+    type TransactionsControllerGetTransactionsV1IsClaimedParameter,
+    TransactionsControllerGetTransactionsV1IsClaimedParameterFromJSON,
+    TransactionsControllerGetTransactionsV1IsClaimedParameterToJSON,
+} from '../models/transactions-controller-get-transactions-v1-is-claimed-parameter';
+import {
+    type UpdateAccountDto,
     UpdateAccountDtoFromJSON,
     UpdateAccountDtoToJSON,
-} from '../models/index';
+} from '../models/update-account-dto';
 
 export interface AccountDeploymentsControllerGetNonceInfoV1Request {
     deploymentId: string;
@@ -58,7 +73,7 @@ export interface AccountsControllerFindAccountByIdV1Request {
 }
 
 export interface AccountsControllerFindUserAccountsV1Request {
-    isHidden?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
+    isHidden?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
 }
 
 export interface AccountsControllerGetAssetBalancesV1Request {
@@ -105,10 +120,9 @@ export interface AccountsControllerUpdateAccountV1Request {
 export class AccountsApi extends runtime.BaseAPI {
 
     /**
-     * Returns current nonce and last executed nonce for the deployment
-     * Get nonce information
+     * Creates request options for accountDeploymentsControllerGetNonceInfoV1 without sending the request
      */
-    async accountDeploymentsControllerGetNonceInfoV1Raw(requestParameters: AccountDeploymentsControllerGetNonceInfoV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<NonceInfoResponseDto>> {
+    async accountDeploymentsControllerGetNonceInfoV1RequestOpts(requestParameters: AccountDeploymentsControllerGetNonceInfoV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -126,14 +140,23 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/deployments/{deploymentId}/nonce-info`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns current nonce and last executed nonce for the deployment
+     * Get nonce information
+     */
+    async accountDeploymentsControllerGetNonceInfoV1Raw(requestParameters: AccountDeploymentsControllerGetNonceInfoV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<NonceInfoResponseDto>> {
+        const requestOptions = await this.accountDeploymentsControllerGetNonceInfoV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => NonceInfoResponseDtoFromJSON(jsonValue));
     }
@@ -148,10 +171,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get entity by ID
-     * Get by ID
+     * Creates request options for accountsControllerFindAccountByIdV1 without sending the request
      */
-    async accountsControllerFindAccountByIdV1Raw(requestParameters: AccountsControllerFindAccountByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AccountDetailsDto>> {
+    async accountsControllerFindAccountByIdV1RequestOpts(requestParameters: AccountsControllerFindAccountByIdV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['accountId'] == null) {
             throw new runtime.RequiredError(
                 'accountId',
@@ -169,14 +191,23 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/{accountId}`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get entity by ID
+     * Get by ID
+     */
+    async accountsControllerFindAccountByIdV1Raw(requestParameters: AccountsControllerFindAccountByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AccountDetailsDto>> {
+        const requestOptions = await this.accountsControllerFindAccountByIdV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => AccountDetailsDtoFromJSON(jsonValue));
     }
@@ -191,10 +222,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get list of entities
-     * Get list
+     * Creates request options for accountsControllerFindUserAccountsV1 without sending the request
      */
-    async accountsControllerFindUserAccountsV1Raw(requestParameters: AccountsControllerFindUserAccountsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccountResponseDto>>> {
+    async accountsControllerFindUserAccountsV1RequestOpts(requestParameters: AccountsControllerFindUserAccountsV1Request): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['isHidden'] != null) {
@@ -210,12 +240,21 @@ export class AccountsApi extends runtime.BaseAPI {
 
         let urlPath = `/api/v1/accounts`;
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get list of entities
+     * Get list
+     */
+    async accountsControllerFindUserAccountsV1Raw(requestParameters: AccountsControllerFindUserAccountsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AccountResponseDto>>> {
+        const requestOptions = await this.accountsControllerFindUserAccountsV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AccountResponseDtoFromJSON));
     }
@@ -230,10 +269,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns balances for each asset with conversion to base currency for a specific network with pagination
-     * Get asset balances
+     * Creates request options for accountsControllerGetAssetBalancesV1 without sending the request
      */
-    async accountsControllerGetAssetBalancesV1Raw(requestParameters: AccountsControllerGetAssetBalancesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssetBalancesResponseDto>> {
+    async accountsControllerGetAssetBalancesV1RequestOpts(requestParameters: AccountsControllerGetAssetBalancesV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['accountId'] == null) {
             throw new runtime.RequiredError(
                 'accountId',
@@ -305,14 +343,23 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/{accountId}/balance/assets`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns balances for each asset with conversion to base currency for a specific network with pagination
+     * Get asset balances
+     */
+    async accountsControllerGetAssetBalancesV1Raw(requestParameters: AccountsControllerGetAssetBalancesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AssetBalancesResponseDto>> {
+        const requestOptions = await this.accountsControllerGetAssetBalancesV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => AssetBalancesResponseDtoFromJSON(jsonValue));
     }
@@ -327,10 +374,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns total balance, uncollected balance and count of uncollected invoices for a team on a specific network
-     * Get balance summary
+     * Creates request options for accountsControllerGetBalanceSummaryV1 without sending the request
      */
-    async accountsControllerGetBalanceSummaryV1Raw(requestParameters: AccountsControllerGetBalanceSummaryV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BalanceSummaryResponseDto>> {
+    async accountsControllerGetBalanceSummaryV1RequestOpts(requestParameters: AccountsControllerGetBalanceSummaryV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['accountId'] == null) {
             throw new runtime.RequiredError(
                 'accountId',
@@ -370,14 +416,23 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/{accountId}/balance/summary`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns total balance, uncollected balance and count of uncollected invoices for a team on a specific network
+     * Get balance summary
+     */
+    async accountsControllerGetBalanceSummaryV1Raw(requestParameters: AccountsControllerGetBalanceSummaryV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BalanceSummaryResponseDto>> {
+        const requestOptions = await this.accountsControllerGetBalanceSummaryV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => BalanceSummaryResponseDtoFromJSON(jsonValue));
     }
@@ -392,10 +447,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get parameters required to deploy the team including bytecode, initializer bytecode, and nonce
-     * Get deployment params
+     * Creates request options for accountsControllerGetDeploymentInfoV1 without sending the request
      */
-    async accountsControllerGetDeploymentInfoV1Raw(requestParameters: AccountsControllerGetDeploymentInfoV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeploymentParamsResponseDto>> {
+    async accountsControllerGetDeploymentInfoV1RequestOpts(requestParameters: AccountsControllerGetDeploymentInfoV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['accountId'] == null) {
             throw new runtime.RequiredError(
                 'accountId',
@@ -413,14 +467,23 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/{accountId}/deploy-params`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get parameters required to deploy the team including bytecode, initializer bytecode, and nonce
+     * Get deployment params
+     */
+    async accountsControllerGetDeploymentInfoV1Raw(requestParameters: AccountsControllerGetDeploymentInfoV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeploymentParamsResponseDto>> {
+        const requestOptions = await this.accountsControllerGetDeploymentInfoV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => DeploymentParamsResponseDtoFromJSON(jsonValue));
     }
@@ -435,10 +498,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Returns asset balances without conversion and pagination. Response is a flat array of items.
-     * Get asset balances (short)
+     * Creates request options for accountsControllerGetShortAssetBalancesV1 without sending the request
      */
-    async accountsControllerGetShortAssetBalancesV1Raw(requestParameters: AccountsControllerGetShortAssetBalancesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AssetBalanceShortResponseDto>>> {
+    async accountsControllerGetShortAssetBalancesV1RequestOpts(requestParameters: AccountsControllerGetShortAssetBalancesV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['accountId'] == null) {
             throw new runtime.RequiredError(
                 'accountId',
@@ -483,14 +545,23 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/{accountId}/balances`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Returns asset balances without conversion and pagination. Response is a flat array of items.
+     * Get asset balances (short)
+     */
+    async accountsControllerGetShortAssetBalancesV1Raw(requestParameters: AccountsControllerGetShortAssetBalancesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AssetBalanceShortResponseDto>>> {
+        const requestOptions = await this.accountsControllerGetShortAssetBalancesV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AssetBalanceShortResponseDtoFromJSON));
     }
@@ -505,10 +576,9 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update entity
-     * Update
+     * Creates request options for accountsControllerUpdateAccountV1 without sending the request
      */
-    async accountsControllerUpdateAccountV1Raw(requestParameters: AccountsControllerUpdateAccountV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AccountResponseDto>> {
+    async accountsControllerUpdateAccountV1RequestOpts(requestParameters: AccountsControllerUpdateAccountV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['accountId'] == null) {
             throw new runtime.RequiredError(
                 'accountId',
@@ -535,15 +605,24 @@ export class AccountsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/accounts/{accountId}`;
-        urlPath = urlPath.replace(`{${"accountId"}}`, encodeURIComponent(String(requestParameters['accountId'])));
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
             body: UpdateAccountDtoToJSON(requestParameters['updateAccountDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update entity
+     * Update
+     */
+    async accountsControllerUpdateAccountV1Raw(requestParameters: AccountsControllerUpdateAccountV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AccountResponseDto>> {
+        const requestOptions = await this.accountsControllerUpdateAccountV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => AccountResponseDtoFromJSON(jsonValue));
     }

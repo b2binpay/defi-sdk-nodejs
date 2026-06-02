@@ -14,7 +14,7 @@
 
 import { mapValues } from '../runtime';
 /**
- * 
+ * dApp metadata for DAPP_TRANSACTION operations (name, URL, icon)
  * @export
  * @interface QueueOperationResponseDtoDappMetadata
  */

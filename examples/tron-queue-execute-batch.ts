@@ -6,7 +6,13 @@
  */
 import 'dotenv/config';
 import { TronWeb } from 'tronweb';
-import { DefiClient, type QueueOperation, type TronAddress, TronMultisigBlockchainClient } from '../src';
+import {
+  DefiClient,
+  type QueueOperation,
+  QueueOperationStatus,
+  type TronAddress,
+  TronMultisigBlockchainClient,
+} from '../src';
 import { DEFAULT_FEE_LIMIT, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
@@ -19,7 +25,7 @@ runMain(async () => {
   const accountDetails = await client.getAccount();
   await client.selectChain(chainId);
 
-  const queue = await client.getDeploymentQueue({ statuses: ['READY'], pageSize: 50 });
+  const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 50 });
   const operationsToExecute: QueueOperation[] = [];
 
   let currentNonce = Number(queue.nextExecutableNonce);

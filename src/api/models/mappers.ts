@@ -20,9 +20,9 @@ import type {
   QueueOperationResponseDto,
   SignatureResponseDto,
   TransactionDetailsDto,
-  TransactionInvoiceResponseDto,
   TransactionListResponseDto,
-  TransactionResponseDto,
+  TransactionListResponseDtoItemsInner,
+  TransactionListResponseDtoItemsInnerInvoice,
 } from '../../../generated-contracts';
 import type {
   Account,
@@ -150,9 +150,9 @@ export const mapExecuteBatchOperationsResult = (): ExecuteBatchOperationsResult 
   success: true,
 });
 
-const mapTransactionInvoice = (dto: TransactionInvoiceResponseDto): TransactionInvoice => clone(dto);
+const mapTransactionInvoice = (dto: TransactionListResponseDtoItemsInnerInvoice): TransactionInvoice => clone(dto);
 
-export const mapTransaction = (dto: TransactionResponseDto): Transaction => ({
+export const mapTransaction = (dto: TransactionListResponseDtoItemsInner): Transaction => ({
   ...dto,
   direction: dto.direction as TransactionDirection,
   status: dto.status as TransactionStatus,

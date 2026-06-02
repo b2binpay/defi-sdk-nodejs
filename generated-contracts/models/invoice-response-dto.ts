@@ -59,7 +59,7 @@ export interface InvoiceResponseDto {
     paymentPageUrl: string;
     /**
      * Invoice status
-     * @type {string}
+     * @type {InvoiceResponseDtoStatusEnum}
      * @memberof InvoiceResponseDto
      */
     status: InvoiceResponseDtoStatusEnum;

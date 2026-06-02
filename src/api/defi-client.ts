@@ -70,6 +70,7 @@ import type {
   TransactionSortField,
   TransactionStatus,
 } from './models';
+import { QueueOperationStatus } from './models';
 import {
   mapAccountDetails,
   mapAssetBalanceList,
@@ -125,9 +126,21 @@ export interface CreatePayoutParams extends ChainScopedParams {
 }
 
 export interface GetDeploymentQueueParams extends ChainScopedParams {
-  statuses?: Array<'PENDING' | 'READY' | 'EXECUTED' | 'FAILED' | 'CANCELLED'>;
+  statuses?: QueueOperationStatus[];
   page?: number;
   pageSize?: number;
+}
+
+export interface DeleteQueueOperationParams extends ChainScopedParams {
+  operationId: string;
+}
+
+/** Statuses the API permits for deletion. */
+export type DeletableQueueOperationStatus = QueueOperationStatus.Pending | QueueOperationStatus.Ready;
+
+export interface DeleteAllQueueOperationsParams extends ChainScopedParams {
+  /** Statuses to delete. Defaults to PENDING + READY (the only ones the API allows). */
+  statuses?: DeletableQueueOperationStatus[];
 }
 
 export interface SubmitOperationSignatureParams extends ChainScopedParams {
@@ -630,6 +643,48 @@ export class DefiClient {
     );
 
     return mapDeploymentQueue(response);
+  }
+
+  async deleteQueueOperation(params: DeleteQueueOperationParams): Promise<void> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    await this.callApi(() =>
+      this.queueOperationsApi.queueOperationsControllerDeleteOperationV1({
+        deploymentId,
+        operationId: params.operationId,
+      }),
+    );
+  }
+
+  /**
+   * Delete every deletable queue operation owned by this API key.
+   * Server only accepts deletion for PENDING/READY; other statuses are skipped.
+   * Returns deleted operation ids.
+   */
+  async deleteAllQueueOperations(params: DeleteAllQueueOperationsParams = {}): Promise<string[]> {
+    const statuses: DeletableQueueOperationStatus[] = params.statuses ?? [
+      QueueOperationStatus.Pending,
+      QueueOperationStatus.Ready,
+    ];
+    const pageSize = 100;
+    const deletedIds: string[] = [];
+
+    /**
+     * Always fetch page 1: after deleting items, the remaining matches collapse
+     * back to page 1, so advancing the cursor would skip the survivors.
+     */
+    while (true) {
+      const queue = await this.getDeploymentQueue({ chainId: params.chainId, statuses, page: 1, pageSize });
+      if (queue.items.length === 0) {
+        break;
+      }
+      for (const op of queue.items) {
+        await this.deleteQueueOperation({ chainId: params.chainId, operationId: op.id });
+        deletedIds.push(op.id);
+      }
+    }
+
+    return deletedIds;
   }
 
   async getTransactions(params: GetTransactionsParams): Promise<TransactionList> {

@@ -27,6 +27,9 @@ export function TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParamet
     if (json == null) {
         return json;
     }
+    if (typeof json === 'boolean') {
+        return json;
+    }
     if (typeof json === 'string') {
         return json;
     }
@@ -39,6 +42,9 @@ export function TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParamet
 
 export function TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterToJSONTyped(value?: TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
+        return value;
+    }
+    if (typeof value === 'boolean') {
         return value;
     }
     if (typeof value === 'string') {

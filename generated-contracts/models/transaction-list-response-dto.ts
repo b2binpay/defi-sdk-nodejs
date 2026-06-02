@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { TransactionResponseDto } from './transaction-response-dto';
+import type { TransactionListResponseDtoItemsInner } from './transaction-list-response-dto-items-inner';
 import {
-    TransactionResponseDtoFromJSON,
-    TransactionResponseDtoFromJSONTyped,
-    TransactionResponseDtoToJSON,
-    TransactionResponseDtoToJSONTyped,
-} from './transaction-response-dto';
+    TransactionListResponseDtoItemsInnerFromJSON,
+    TransactionListResponseDtoItemsInnerFromJSONTyped,
+    TransactionListResponseDtoItemsInnerToJSON,
+    TransactionListResponseDtoItemsInnerToJSONTyped,
+} from './transaction-list-response-dto-items-inner';
 
 /**
  * 
@@ -46,11 +46,11 @@ export interface TransactionListResponseDto {
      */
     pageSize: number;
     /**
-     * Array of transaction items
-     * @type {Array<TransactionResponseDto>}
+     * 
+     * @type {Array<TransactionListResponseDtoItemsInner>}
      * @memberof TransactionListResponseDto
      */
-    items: Array<TransactionResponseDto>;
+    items: Array<TransactionListResponseDtoItemsInner>;
 }
 
 /**
@@ -77,7 +77,7 @@ export function TransactionListResponseDtoFromJSONTyped(json: any, ignoreDiscrim
         'total': json['total'],
         'page': json['page'],
         'pageSize': json['pageSize'],
-        'items': ((json['items'] as Array<any>).map(TransactionResponseDtoFromJSON)),
+        'items': ((json['items'] as Array<any>).map(TransactionListResponseDtoItemsInnerFromJSON)),
     };
 }
 
@@ -95,7 +95,7 @@ export function TransactionListResponseDtoToJSONTyped(value?: TransactionListRes
         'total': value['total'],
         'page': value['page'],
         'pageSize': value['pageSize'],
-        'items': ((value['items'] as Array<any>).map(TransactionResponseDtoToJSON)),
+        'items': ((value['items'] as Array<any>).map(TransactionListResponseDtoItemsInnerToJSON)),
     };
 }
 

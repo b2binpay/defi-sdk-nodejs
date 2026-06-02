@@ -28,13 +28,13 @@ import {
  */
 export interface ClaimsResponseDto {
     /**
-     * Total number of claimable groups
+     * Total number of items across all pages
      * @type {number}
      * @memberof ClaimsResponseDto
      */
     total: number;
     /**
-     * Current page number
+     * Current page number (starts from 1)
      * @type {number}
      * @memberof ClaimsResponseDto
      */
@@ -46,7 +46,7 @@ export interface ClaimsResponseDto {
      */
     pageSize: number;
     /**
-     * List of claimable groups
+     * 
      * @type {Array<ClaimItemDto>}
      * @memberof ClaimsResponseDto
      */

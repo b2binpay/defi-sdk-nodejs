@@ -12,15 +12,12 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  SmartContractVersionResponseDto,
-} from '../models/index';
 import {
+    type SmartContractVersionResponseDto,
     SmartContractVersionResponseDtoFromJSON,
     SmartContractVersionResponseDtoToJSON,
-} from '../models/index';
+} from '../models/smart-contract-version-response-dto';
 
 export interface PublicSmartContractVersionsControllerGetByVersionIdV1Request {
     versionId: string;
@@ -32,10 +29,9 @@ export interface PublicSmartContractVersionsControllerGetByVersionIdV1Request {
 export class SmartContractVersionsApi extends runtime.BaseAPI {
 
     /**
-     * Retrieves the smart contract version by version ID.
-     * Get smart contract version by version ID
+     * Creates request options for publicSmartContractVersionsControllerGetByVersionIdV1 without sending the request
      */
-    async publicSmartContractVersionsControllerGetByVersionIdV1Raw(requestParameters: PublicSmartContractVersionsControllerGetByVersionIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SmartContractVersionResponseDto>> {
+    async publicSmartContractVersionsControllerGetByVersionIdV1RequestOpts(requestParameters: PublicSmartContractVersionsControllerGetByVersionIdV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['versionId'] == null) {
             throw new runtime.RequiredError(
                 'versionId',
@@ -53,14 +49,23 @@ export class SmartContractVersionsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/public/smart-contract-versions/{versionId}`;
-        urlPath = urlPath.replace(`{${"versionId"}}`, encodeURIComponent(String(requestParameters['versionId'])));
+        urlPath = urlPath.replace('{versionId}', encodeURIComponent(String(requestParameters['versionId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Retrieves the smart contract version by version ID.
+     * Get smart contract version by version ID
+     */
+    async publicSmartContractVersionsControllerGetByVersionIdV1Raw(requestParameters: PublicSmartContractVersionsControllerGetByVersionIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SmartContractVersionResponseDto>> {
+        const requestOptions = await this.publicSmartContractVersionsControllerGetByVersionIdV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => SmartContractVersionResponseDtoFromJSON(jsonValue));
     }

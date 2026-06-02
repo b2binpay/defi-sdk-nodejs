@@ -57,7 +57,7 @@ export interface UpdateInvoiceDto {
     currencyIds?: Array<string>;
     /**
      * 
-     * @type {string}
+     * @type {UpdateInvoiceDtoStatusEnum}
      * @memberof UpdateInvoiceDto
      */
     status?: UpdateInvoiceDtoStatusEnum;

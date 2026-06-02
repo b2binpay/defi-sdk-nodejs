@@ -28,7 +28,7 @@ import {
  */
 export interface NetworksResponseDto {
     /**
-     * Get list
+     * 
      * @type {Array<NetworkResponseDto>}
      * @memberof NetworksResponseDto
      */

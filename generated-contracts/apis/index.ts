@@ -1,7 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export * from './accounts-api';
-export * from './callbacks-api';
 export * from './claims-api';
 export * from './currencies-api';
 export * from './invoices-api';

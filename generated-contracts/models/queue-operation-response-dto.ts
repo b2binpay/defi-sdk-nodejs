@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { UniversalAddress } from './universal-address';
+import {
+    UniversalAddressFromJSON,
+    UniversalAddressFromJSONTyped,
+    UniversalAddressToJSON,
+    UniversalAddressToJSONTyped,
+} from './universal-address';
 import type { OperationSignatureDto } from './operation-signature-dto';
 import {
     OperationSignatureDtoFromJSON,
@@ -27,6 +34,13 @@ import {
     CallDtoToJSON,
     CallDtoToJSONTyped,
 } from './call-dto';
+import type { QueueOperationResponseDtoPayload } from './queue-operation-response-dto-payload';
+import {
+    QueueOperationResponseDtoPayloadFromJSON,
+    QueueOperationResponseDtoPayloadFromJSONTyped,
+    QueueOperationResponseDtoPayloadToJSON,
+    QueueOperationResponseDtoPayloadToJSONTyped,
+} from './queue-operation-response-dto-payload';
 import type { QueueOperationResponseDtoDappMetadata } from './queue-operation-response-dto-dapp-metadata';
 import {
     QueueOperationResponseDtoDappMetadataFromJSON,
@@ -61,13 +75,13 @@ export interface QueueOperationResponseDto {
     nonce: string;
     /**
      * Type of operation to execute
-     * @type {string}
+     * @type {QueueOperationResponseDtoOperationTypeEnum}
      * @memberof QueueOperationResponseDto
      */
     operationType: QueueOperationResponseDtoOperationTypeEnum;
     /**
      * Current operation status
-     * @type {string}
+     * @type {QueueOperationResponseDtoStatusEnum}
      * @memberof QueueOperationResponseDto
      */
     status: QueueOperationResponseDtoStatusEnum;
@@ -78,11 +92,11 @@ export interface QueueOperationResponseDto {
      */
     calls: Array<CallDto>;
     /**
-     * Operation-specific data (team config changes, reject details, etc.)
-     * @type {{ [key: string]: any; }}
+     * 
+     * @type {QueueOperationResponseDtoPayload}
      * @memberof QueueOperationResponseDto
      */
-    payload: { [key: string]: any; };
+    payload: QueueOperationResponseDtoPayload;
     /**
      * Number of signatures collected
      * @type {number}
@@ -96,7 +110,7 @@ export interface QueueOperationResponseDto {
      */
     signaturesRequired: number;
     /**
-     * Blockchain transaction hash
+     * Blockchain transaction hash. EVM chains use the `0x`-prefixed 32-byte hex form; TVM (Tron) chains use a bare 64-hex string without the `0x` prefix.
      * @type {string}
      * @memberof QueueOperationResponseDto
      */
@@ -144,17 +158,23 @@ export interface QueueOperationResponseDto {
      */
     createdAt: string;
     /**
-     * Wallet address (Ethereum 0x... or Tron TVM T...)
-     * @type {string}
+     * 
+     * @type {UniversalAddress}
      * @memberof QueueOperationResponseDto
      */
-    createdBy: string;
+    createdBy: UniversalAddress;
     /**
-     * Array of signatures for this operation
+     * Array of signatures for this operation, ordered by signer address ascending
      * @type {Array<OperationSignatureDto>}
      * @memberof QueueOperationResponseDto
      */
     signatures: Array<OperationSignatureDto>;
+    /**
+     * Pre-built signature blob ready for the on-chain `execute` call (signers ordered ascending). Null until the required number of signatures is collected.
+     * @type {string}
+     * @memberof QueueOperationResponseDto
+     */
+    signatureBlob: string | null;
     /**
      * Operation expiry timestamp (for DAPP_TRANSACTION operations)
      * @type {string}
@@ -217,6 +237,7 @@ export function instanceOfQueueOperationResponseDto(value: object): value is Que
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('createdBy' in value) || value['createdBy'] === undefined) return false;
     if (!('signatures' in value) || value['signatures'] === undefined) return false;
+    if (!('signatureBlob' in value) || value['signatureBlob'] === undefined) return false;
     return true;
 }
 
@@ -236,7 +257,7 @@ export function QueueOperationResponseDtoFromJSONTyped(json: any, ignoreDiscrimi
         'operationType': json['operationType'],
         'status': json['status'],
         'calls': ((json['calls'] as Array<any>).map(CallDtoFromJSON)),
-        'payload': json['payload'],
+        'payload': QueueOperationResponseDtoPayloadFromJSON(json['payload']),
         'signaturesCollected': json['signaturesCollected'],
         'signaturesRequired': json['signaturesRequired'],
         'txHash': json['txHash'],
@@ -247,8 +268,9 @@ export function QueueOperationResponseDtoFromJSONTyped(json: any, ignoreDiscrimi
         'canReject': json['canReject'],
         'isBlocked': json['isBlocked'],
         'createdAt': json['createdAt'],
-        'createdBy': json['createdBy'],
+        'createdBy': UniversalAddressFromJSON(json['createdBy']),
         'signatures': ((json['signatures'] as Array<any>).map(OperationSignatureDtoFromJSON)),
+        'signatureBlob': json['signatureBlob'],
         'expiresAt': json['expiresAt'] == null ? undefined : json['expiresAt'],
         'dappMetadata': json['dappMetadata'] == null ? undefined : QueueOperationResponseDtoDappMetadataFromJSON(json['dappMetadata']),
     };
@@ -271,7 +293,7 @@ export function QueueOperationResponseDtoToJSONTyped(value?: QueueOperationRespo
         'operationType': value['operationType'],
         'status': value['status'],
         'calls': ((value['calls'] as Array<any>).map(CallDtoToJSON)),
-        'payload': value['payload'],
+        'payload': QueueOperationResponseDtoPayloadToJSON(value['payload']),
         'signaturesCollected': value['signaturesCollected'],
         'signaturesRequired': value['signaturesRequired'],
         'txHash': value['txHash'],
@@ -282,8 +304,9 @@ export function QueueOperationResponseDtoToJSONTyped(value?: QueueOperationRespo
         'canReject': value['canReject'],
         'isBlocked': value['isBlocked'],
         'createdAt': value['createdAt'],
-        'createdBy': value['createdBy'],
+        'createdBy': UniversalAddressToJSON(value['createdBy']),
         'signatures': ((value['signatures'] as Array<any>).map(OperationSignatureDtoToJSON)),
+        'signatureBlob': value['signatureBlob'],
         'expiresAt': value['expiresAt'],
         'dappMetadata': QueueOperationResponseDtoDappMetadataToJSON(value['dappMetadata']),
     };

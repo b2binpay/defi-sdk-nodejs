@@ -40,7 +40,7 @@ export interface InvoicesResponseDto {
      */
     page: number;
     /**
-     * Number of items per page (max 100)
+     * Number of items per page
      * @type {number}
      * @memberof InvoicesResponseDto
      */

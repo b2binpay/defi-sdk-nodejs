@@ -12,24 +12,27 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  TransactionDetailsDto,
-  TransactionListResponseDto,
-  TransactionsControllerGetTransactionsV1CurrencyIsScamParameter,
-  TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter,
-} from '../models/index';
 import {
+    type TransactionDetailsDto,
     TransactionDetailsDtoFromJSON,
     TransactionDetailsDtoToJSON,
+} from '../models/transaction-details-dto';
+import {
+    type TransactionListResponseDto,
     TransactionListResponseDtoFromJSON,
     TransactionListResponseDtoToJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsScamParameterFromJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsScamParameterToJSON,
+} from '../models/transaction-list-response-dto';
+import {
+    type TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter,
     TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterFromJSON,
     TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterToJSON,
-} from '../models/index';
+} from '../models/transactions-controller-get-transactions-v1-currency-is-verified-parameter';
+import {
+    type TransactionsControllerGetTransactionsV1IsClaimedParameter,
+    TransactionsControllerGetTransactionsV1IsClaimedParameterFromJSON,
+    TransactionsControllerGetTransactionsV1IsClaimedParameterToJSON,
+} from '../models/transactions-controller-get-transactions-v1-is-claimed-parameter';
 
 export interface TransactionsControllerGetTransactionDetailsV1Request {
     deploymentId: string;
@@ -38,24 +41,24 @@ export interface TransactionsControllerGetTransactionDetailsV1Request {
 
 export interface TransactionsControllerGetTransactionsV1Request {
     deploymentId: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: TransactionsControllerGetTransactionsV1SortByEnum;
+    sortOrder?: TransactionsControllerGetTransactionsV1SortOrderEnum;
     id?: string;
-    operationId?: string;
-    operationTypes?: Array<TransactionsControllerGetTransactionsV1OperationTypesEnum>;
-    statuses?: Array<TransactionsControllerGetTransactionsV1StatusesEnum>;
     txHash?: string;
-    currencyIds?: Array<string>;
-    currencyIsScam?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
-    currencyIsVerified?: TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter;
-    currencyIsHidden?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
     updatedTo?: string;
-    isClaimed?: TransactionsControllerGetTransactionsV1CurrencyIsScamParameter;
-    sortBy?: TransactionsControllerGetTransactionsV1SortByEnum;
-    sortOrder?: TransactionsControllerGetTransactionsV1SortOrderEnum;
-    page?: number;
-    pageSize?: number;
+    currencyIds?: Array<string>;
+    statuses?: Array<TransactionsControllerGetTransactionsV1StatusesEnum>;
+    operationId?: string;
+    operationTypes?: Array<TransactionsControllerGetTransactionsV1OperationTypesEnum>;
+    isClaimed?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
+    currencyIsScam?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
+    currencyIsVerified?: TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter;
+    currencyIsHidden?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
 }
 
 /**
@@ -64,10 +67,9 @@ export interface TransactionsControllerGetTransactionsV1Request {
 export class TransactionsApi extends runtime.BaseAPI {
 
     /**
-     * Get entity by ID
-     * Get by ID
+     * Creates request options for transactionsControllerGetTransactionDetailsV1 without sending the request
      */
-    async transactionsControllerGetTransactionDetailsV1Raw(requestParameters: TransactionsControllerGetTransactionDetailsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionDetailsDto>> {
+    async transactionsControllerGetTransactionDetailsV1RequestOpts(requestParameters: TransactionsControllerGetTransactionDetailsV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -92,15 +94,24 @@ export class TransactionsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/transactions/{transactionId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"transactionId"}}`, encodeURIComponent(String(requestParameters['transactionId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{transactionId}', encodeURIComponent(String(requestParameters['transactionId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get entity by ID
+     * Get by ID
+     */
+    async transactionsControllerGetTransactionDetailsV1Raw(requestParameters: TransactionsControllerGetTransactionDetailsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionDetailsDto>> {
+        const requestOptions = await this.transactionsControllerGetTransactionDetailsV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TransactionDetailsDtoFromJSON(jsonValue));
     }
@@ -115,10 +126,9 @@ export class TransactionsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get list of entities
-     * Get list
+     * Creates request options for transactionsControllerGetTransactionsV1 without sending the request
      */
-    async transactionsControllerGetTransactionsV1Raw(requestParameters: TransactionsControllerGetTransactionsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionListResponseDto>> {
+    async transactionsControllerGetTransactionsV1RequestOpts(requestParameters: TransactionsControllerGetTransactionsV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -128,40 +138,28 @@ export class TransactionsApi extends runtime.BaseAPI {
 
         const queryParameters: any = {};
 
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
+        if (requestParameters['sortBy'] != null) {
+            queryParameters['sortBy'] = requestParameters['sortBy'];
+        }
+
+        if (requestParameters['sortOrder'] != null) {
+            queryParameters['sortOrder'] = requestParameters['sortOrder'];
+        }
+
         if (requestParameters['id'] != null) {
             queryParameters['id'] = requestParameters['id'];
         }
 
-        if (requestParameters['operationId'] != null) {
-            queryParameters['operationId'] = requestParameters['operationId'];
-        }
-
-        if (requestParameters['operationTypes'] != null) {
-            queryParameters['operationTypes'] = requestParameters['operationTypes'];
-        }
-
-        if (requestParameters['statuses'] != null) {
-            queryParameters['statuses'] = requestParameters['statuses'];
-        }
-
         if (requestParameters['txHash'] != null) {
             queryParameters['txHash'] = requestParameters['txHash'];
-        }
-
-        if (requestParameters['currencyIds'] != null) {
-            queryParameters['currencyIds'] = requestParameters['currencyIds'];
-        }
-
-        if (requestParameters['currencyIsScam'] != null) {
-            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
-        }
-
-        if (requestParameters['currencyIsVerified'] != null) {
-            queryParameters['currencyIsVerified'] = requestParameters['currencyIsVerified'];
-        }
-
-        if (requestParameters['currencyIsHidden'] != null) {
-            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -180,24 +178,36 @@ export class TransactionsApi extends runtime.BaseAPI {
             queryParameters['updatedTo'] = requestParameters['updatedTo'];
         }
 
+        if (requestParameters['currencyIds'] != null) {
+            queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['statuses'] != null) {
+            queryParameters['statuses'] = requestParameters['statuses'];
+        }
+
+        if (requestParameters['operationId'] != null) {
+            queryParameters['operationId'] = requestParameters['operationId'];
+        }
+
+        if (requestParameters['operationTypes'] != null) {
+            queryParameters['operationTypes'] = requestParameters['operationTypes'];
+        }
+
         if (requestParameters['isClaimed'] != null) {
             queryParameters['isClaimed'] = requestParameters['isClaimed'];
         }
 
-        if (requestParameters['sortBy'] != null) {
-            queryParameters['sortBy'] = requestParameters['sortBy'];
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
         }
 
-        if (requestParameters['sortOrder'] != null) {
-            queryParameters['sortOrder'] = requestParameters['sortOrder'];
+        if (requestParameters['currencyIsVerified'] != null) {
+            queryParameters['currencyIsVerified'] = requestParameters['currencyIsVerified'];
         }
 
-        if (requestParameters['page'] != null) {
-            queryParameters['page'] = requestParameters['page'];
-        }
-
-        if (requestParameters['pageSize'] != null) {
-            queryParameters['pageSize'] = requestParameters['pageSize'];
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -208,14 +218,23 @@ export class TransactionsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/transactions`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get list of entities
+     * Get list
+     */
+    async transactionsControllerGetTransactionsV1Raw(requestParameters: TransactionsControllerGetTransactionsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TransactionListResponseDto>> {
+        const requestOptions = await this.transactionsControllerGetTransactionsV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TransactionListResponseDtoFromJSON(jsonValue));
     }
@@ -234,29 +253,6 @@ export class TransactionsApi extends runtime.BaseAPI {
 /**
  * @export
  */
-export const TransactionsControllerGetTransactionsV1OperationTypesEnum = {
-    Invoice: 'invoice',
-    DirectDeposit: 'direct_deposit',
-    SetConfig: 'set_config',
-    Claim: 'claim',
-    Payout: 'payout',
-    Reject: 'reject',
-    DappTransaction: 'dapp_transaction'
-} as const;
-export type TransactionsControllerGetTransactionsV1OperationTypesEnum = typeof TransactionsControllerGetTransactionsV1OperationTypesEnum[keyof typeof TransactionsControllerGetTransactionsV1OperationTypesEnum];
-/**
- * @export
- */
-export const TransactionsControllerGetTransactionsV1StatusesEnum = {
-    Pending: 'PENDING',
-    Executed: 'EXECUTED',
-    Confirmed: 'CONFIRMED',
-    Failed: 'FAILED'
-} as const;
-export type TransactionsControllerGetTransactionsV1StatusesEnum = typeof TransactionsControllerGetTransactionsV1StatusesEnum[keyof typeof TransactionsControllerGetTransactionsV1StatusesEnum];
-/**
- * @export
- */
 export const TransactionsControllerGetTransactionsV1SortByEnum = {
     Id: 'id',
     CreatedAt: 'createdAt',
@@ -271,3 +267,27 @@ export const TransactionsControllerGetTransactionsV1SortOrderEnum = {
     Desc: 'desc'
 } as const;
 export type TransactionsControllerGetTransactionsV1SortOrderEnum = typeof TransactionsControllerGetTransactionsV1SortOrderEnum[keyof typeof TransactionsControllerGetTransactionsV1SortOrderEnum];
+/**
+ * @export
+ */
+export const TransactionsControllerGetTransactionsV1StatusesEnum = {
+    Pending: 'PENDING',
+    Executed: 'EXECUTED',
+    Confirmed: 'CONFIRMED',
+    Failed: 'FAILED'
+} as const;
+export type TransactionsControllerGetTransactionsV1StatusesEnum = typeof TransactionsControllerGetTransactionsV1StatusesEnum[keyof typeof TransactionsControllerGetTransactionsV1StatusesEnum];
+/**
+ * @export
+ */
+export const TransactionsControllerGetTransactionsV1OperationTypesEnum = {
+    Invoice: 'invoice',
+    DirectDeposit: 'direct_deposit',
+    SetConfig: 'set_config',
+    Claim: 'claim',
+    Payout: 'payout',
+    Reject: 'reject',
+    Deploy: 'deploy',
+    DappTransaction: 'dapp_transaction'
+} as const;
+export type TransactionsControllerGetTransactionsV1OperationTypesEnum = typeof TransactionsControllerGetTransactionsV1OperationTypesEnum[keyof typeof TransactionsControllerGetTransactionsV1OperationTypesEnum];

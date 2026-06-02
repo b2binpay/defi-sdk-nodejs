@@ -27,6 +27,9 @@ export function CurrenciesControllerFindAllV1IsNativeParameterFromJSONTyped(json
     if (json == null) {
         return json;
     }
+    if (typeof json === 'boolean') {
+        return json;
+    }
     if (typeof json === 'string') {
         return json;
     }
@@ -39,6 +42,9 @@ export function CurrenciesControllerFindAllV1IsNativeParameterToJSON(json: any):
 
 export function CurrenciesControllerFindAllV1IsNativeParameterToJSONTyped(value?: CurrenciesControllerFindAllV1IsNativeParameter | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
+        return value;
+    }
+    if (typeof value === 'boolean') {
         return value;
     }
     if (typeof value === 'string') {

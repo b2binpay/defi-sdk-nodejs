@@ -32,12 +32,6 @@ export interface NetworkResponseDto {
      */
     name: string;
     /**
-     * Native token symbol
-     * @type {string}
-     * @memberof NetworkResponseDto
-     */
-    coin: string;
-    /**
      * Whether this is a testnet
      * @type {boolean}
      * @memberof NetworkResponseDto
@@ -74,7 +68,7 @@ export interface NetworkResponseDto {
      */
     tokenExplorerUrl: string | null;
     /**
-     * Number of confirmations required for transaction finality on this network
+     * Number of confirmations required for transaction finality
      * @type {number}
      * @memberof NetworkResponseDto
      */
@@ -87,7 +81,6 @@ export interface NetworkResponseDto {
 export function instanceOfNetworkResponseDto(value: object): value is NetworkResponseDto {
     if (!('chainId' in value) || value['chainId'] === undefined) return false;
     if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('coin' in value) || value['coin'] === undefined) return false;
     if (!('isTestnet' in value) || value['isTestnet'] === undefined) return false;
     if (!('isActive' in value) || value['isActive'] === undefined) return false;
     if (!('isTron' in value) || value['isTron'] === undefined) return false;
@@ -110,7 +103,6 @@ export function NetworkResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
         
         'chainId': json['chainId'],
         'name': json['name'],
-        'coin': json['coin'],
         'isTestnet': json['isTestnet'],
         'isActive': json['isActive'],
         'isTron': json['isTron'],
@@ -134,7 +126,6 @@ export function NetworkResponseDtoToJSONTyped(value?: NetworkResponseDto | null,
         
         'chainId': value['chainId'],
         'name': value['name'],
-        'coin': value['coin'],
         'isTestnet': value['isTestnet'],
         'isActive': value['isActive'],
         'isTron': value['isTron'],

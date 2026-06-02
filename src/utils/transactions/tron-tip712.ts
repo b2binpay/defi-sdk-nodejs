@@ -2,6 +2,7 @@ import { TronWeb } from 'tronweb';
 import { bytesToHex, concatHex, type Hex, hexToBytes } from 'viem';
 import type { TronAddress } from '../tron-types';
 import { tronToEvmHex } from '../tron-validation';
+import { CONTRACT_VERSION_LEGACY } from './contract-versions';
 import {
   type FetchTronExecuteTypedDataDomainParams,
   TRON_EXECUTE_PRIMARY_TYPE,
@@ -88,18 +89,11 @@ export function prepareTronTypedDataForSigning(typedData: TronExecuteTypedDataPa
 }
 
 export function packTronSignatures(signatures: ReadonlyArray<TronSignatureEntry>, contractVersion: string): Hex {
-  switch (contractVersion) {
-    case '1.0.0':
-      return packTronSignaturesV1(signatures);
-    case '1.1.0':
-      return packTronSignaturesV1_1(signatures);
-    default:
-      console.warn(
-        `[defi-sdk] Unknown contract version "${contractVersion}" in packTronSignatures. ` +
-          'Using v1.1.0 signature format as fallback.',
-      );
-      return packTronSignaturesV1_1(signatures);
+  if (contractVersion === CONTRACT_VERSION_LEGACY) {
+    return packTronSignaturesV1(signatures);
   }
+
+  return packTronSignaturesV1_1(signatures);
 }
 
 function packTronSignaturesV1(signatures: ReadonlyArray<TronSignatureEntry>): Hex {

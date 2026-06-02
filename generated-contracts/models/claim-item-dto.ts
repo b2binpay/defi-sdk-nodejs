@@ -52,7 +52,7 @@ export interface ClaimItemDto {
      */
     updatedAt: string;
     /**
-     * Currency details
+     * 
      * @type {CurrencyResponseDto}
      * @memberof ClaimItemDto
      */

@@ -12,21 +12,22 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  CurrenciesControllerFindAllV1IsNativeParameter,
-  CurrencyResponseDto,
-  UniversalAddress,
-} from '../models/index';
 import {
+    type CurrenciesControllerFindAllV1IsNativeParameter,
     CurrenciesControllerFindAllV1IsNativeParameterFromJSON,
     CurrenciesControllerFindAllV1IsNativeParameterToJSON,
+} from '../models/currencies-controller-find-all-v1-is-native-parameter';
+import {
+    type CurrencyResponseDto,
     CurrencyResponseDtoFromJSON,
     CurrencyResponseDtoToJSON,
+} from '../models/currency-response-dto';
+import {
+    type UniversalAddress,
     UniversalAddressFromJSON,
     UniversalAddressToJSON,
-} from '../models/index';
+} from '../models/universal-address';
 
 export interface CurrenciesControllerFindAllV1Request {
     sortBy?: CurrenciesControllerFindAllV1SortByEnum;
@@ -50,9 +51,9 @@ export interface CurrenciesControllerFindOneV1Request {
 export class CurrenciesApi extends runtime.BaseAPI {
 
     /**
-     * Get list
+     * Creates request options for currenciesControllerFindAllV1 without sending the request
      */
-    async currenciesControllerFindAllV1Raw(requestParameters: CurrenciesControllerFindAllV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CurrencyResponseDto>>> {
+    async currenciesControllerFindAllV1RequestOpts(requestParameters: CurrenciesControllerFindAllV1Request): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         if (requestParameters['sortBy'] != null) {
@@ -100,12 +101,20 @@ export class CurrenciesApi extends runtime.BaseAPI {
 
         let urlPath = `/api/v1/public/currencies`;
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get list
+     */
+    async currenciesControllerFindAllV1Raw(requestParameters: CurrenciesControllerFindAllV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<CurrencyResponseDto>>> {
+        const requestOptions = await this.currenciesControllerFindAllV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(CurrencyResponseDtoFromJSON));
     }
@@ -119,9 +128,9 @@ export class CurrenciesApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get by ID
+     * Creates request options for currenciesControllerFindOneV1 without sending the request
      */
-    async currenciesControllerFindOneV1Raw(requestParameters: CurrenciesControllerFindOneV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CurrencyResponseDto>> {
+    async currenciesControllerFindOneV1RequestOpts(requestParameters: CurrenciesControllerFindOneV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['id'] == null) {
             throw new runtime.RequiredError(
                 'id',
@@ -139,14 +148,22 @@ export class CurrenciesApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/public/currencies/{id}`;
-        urlPath = urlPath.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id'])));
+        urlPath = urlPath.replace('{id}', encodeURIComponent(String(requestParameters['id'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get by ID
+     */
+    async currenciesControllerFindOneV1Raw(requestParameters: CurrenciesControllerFindOneV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CurrencyResponseDto>> {
+        const requestOptions = await this.currenciesControllerFindOneV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => CurrencyResponseDtoFromJSON(jsonValue));
     }
