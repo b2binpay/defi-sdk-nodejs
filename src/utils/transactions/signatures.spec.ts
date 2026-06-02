@@ -104,25 +104,23 @@ describe('packSignatures', () => {
       expect(result).toBe(`0x${'bb'.repeat(65)}${'aa'.repeat(65)}`);
     });
 
-    it('uses v1.1.0 packing for version "1.1.0"', () => {
+    it('uses v1.1.0+ packed format for version "1.1.0"', () => {
       const result = packSignatures([entry(SIGNER_A, SIG_A)], '1.1.0');
       const bytes = hexToBytes(result);
-      // v1.1.0 includes address + length prefix = 87 bytes, not 65
+      // packed format includes address + length prefix = 87 bytes, not 65
       expect(bytes.length).toBe(87);
     });
 
-    it('falls back to v1.1.0 for unknown versions with console warning', () => {
-      const warnSpy = jest.spyOn(console, 'warn').mockImplementation();
+    it('uses v1.1.0+ packed format for version "1.2.0"', () => {
+      const result = packSignatures([entry(SIGNER_A, SIG_A)], '1.2.0');
+      const bytes = hexToBytes(result);
+      expect(bytes.length).toBe(87);
+    });
 
+    it('uses v1.1.0+ packed format for any non-v1.0.0 version', () => {
       const result = packSignatures([entry(SIGNER_A, SIG_A)], '2.0.0');
       const bytes = hexToBytes(result);
-
-      // Should use v1.1.0 format
       expect(bytes.length).toBe(87);
-
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Unknown contract version "2.0.0"'));
-
-      warnSpy.mockRestore();
     });
   });
 

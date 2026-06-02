@@ -13,20 +13,20 @@
  */
 
 import { mapValues } from '../runtime';
-import type { TransactionInvoiceResponseDto } from './transaction-invoice-response-dto';
+import type { TransactionListResponseDtoItemsInnerInvoice } from './transaction-list-response-dto-items-inner-invoice';
 import {
-    TransactionInvoiceResponseDtoFromJSON,
-    TransactionInvoiceResponseDtoFromJSONTyped,
-    TransactionInvoiceResponseDtoToJSON,
-    TransactionInvoiceResponseDtoToJSONTyped,
-} from './transaction-invoice-response-dto';
-import type { TransactionResponseDto } from './transaction-response-dto';
+    TransactionListResponseDtoItemsInnerInvoiceFromJSON,
+    TransactionListResponseDtoItemsInnerInvoiceFromJSONTyped,
+    TransactionListResponseDtoItemsInnerInvoiceToJSON,
+    TransactionListResponseDtoItemsInnerInvoiceToJSONTyped,
+} from './transaction-list-response-dto-items-inner-invoice';
+import type { TransactionListResponseDtoItemsInner } from './transaction-list-response-dto-items-inner';
 import {
-    TransactionResponseDtoFromJSON,
-    TransactionResponseDtoFromJSONTyped,
-    TransactionResponseDtoToJSON,
-    TransactionResponseDtoToJSONTyped,
-} from './transaction-response-dto';
+    TransactionListResponseDtoItemsInnerFromJSON,
+    TransactionListResponseDtoItemsInnerFromJSONTyped,
+    TransactionListResponseDtoItemsInnerToJSON,
+    TransactionListResponseDtoItemsInnerToJSONTyped,
+} from './transaction-list-response-dto-items-inner';
 import type { CurrencyResponseDto } from './currency-response-dto';
 import {
     CurrencyResponseDtoFromJSON,
@@ -42,11 +42,11 @@ import {
  */
 export interface TransactionDetailsDto {
     /**
-     * Transaction details
-     * @type {TransactionResponseDto}
+     * 
+     * @type {TransactionListResponseDtoItemsInner}
      * @memberof TransactionDetailsDto
      */
-    transaction: TransactionResponseDto;
+    transaction: TransactionListResponseDtoItemsInner;
     /**
      * Can this invoice be claimed
      * @type {boolean}
@@ -60,17 +60,17 @@ export interface TransactionDetailsDto {
      */
     isClaimed: boolean;
     /**
-     * Related invoice information
-     * @type {TransactionInvoiceResponseDto}
+     * 
+     * @type {TransactionListResponseDtoItemsInnerInvoice}
      * @memberof TransactionDetailsDto
      */
-    invoice: TransactionInvoiceResponseDto | null;
+    invoice: TransactionListResponseDtoItemsInnerInvoice | null;
     /**
-     * Currency details
+     * 
      * @type {CurrencyResponseDto}
      * @memberof TransactionDetailsDto
      */
-    currency: CurrencyResponseDto;
+    currency: CurrencyResponseDto | null;
 }
 
 /**
@@ -95,10 +95,10 @@ export function TransactionDetailsDtoFromJSONTyped(json: any, ignoreDiscriminato
     }
     return {
         
-        'transaction': TransactionResponseDtoFromJSON(json['transaction']),
+        'transaction': TransactionListResponseDtoItemsInnerFromJSON(json['transaction']),
         'canClaim': json['canClaim'],
         'isClaimed': json['isClaimed'],
-        'invoice': TransactionInvoiceResponseDtoFromJSON(json['invoice']),
+        'invoice': TransactionListResponseDtoItemsInnerInvoiceFromJSON(json['invoice']),
         'currency': CurrencyResponseDtoFromJSON(json['currency']),
     };
 }
@@ -114,10 +114,10 @@ export function TransactionDetailsDtoToJSONTyped(value?: TransactionDetailsDto |
 
     return {
         
-        'transaction': TransactionResponseDtoToJSON(value['transaction']),
+        'transaction': TransactionListResponseDtoItemsInnerToJSON(value['transaction']),
         'canClaim': value['canClaim'],
         'isClaimed': value['isClaimed'],
-        'invoice': TransactionInvoiceResponseDtoToJSON(value['invoice']),
+        'invoice': TransactionListResponseDtoItemsInnerInvoiceToJSON(value['invoice']),
         'currency': CurrencyResponseDtoToJSON(value['currency']),
     };
 }

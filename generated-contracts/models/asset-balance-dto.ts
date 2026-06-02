@@ -35,16 +35,16 @@ export interface AssetBalanceDto {
     currency: CurrencyResponseDto;
     /**
      * Asset balance
-     * @type {number}
+     * @type {string}
      * @memberof AssetBalanceDto
      */
-    balance: number;
+    balance: string;
     /**
      * Balance converted to base currency (null if rate unavailable)
-     * @type {number}
+     * @type {string}
      * @memberof AssetBalanceDto
      */
-    convertedBalance: number | null;
+    convertedBalance: string | null;
     /**
      * Only for JWT users; ignored for API keys
      * @type {boolean}

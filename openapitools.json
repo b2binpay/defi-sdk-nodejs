@@ -2,7 +2,7 @@
   "$schema": "node_modules/@openapitools/openapi-generator-cli/config.schema.json",
   "spaces": 2,
   "generator-cli": {
-    "version": "7.16.0",
+    "version": "7.22.0",
     "generators": {
       "api": {
         "generatorName": "typescript-fetch",
@@ -16,7 +16,13 @@
           "modelPropertyNaming": "camelCase",
           "useSingleRequestParameter": true
         },
-        "skipValidateSpec": true
+        "skipValidateSpec": true,
+        "globalProperty": {
+          "modelDocs": "false",
+          "apiDocs": "false",
+          "modelTests": "false",
+          "apiTests": "false"
+        }
       }
     }
   }

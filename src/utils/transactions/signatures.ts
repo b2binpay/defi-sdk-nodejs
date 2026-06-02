@@ -1,11 +1,5 @@
 import { type Address, bytesToHex, concatHex, type Hex, hexToBytes } from 'viem';
-
-/**
- * Supported MultiSigWallet contract versions.
- */
-export type ContractVersion = '1.0.0' | '1.1.0';
-
-export const SUPPORTED_CONTRACT_VERSIONS: readonly ContractVersion[] = ['1.0.0', '1.1.0'];
+import { CONTRACT_VERSION_LEGACY } from './contract-versions';
 
 export interface SignatureEntry {
   /** Signer address */
@@ -19,22 +13,17 @@ export interface SignatureEntry {
  * for the given contract version.
  *
  * - **v1.0.0**: Simple concatenation of 65-byte ECDSA signatures.
- * - **v1.1.0**: Packed binary format `[signer:20 bytes][sigLen:2 bytes uint16 BE][sig:sigLen bytes]`
- *   per entry, sorted by signer address in strictly ascending order.
+ * - **v1.1.0 and later** (v1.1.0, v1.2.0, …): Packed binary format
+ *   `[signer:20 bytes][sigLen:2 bytes uint16 BE][sig:sigLen bytes]` per entry,
+ *   sorted by signer address in strictly ascending order. ERC-1271 contract
+ *   signatures use the same envelope with a non-65-byte inner signature.
  */
 export function packSignatures(signatures: ReadonlyArray<SignatureEntry>, contractVersion: string): Hex {
-  switch (contractVersion) {
-    case '1.0.0':
-      return packSignaturesV1(signatures);
-    case '1.1.0':
-      return packSignaturesV1_1(signatures);
-    default:
-      console.warn(
-        `[defi-sdk] Unknown contract version "${contractVersion}" in packSignatures. ` +
-          'Using v1.1.0 signature format as fallback.',
-      );
-      return packSignaturesV1_1(signatures);
+  if (contractVersion === CONTRACT_VERSION_LEGACY) {
+    return packSignaturesV1(signatures);
   }
+
+  return packSignaturesV1_1(signatures);
 }
 
 /**
@@ -45,7 +34,7 @@ function packSignaturesV1(signatures: ReadonlyArray<SignatureEntry>): Hex {
 }
 
 /**
- * v1.1.0 signature packing: packed binary format with explicit signer addresses.
+ * v1.1.0+ signature packing: packed binary format with explicit signer addresses.
  *
  * Format per entry: `[signer:20 bytes][sigLen:2 bytes uint16 BE][sig:sigLen bytes]`
  * Entries are sorted by signer address in strictly ascending order.

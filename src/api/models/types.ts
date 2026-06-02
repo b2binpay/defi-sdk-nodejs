@@ -17,9 +17,9 @@ import type {
   QueueOperationResponseDto,
   SignatureResponseDto,
   TransactionDetailsDto,
-  TransactionInvoiceResponseDto,
   TransactionListResponseDto,
-  TransactionResponseDto,
+  TransactionListResponseDtoItemsInner,
+  TransactionListResponseDtoItemsInnerInvoice,
 } from '../../../generated-contracts';
 
 export enum FiatCurrency {
@@ -188,10 +188,10 @@ export enum TransactionSortField {
   UpdatedAt = 'updatedAt',
 }
 
-export type TransactionInvoice = TransactionInvoiceResponseDto;
+export type TransactionInvoice = TransactionListResponseDtoItemsInnerInvoice;
 
 export type Transaction = Omit<
-  TransactionResponseDto,
+  TransactionListResponseDtoItemsInner,
   'direction' | 'status' | 'operationType' | 'currency' | 'invoice'
 > & {
   /** @deprecated Use `operationType` to determine transaction direction instead. */

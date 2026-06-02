@@ -44,7 +44,10 @@ export function buildExecuteOperationsTransaction(input: ExecuteQueueOperationIn
       value: call.value ? BigInt(call.value) : 0n,
       data: (call.data ?? '0x') as Hex,
     })),
-    signatures: concatHex(operation.signatures.map((sig) => sig.sign as Hex)),
+    // Prefer the backend-built blob (signers ordered ascending); fall back to
+    // client-side concat for backends that don't expose signatureBlob yet.
+    signatures:
+      (operation.signatureBlob as Hex | null) ?? concatHex(operation.signatures.map((sig) => sig.sign as Hex)),
     id: operation.executeOperationId as Hex,
   }));
 

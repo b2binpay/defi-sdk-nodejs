@@ -114,5 +114,10 @@ describe('packTronSignatures', () => {
       const result = packTronSignatures([], '1.1.0');
       expect(result).toBe('0x');
     });
+
+    it('uses packed format for any non-v1.0.0 version (e.g. v1.2.0)', () => {
+      const result = packTronSignatures([{ signer: SIGNER_A, signature: SIG_A }], '1.2.0');
+      expect((result.length - 2) / 2).toBe(87);
+    });
   });
 });

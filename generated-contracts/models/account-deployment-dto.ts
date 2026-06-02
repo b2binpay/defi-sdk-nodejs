@@ -51,7 +51,7 @@ export interface AccountDeploymentDto {
     threshold: number;
     /**
      * Deployment status
-     * @type {string}
+     * @type {AccountDeploymentDtoDeploymentStatusEnum}
      * @memberof AccountDeploymentDto
      */
     deploymentStatus: AccountDeploymentDtoDeploymentStatusEnum;

@@ -46,7 +46,7 @@ export interface PayoutListResponseDto {
      */
     pageSize: number;
     /**
-     * Array of payouts
+     * 
      * @type {Array<PayoutResponseDto>}
      * @memberof PayoutListResponseDto
      */

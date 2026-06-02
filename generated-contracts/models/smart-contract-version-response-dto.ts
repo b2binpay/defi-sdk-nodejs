@@ -33,7 +33,7 @@ export interface SmartContractVersionResponseDto {
     version: string;
     /**
      * 
-     * @type {string}
+     * @type {SmartContractVersionResponseDtoNetworkTypeEnum}
      * @memberof SmartContractVersionResponseDto
      */
     networkType: SmartContractVersionResponseDtoNetworkTypeEnum;

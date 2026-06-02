@@ -21,16 +21,16 @@ import { mapValues } from '../runtime';
 export interface BalanceSummaryResponseDto {
     /**
      * Total balance in base currency
-     * @type {number}
+     * @type {string}
      * @memberof BalanceSummaryResponseDto
      */
-    totalBalance: number;
+    totalBalance: string;
     /**
      * Uncollected balance in base currency
-     * @type {number}
+     * @type {string}
      * @memberof BalanceSummaryResponseDto
      */
-    uncollectedBalance: number;
+    uncollectedBalance: string;
     /**
      * Count of uncollected invoices
      * @type {number}

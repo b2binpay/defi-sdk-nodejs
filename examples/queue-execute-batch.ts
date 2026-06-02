@@ -7,7 +7,7 @@
 import 'dotenv/config';
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { DefiClient, MultisigBlockchainClient, type QueueOperation } from '../src';
+import { DefiClient, MultisigBlockchainClient, type QueueOperation, QueueOperationStatus } from '../src';
 import { getEvmChainById } from '../src/blockchain/get-chain';
 import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
@@ -22,7 +22,7 @@ runMain(async () => {
   const accountDetails = await client.getAccount();
   await client.selectChain(chainId);
 
-  const queue = await client.getDeploymentQueue({ statuses: ['READY'], pageSize: 50 });
+  const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 50 });
   const operationsToExecute: QueueOperation[] = [];
 
   let currentNonce = Number(queue.nextExecutableNonce);

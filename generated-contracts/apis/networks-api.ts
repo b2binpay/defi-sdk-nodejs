@@ -12,15 +12,12 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  NetworksResponseDto,
-} from '../models/index';
 import {
+    type NetworksResponseDto,
     NetworksResponseDtoFromJSON,
     NetworksResponseDtoToJSON,
-} from '../models/index';
+} from '../models/networks-response-dto';
 
 /**
  * 
@@ -28,9 +25,9 @@ import {
 export class NetworksApi extends runtime.BaseAPI {
 
     /**
-     * Get list
+     * Creates request options for networksControllerFindAllV1 without sending the request
      */
-    async networksControllerFindAllV1Raw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<NetworksResponseDto>> {
+    async networksControllerFindAllV1RequestOpts(): Promise<runtime.RequestOpts> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -42,12 +39,20 @@ export class NetworksApi extends runtime.BaseAPI {
 
         let urlPath = `/api/v1/networks`;
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get list
+     */
+    async networksControllerFindAllV1Raw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<NetworksResponseDto>> {
+        const requestOptions = await this.networksControllerFindAllV1RequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => NetworksResponseDtoFromJSON(jsonValue));
     }

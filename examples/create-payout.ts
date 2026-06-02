@@ -5,6 +5,7 @@
  * - Fetch payout details and show the associated queue operation for follow-up signing/execution flows.
  */
 import 'dotenv/config';
+import { instanceOfPayoutPayload } from '../generated-contracts';
 import { DefiClient } from '../src';
 import { parseChainId, requireEnvVars, runMain } from './utils';
 
@@ -57,8 +58,15 @@ runMain(async () => {
     })),
   );
 
+  // TODO: Fetch queue by id
   const queue = await client.getDeploymentQueue({ pageSize: 100 });
-  const operation = queue.items.find((item) => item.operationType === 'PAYOUT' && item.payload?.payoutId === payout.id);
+  const operation = queue.items.find(
+    (item) =>
+      item.operationType === 'PAYOUT' &&
+      item.payload != null &&
+      instanceOfPayoutPayload(item.payload) &&
+      item.payload.payoutId === payout.id,
+  );
   if (!operation) {
     throw new Error(`Payout operation for ${payout.id} not found in queue (queue size ${queue.items.length}).`);
   }

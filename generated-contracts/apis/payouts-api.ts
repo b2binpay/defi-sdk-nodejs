@@ -12,27 +12,32 @@
  * Do not edit the class manually.
  */
 
-
 import * as runtime from '../runtime';
-import type {
-  CreatePayoutDto,
-  PayoutDetailResponseDto,
-  PayoutListResponseDto,
-  PayoutResponseDto,
-  UpdatePayoutDto,
-} from '../models/index';
 import {
+    type CreatePayoutDto,
     CreatePayoutDtoFromJSON,
     CreatePayoutDtoToJSON,
+} from '../models/create-payout-dto';
+import {
+    type PayoutDetailResponseDto,
     PayoutDetailResponseDtoFromJSON,
     PayoutDetailResponseDtoToJSON,
+} from '../models/payout-detail-response-dto';
+import {
+    type PayoutListResponseDto,
     PayoutListResponseDtoFromJSON,
     PayoutListResponseDtoToJSON,
+} from '../models/payout-list-response-dto';
+import {
+    type PayoutResponseDto,
     PayoutResponseDtoFromJSON,
     PayoutResponseDtoToJSON,
+} from '../models/payout-response-dto';
+import {
+    type UpdatePayoutDto,
     UpdatePayoutDtoFromJSON,
     UpdatePayoutDtoToJSON,
-} from '../models/index';
+} from '../models/update-payout-dto';
 
 export interface PayoutsControllerCreateV1Request {
     deploymentId: string;
@@ -41,6 +46,10 @@ export interface PayoutsControllerCreateV1Request {
 
 export interface PayoutsControllerFindAllV1Request {
     deploymentId: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: PayoutsControllerFindAllV1SortByEnum;
+    sortOrder?: PayoutsControllerFindAllV1SortOrderEnum;
     id?: string;
     createdFrom?: string;
     createdTo?: string;
@@ -51,10 +60,6 @@ export interface PayoutsControllerFindAllV1Request {
     trackingId?: string;
     createdBy?: string;
     toAddress?: string;
-    sortBy?: PayoutsControllerFindAllV1SortByEnum;
-    sortOrder?: PayoutsControllerFindAllV1SortOrderEnum;
-    page?: number;
-    pageSize?: number;
 }
 
 export interface PayoutsControllerFindOneV1Request {
@@ -74,10 +79,9 @@ export interface PayoutsControllerUpdateV1Request {
 export class PayoutsApi extends runtime.BaseAPI {
 
     /**
-     * Create new entity
-     * Create
+     * Creates request options for payoutsControllerCreateV1 without sending the request
      */
-    async payoutsControllerCreateV1Raw(requestParameters: PayoutsControllerCreateV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutResponseDto>> {
+    async payoutsControllerCreateV1RequestOpts(requestParameters: PayoutsControllerCreateV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -104,15 +108,24 @@ export class PayoutsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/payouts`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
             body: CreatePayoutDtoToJSON(requestParameters['createPayoutDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Create new entity
+     * Create
+     */
+    async payoutsControllerCreateV1Raw(requestParameters: PayoutsControllerCreateV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutResponseDto>> {
+        const requestOptions = await this.payoutsControllerCreateV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => PayoutResponseDtoFromJSON(jsonValue));
     }
@@ -127,10 +140,9 @@ export class PayoutsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get list of entities
-     * Get list
+     * Creates request options for payoutsControllerFindAllV1 without sending the request
      */
-    async payoutsControllerFindAllV1Raw(requestParameters: PayoutsControllerFindAllV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutListResponseDto>> {
+    async payoutsControllerFindAllV1RequestOpts(requestParameters: PayoutsControllerFindAllV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -139,6 +151,22 @@ export class PayoutsApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
+        if (requestParameters['sortBy'] != null) {
+            queryParameters['sortBy'] = requestParameters['sortBy'];
+        }
+
+        if (requestParameters['sortOrder'] != null) {
+            queryParameters['sortOrder'] = requestParameters['sortOrder'];
+        }
 
         if (requestParameters['id'] != null) {
             queryParameters['id'] = requestParameters['id'];
@@ -180,22 +208,6 @@ export class PayoutsApi extends runtime.BaseAPI {
             queryParameters['toAddress'] = requestParameters['toAddress'];
         }
 
-        if (requestParameters['sortBy'] != null) {
-            queryParameters['sortBy'] = requestParameters['sortBy'];
-        }
-
-        if (requestParameters['sortOrder'] != null) {
-            queryParameters['sortOrder'] = requestParameters['sortOrder'];
-        }
-
-        if (requestParameters['page'] != null) {
-            queryParameters['page'] = requestParameters['page'];
-        }
-
-        if (requestParameters['pageSize'] != null) {
-            queryParameters['pageSize'] = requestParameters['pageSize'];
-        }
-
         const headerParameters: runtime.HTTPHeaders = {};
 
         if (this.configuration && this.configuration.apiKey) {
@@ -204,14 +216,23 @@ export class PayoutsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/payouts`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get list of entities
+     * Get list
+     */
+    async payoutsControllerFindAllV1Raw(requestParameters: PayoutsControllerFindAllV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutListResponseDto>> {
+        const requestOptions = await this.payoutsControllerFindAllV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => PayoutListResponseDtoFromJSON(jsonValue));
     }
@@ -226,10 +247,9 @@ export class PayoutsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Get entity by ID
-     * Get by ID
+     * Creates request options for payoutsControllerFindOneV1 without sending the request
      */
-    async payoutsControllerFindOneV1Raw(requestParameters: PayoutsControllerFindOneV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutDetailResponseDto>> {
+    async payoutsControllerFindOneV1RequestOpts(requestParameters: PayoutsControllerFindOneV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -254,15 +274,24 @@ export class PayoutsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/payouts/{payoutId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"payoutId"}}`, encodeURIComponent(String(requestParameters['payoutId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{payoutId}', encodeURIComponent(String(requestParameters['payoutId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Get entity by ID
+     * Get by ID
+     */
+    async payoutsControllerFindOneV1Raw(requestParameters: PayoutsControllerFindOneV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutDetailResponseDto>> {
+        const requestOptions = await this.payoutsControllerFindOneV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => PayoutDetailResponseDtoFromJSON(jsonValue));
     }
@@ -277,10 +306,9 @@ export class PayoutsApi extends runtime.BaseAPI {
     }
 
     /**
-     * Update entity
-     * Update
+     * Creates request options for payoutsControllerUpdateV1 without sending the request
      */
-    async payoutsControllerUpdateV1Raw(requestParameters: PayoutsControllerUpdateV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutResponseDto>> {
+    async payoutsControllerUpdateV1RequestOpts(requestParameters: PayoutsControllerUpdateV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
             throw new runtime.RequiredError(
                 'deploymentId',
@@ -314,16 +342,25 @@ export class PayoutsApi extends runtime.BaseAPI {
 
 
         let urlPath = `/api/v1/deployments/{deploymentId}/payouts/{payoutId}`;
-        urlPath = urlPath.replace(`{${"deploymentId"}}`, encodeURIComponent(String(requestParameters['deploymentId'])));
-        urlPath = urlPath.replace(`{${"payoutId"}}`, encodeURIComponent(String(requestParameters['payoutId'])));
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{payoutId}', encodeURIComponent(String(requestParameters['payoutId'])));
 
-        const response = await this.request({
+        return {
             path: urlPath,
             method: 'PATCH',
             headers: headerParameters,
             query: queryParameters,
             body: UpdatePayoutDtoToJSON(requestParameters['updatePayoutDto']),
-        }, initOverrides);
+        };
+    }
+
+    /**
+     * Update entity
+     * Update
+     */
+    async payoutsControllerUpdateV1Raw(requestParameters: PayoutsControllerUpdateV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<PayoutResponseDto>> {
+        const requestOptions = await this.payoutsControllerUpdateV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => PayoutResponseDtoFromJSON(jsonValue));
     }
@@ -342,18 +379,6 @@ export class PayoutsApi extends runtime.BaseAPI {
 /**
  * @export
  */
-export const PayoutsControllerFindAllV1StatusesEnum = {
-    Created: 'CREATED',
-    Signed: 'SIGNED',
-    Sent: 'SENT',
-    Executed: 'EXECUTED',
-    Failed: 'FAILED',
-    Canceled: 'CANCELED'
-} as const;
-export type PayoutsControllerFindAllV1StatusesEnum = typeof PayoutsControllerFindAllV1StatusesEnum[keyof typeof PayoutsControllerFindAllV1StatusesEnum];
-/**
- * @export
- */
 export const PayoutsControllerFindAllV1SortByEnum = {
     Id: 'id',
     CreatedAt: 'createdAt',
@@ -368,3 +393,15 @@ export const PayoutsControllerFindAllV1SortOrderEnum = {
     Desc: 'desc'
 } as const;
 export type PayoutsControllerFindAllV1SortOrderEnum = typeof PayoutsControllerFindAllV1SortOrderEnum[keyof typeof PayoutsControllerFindAllV1SortOrderEnum];
+/**
+ * @export
+ */
+export const PayoutsControllerFindAllV1StatusesEnum = {
+    Created: 'CREATED',
+    Signed: 'SIGNED',
+    Sent: 'SENT',
+    Executed: 'EXECUTED',
+    Failed: 'FAILED',
+    Canceled: 'CANCELED'
+} as const;
+export type PayoutsControllerFindAllV1StatusesEnum = typeof PayoutsControllerFindAllV1StatusesEnum[keyof typeof PayoutsControllerFindAllV1StatusesEnum];

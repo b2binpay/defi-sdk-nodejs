@@ -35,10 +35,10 @@ export interface AssetBalanceShortResponseDto {
     currency: CurrencyResponseDto;
     /**
      * Asset balance
-     * @type {number}
+     * @type {string}
      * @memberof AssetBalanceShortResponseDto
      */
-    balance: number;
+    balance: string;
     /**
      * Only for JWT users; ignored for API keys
      * @type {boolean}

@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { UniversalAddress } from './universal-address';
+import {
+    UniversalAddressFromJSON,
+    UniversalAddressFromJSONTyped,
+    UniversalAddressToJSON,
+    UniversalAddressToJSONTyped,
+} from './universal-address';
 import type { CurrencyResponseDto } from './currency-response-dto';
 import {
     CurrencyResponseDtoFromJSON,
@@ -46,11 +53,11 @@ export interface PayoutResponseDto {
      */
     amount: string;
     /**
-     * Wallet address (Ethereum 0x... or Tron TVM T...)
-     * @type {string}
+     * 
+     * @type {UniversalAddress}
      * @memberof PayoutResponseDto
      */
-    toAddress: string;
+    toAddress: UniversalAddress;
     /**
      * Whether the entity relates to Tron (TVM)
      * @type {boolean}
@@ -68,13 +75,13 @@ export interface PayoutResponseDto {
      * @type {string}
      * @memberof PayoutResponseDto
      */
-    trackingId: string;
+    trackingId: string | null;
     /**
      * Callback URL for notifications
      * @type {string}
      * @memberof PayoutResponseDto
      */
-    callbackUrl: string;
+    callbackUrl: string | null;
     /**
      * Queue operation ID associated with this payout
      * @type {string}
@@ -89,16 +96,16 @@ export interface PayoutResponseDto {
     nonce: string;
     /**
      * Current status of the payout
-     * @type {string}
+     * @type {PayoutResponseDtoStatusEnum}
      * @memberof PayoutResponseDto
      */
     status: PayoutResponseDtoStatusEnum;
     /**
-     * Wallet address (Ethereum 0x... or Tron TVM T...)
-     * @type {string}
+     * 
+     * @type {UniversalAddress}
      * @memberof PayoutResponseDto
      */
-    createdBy: string;
+    createdBy: UniversalAddress;
     /**
      * Creation timestamp
      * @type {string}
@@ -112,7 +119,7 @@ export interface PayoutResponseDto {
      */
     updatedAt: string;
     /**
-     * Currency information
+     * 
      * @type {CurrencyResponseDto}
      * @memberof PayoutResponseDto
      */
@@ -169,7 +176,7 @@ export function PayoutResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: b
         'id': json['id'],
         'currencyId': json['currencyId'],
         'amount': json['amount'],
-        'toAddress': json['toAddress'],
+        'toAddress': UniversalAddressFromJSON(json['toAddress']),
         'isTron': json['isTron'],
         'deploymentId': json['deploymentId'],
         'trackingId': json['trackingId'],
@@ -177,7 +184,7 @@ export function PayoutResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: b
         'queueOperationId': json['queueOperationId'],
         'nonce': json['nonce'],
         'status': json['status'],
-        'createdBy': json['createdBy'],
+        'createdBy': UniversalAddressFromJSON(json['createdBy']),
         'createdAt': json['createdAt'],
         'updatedAt': json['updatedAt'],
         'currency': CurrencyResponseDtoFromJSON(json['currency']),
@@ -198,7 +205,7 @@ export function PayoutResponseDtoToJSONTyped(value?: PayoutResponseDto | null, i
         'id': value['id'],
         'currencyId': value['currencyId'],
         'amount': value['amount'],
-        'toAddress': value['toAddress'],
+        'toAddress': UniversalAddressToJSON(value['toAddress']),
         'isTron': value['isTron'],
         'deploymentId': value['deploymentId'],
         'trackingId': value['trackingId'],
@@ -206,7 +213,7 @@ export function PayoutResponseDtoToJSONTyped(value?: PayoutResponseDto | null, i
         'queueOperationId': value['queueOperationId'],
         'nonce': value['nonce'],
         'status': value['status'],
-        'createdBy': value['createdBy'],
+        'createdBy': UniversalAddressToJSON(value['createdBy']),
         'createdAt': value['createdAt'],
         'updatedAt': value['updatedAt'],
         'currency': CurrencyResponseDtoToJSON(value['currency']),

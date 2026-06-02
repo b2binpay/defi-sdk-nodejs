@@ -27,6 +27,7 @@
  */
 import 'dotenv/config';
 import { TronWeb } from 'tronweb';
+import { instanceOfPayoutPayload } from '../generated-contracts';
 import {
   AssetSortField,
   AssetSortOrder,
@@ -34,6 +35,7 @@ import {
   DefiClient,
   FiatCurrency,
   type QueueOperation,
+  QueueOperationStatus,
   TRON_ZERO_ADDRESS,
   type Transaction,
   TransactionOperationType,
@@ -259,7 +261,13 @@ runMain(async () => {
     'payout queue operation',
     async () => {
       const queue = await client.getDeploymentQueue({ pageSize: 100 });
-      const op = queue.items.find((item) => item.operationType === 'PAYOUT' && item.payload?.payoutId === payout.id);
+      const op = queue.items.find(
+        (item) =>
+          item.operationType === 'PAYOUT' &&
+          item.payload != null &&
+          instanceOfPayoutPayload(item.payload) &&
+          item.payload.payoutId === payout.id,
+      );
       return op ?? null;
     },
     pollInterval,
@@ -306,7 +314,7 @@ runMain(async () => {
   const operationsToExecute = await poll<QueueOperation[]>(
     'executable operation',
     async () => {
-      const queue = await client.getDeploymentQueue({ statuses: ['READY'], pageSize: 100 });
+      const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 100 });
 
       const payoutReady = queue.items.some((item) => item.id === payoutOperation.id);
       if (!payoutReady) return null;

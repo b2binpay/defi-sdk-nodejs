@@ -52,7 +52,7 @@ export interface SignatureResponseDto {
      */
     userSigned: boolean;
     /**
-     * Array of signatures for this operation
+     * Array of signatures for this operation, ordered by signer address ascending
      * @type {Array<OperationSignatureDto>}
      * @memberof SignatureResponseDto
      */
