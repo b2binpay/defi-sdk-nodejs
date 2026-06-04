@@ -25,10 +25,12 @@ import type {
 } from '../../generated-contracts';
 import {
   AccountsApi,
+  CallbacksApi,
   ClaimsApi,
   Configuration,
   CurrenciesApi,
   InvoicesApi,
+  NetworksApi,
   PayoutsApi,
   QueueOperationsApi,
   ResponseError,
@@ -47,9 +49,11 @@ import type {
   AssetSortField,
   AssetSortOrder,
   BalanceSummary,
+  CallbackList,
   ClaimsResponse,
   ClaimsSortField,
   Currency,
+  DeploymentParams,
   DeploymentQueue,
   FiatCurrency,
   Invoice,
@@ -57,11 +61,15 @@ import type {
   InvoiceList,
   InvoiceSortField,
   InvoiceStatus,
+  Network,
+  NonceInfo,
   Payout,
   PayoutDetail,
   PayoutList,
   PayoutSortField,
   PayoutStatus,
+  QueueOperation,
+  ResendCallbacksResult,
   Signature,
   SortOrder,
   TransactionDetails,
@@ -75,15 +83,18 @@ import {
   mapAccountDetails,
   mapAssetBalanceList,
   mapBalanceSummary,
+  mapCallbackList,
   mapClaimsResponse,
   mapCurrency,
   mapDeploymentQueue,
   mapInvoice,
   mapInvoiceDetails,
   mapInvoiceList,
+  mapNetwork,
   mapPayout,
   mapPayoutDetail,
   mapPayoutList,
+  mapQueueOperation,
   mapSignature,
   mapTransactionDetails,
   mapTransactionList,
@@ -287,6 +298,22 @@ export interface GetAssetBalancesParams extends ChainScopedParams {
   pageSize?: number;
 }
 
+export interface GetCallbacksParams {
+  /** Invoice or payout id to fetch callbacks for. */
+  operationId: string;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface ResendCallbacksParams {
+  /** Ids of FAILED callbacks to re-queue for delivery. */
+  ids: string[];
+}
+
+export interface GetQueueOperationParams extends ChainScopedParams {
+  operationId: string;
+}
+
 export class DefiClient {
   private readonly config: Configuration;
   private readonly accountsApi: AccountsApi;
@@ -297,6 +324,8 @@ export class DefiClient {
   private readonly queueOperationsApi: QueueOperationsApi;
   private readonly transactionsApi: TransactionsApi;
   private readonly smartContractVersionsApi: SmartContractVersionsApi;
+  private readonly callbacksApi: CallbacksApi;
+  private readonly networksApi: NetworksApi;
   private readonly abiProvider: AbiProvider;
   private accountInfoPromise?: Promise<{
     accountId: string;
@@ -336,6 +365,8 @@ export class DefiClient {
     this.queueOperationsApi = new QueueOperationsApi(this.config);
     this.transactionsApi = new TransactionsApi(this.config);
     this.smartContractVersionsApi = new SmartContractVersionsApi(this.config);
+    this.callbacksApi = new CallbacksApi(this.config);
+    this.networksApi = new NetworksApi(this.config);
     this.abiProvider = new AbiProvider(this.smartContractVersionsApi, options.abiCacheDir);
   }
 
@@ -367,6 +398,12 @@ export class DefiClient {
   async getAccount(): Promise<AccountDetails> {
     const info = await this.resolveAccountInfo();
     return info.details;
+  }
+
+  /** Fetch multisig deployment parameters (implementation address, initializer bytecode, nonce, deployer address). */
+  async getDeploymentInfo(): Promise<DeploymentParams> {
+    const accountId = await this.resolveAccountId();
+    return this.callApi(() => this.accountsApi.accountsControllerGetDeploymentInfoV1({ accountId }));
   }
 
   async getDeployments(accountDetails?: AccountDetails): Promise<AccountDeployment[]> {
@@ -419,6 +456,18 @@ export class DefiClient {
   async getCurrencies(): Promise<Currency[]> {
     const currencies = await this.callApi(() => this.currenciesApi.currenciesControllerFindAllV1());
     return currencies.map(mapCurrency);
+  }
+
+  /** Fetch a single currency by its id. */
+  async getCurrency(currencyId: string): Promise<Currency> {
+    const response = await this.callApi(() => this.currenciesApi.currenciesControllerFindOneV1({ id: currencyId }));
+    return mapCurrency(response);
+  }
+
+  /** List all networks (chains) supported by the platform. */
+  async getNetworks(): Promise<Network[]> {
+    const response = await this.callApi(() => this.networksApi.networksControllerFindAllV1());
+    return response.items.map(mapNetwork);
   }
 
   async findCurrencyBySymbol(params: FindCurrencyBySymbolParams): Promise<Currency> {
@@ -645,6 +694,31 @@ export class DefiClient {
     return mapDeploymentQueue(response);
   }
 
+  /** Fetch a single queue operation by id. */
+  async getQueueOperation(params: GetQueueOperationParams): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.queueOperationsApi.queueOperationsControllerGetOperationByIdV1({
+        deploymentId,
+        operationId: params.operationId,
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Fetch the current and last-executed nonce for the deployment. */
+  async getNonceInfo(chainId?: ChainIdentifier): Promise<NonceInfo> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    return this.callApi(() =>
+      this.accountsApi.accountDeploymentsControllerGetNonceInfoV1({
+        deploymentId,
+      }),
+    );
+  }
+
   async deleteQueueOperation(params: DeleteQueueOperationParams): Promise<void> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
@@ -788,6 +862,28 @@ export class DefiClient {
     );
 
     return response.map(mapCurrency);
+  }
+
+  /** Fetch the paginated callback delivery log for an invoice or payout. */
+  async getCallbacks(params: GetCallbacksParams): Promise<CallbackList> {
+    const response = await this.callApi(() =>
+      this.callbacksApi.callbacksControllerGetCallbacksV1({
+        operationId: params.operationId,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
+
+    return mapCallbackList(response);
+  }
+
+  /** Re-queue FAILED callbacks for delivery. Only callbacks owned by this API key are eligible. */
+  async resendCallbacks(params: ResendCallbacksParams): Promise<ResendCallbacksResult> {
+    return this.callApi(() =>
+      this.callbacksApi.callbacksControllerResendCallbacksV1({
+        resendCallbacksBodyDto: { ids: params.ids },
+      }),
+    );
   }
 
   private buildInvoiceUpdatePayload(params: UpdateInvoiceParams): UpdateInvoiceDto {

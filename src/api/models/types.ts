@@ -4,17 +4,23 @@ import type {
   AssetBalanceDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
+  CallbackResponseDto,
   CallDto,
   ClaimItemDto,
   CurrencyResponseDto,
+  DeploymentParamsResponseDto,
   DeploymentQueueResponseDto,
+  GetCallbacksResponseDto,
   InvoiceResponseDto,
   InvoicesResponseDto,
+  NetworkResponseDto,
+  NonceInfoResponseDto,
   OperationSignatureDto,
   PayoutDetailResponseDto,
   PayoutListResponseDto,
   PayoutResponseDto,
   QueueOperationResponseDto,
+  ResendCallbacksResponseDto,
   SignatureResponseDto,
   TransactionDetailsDto,
   TransactionListResponseDto,
@@ -231,3 +237,48 @@ export enum ClaimsSortField {
   CreatedAt = 'createdAt',
   UpdatedAt = 'updatedAt',
 }
+
+export enum CallbackType {
+  InvoiceCreated = 'INVOICE_CREATED',
+  InvoiceDepositReceived = 'INVOICE_DEPOSIT_RECEIVED',
+  InvoiceDepositConfirmed = 'INVOICE_DEPOSIT_CONFIRMED',
+  InvoicePaid = 'INVOICE_PAID',
+  InvoiceUnresolved = 'INVOICE_UNRESOLVED',
+  InvoiceClaimed = 'INVOICE_CLAIMED',
+  PayoutCreated = 'PAYOUT_CREATED',
+  PayoutSent = 'PAYOUT_SENT',
+  PayoutExecuted = 'PAYOUT_EXECUTED',
+  PayoutConfirmed = 'PAYOUT_CONFIRMED',
+  PayoutFailed = 'PAYOUT_FAILED',
+  PayoutCancelled = 'PAYOUT_CANCELLED',
+}
+
+export enum CallbackStatus {
+  Created = 'CREATED',
+  Retry = 'RETRY',
+  Sent = 'SENT',
+  Failed = 'FAILED',
+}
+
+export enum CallbackOperationType {
+  Invoice = 'invoice',
+  Payout = 'payout',
+}
+
+export type Callback = Omit<CallbackResponseDto, 'type' | 'status' | 'operationType'> & {
+  type: CallbackType;
+  status: CallbackStatus;
+  operationType: CallbackOperationType;
+};
+
+export type CallbackList = Omit<GetCallbacksResponseDto, 'items'> & {
+  items: Callback[];
+};
+
+export type ResendCallbacksResult = ResendCallbacksResponseDto;
+
+export type Network = NetworkResponseDto;
+
+export type NonceInfo = NonceInfoResponseDto;
+
+export type DeploymentParams = DeploymentParamsResponseDto;

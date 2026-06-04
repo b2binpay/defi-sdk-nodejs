@@ -1,5 +1,6 @@
 .openapi-generator-ignore
 apis/accounts-api.ts
+apis/callbacks-api.ts
 apis/claims-api.ts
 apis/currencies-api.ts
 apis/index.ts
@@ -18,6 +19,7 @@ models/asset-balance-short-response-dto.ts
 models/asset-balances-response-dto.ts
 models/balance-summary-response-dto.ts
 models/call-dto.ts
+models/callback-response-dto.ts
 models/claim-item-dto.ts
 models/claims-response-dto.ts
 models/create-invoice-dto.ts
@@ -29,6 +31,7 @@ models/currency-response-dto.ts
 models/dapp-transaction-payload.ts
 models/deployment-params-response-dto.ts
 models/deployment-queue-response-dto.ts
+models/get-callbacks-response-dto.ts
 models/index.ts
 models/invoice-details-dto.ts
 models/invoice-response-dto.ts
@@ -45,6 +48,8 @@ models/payout-response-dto.ts
 models/queue-operation-response-dto-dapp-metadata.ts
 models/queue-operation-response-dto-payload.ts
 models/queue-operation-response-dto.ts
+models/resend-callbacks-body-dto.ts
+models/resend-callbacks-response-dto.ts
 models/signature-response-dto.ts
 models/smart-contract-version-response-dto.ts
 models/submit-signature-dto.ts
