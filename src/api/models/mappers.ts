@@ -5,14 +5,17 @@ import type {
   AssetBalanceDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
+  CallbackResponseDto,
   CallDto,
   ClaimItemDto,
   ClaimsResponseDto,
   CurrencyResponseDto,
   DeploymentQueueResponseDto,
+  GetCallbacksResponseDto,
   InvoiceDetailsDto,
   InvoiceResponseDto,
   InvoicesResponseDto,
+  NetworkResponseDto,
   OperationSignatureDto,
   PayoutDetailResponseDto,
   PayoutListResponseDto,
@@ -33,6 +36,11 @@ import type {
   AssetBalanceList,
   BalanceSummary,
   Call,
+  Callback,
+  CallbackList,
+  CallbackOperationType,
+  CallbackStatus,
+  CallbackType,
   ClaimItem,
   ClaimsResponse,
   Currency,
@@ -42,6 +50,7 @@ import type {
   InvoiceDetails,
   InvoiceList,
   InvoiceStatus,
+  Network,
   OperationSignature,
   Payout,
   PayoutDetail,
@@ -77,6 +86,8 @@ export const mapAccountDetails = (dto: AccountDetailsDto): AccountDetails => ({
 export const mapBalanceSummary = (dto: BalanceSummaryResponseDto): BalanceSummary => clone(dto);
 
 export const mapCurrency = (dto: CurrencyResponseDto): Currency => clone(dto);
+
+export const mapNetwork = (dto: NetworkResponseDto): Network => clone(dto);
 
 export const mapAssetBalance = (dto: AssetBalanceDto): AssetBalance => ({
   ...dto,
@@ -191,4 +202,18 @@ export const mapClaimsResponse = (dto: ClaimsResponseDto): ClaimsResponse => ({
   page: dto.page,
   pageSize: dto.pageSize,
   items: dto.items.map(mapClaimItem),
+});
+
+export const mapCallback = (dto: CallbackResponseDto): Callback => ({
+  ...dto,
+  type: dto.type as CallbackType,
+  status: dto.status as CallbackStatus,
+  operationType: dto.operationType as CallbackOperationType,
+});
+
+export const mapCallbackList = (dto: GetCallbacksResponseDto): CallbackList => ({
+  total: dto.total,
+  page: dto.page,
+  pageSize: dto.pageSize,
+  items: dto.items.map(mapCallback),
 });
