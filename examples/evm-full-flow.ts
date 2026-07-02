@@ -43,11 +43,11 @@ import {
   DefiClient,
   FiatCurrency,
   MultisigBlockchainClient,
+  OperationTypeV2,
+  type OperationV2,
+  OperationV2Status,
   type QueueOperation,
   QueueOperationStatus,
-  type Transaction,
-  TransactionOperationType,
-  TransactionStatus,
 } from '../src';
 import { getEvmChainById } from '../src/blockchain/get-chain';
 import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
@@ -161,7 +161,7 @@ runMain(async () => {
   const confirmedTx = await waitForTxConfirmation(
     client,
     depositTxHash,
-    TransactionOperationType.Invoice,
+    OperationTypeV2.InvoiceDeposit,
     pollInterval,
     pollTimeout,
   );
@@ -172,7 +172,6 @@ runMain(async () => {
     status: confirmedTx.status,
     confirmations: confirmedTx.confirmations,
     confirmedAt: confirmedTx.confirmedAt,
-    canClaim: confirmedTx.canClaim,
   });
 
   // Fetch the corresponding claimable items for the claim step
@@ -220,7 +219,7 @@ runMain(async () => {
     const confirmedClaim = await waitForTxConfirmation(
       client,
       claimTxHash,
-      TransactionOperationType.Claim,
+      OperationTypeV2.Claim,
       pollInterval,
       pollTimeout,
     );
@@ -328,14 +327,18 @@ runMain(async () => {
   const operationsToExecute = await poll<QueueOperation[]>(
     'executable operation',
     async () => {
-      const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 100 });
+      const queue = await client.getDeploymentQueue({ pageSize: 100 });
 
-      const payoutReady = queue.items.some((item) => item.id === payoutOperation.id);
+      const ourOp = queue.items.find((item) => item.id === payoutOperation.id);
+      assertQueueOperationNotFailed(ourOp?.status);
+
+      const readyItems = queue.items.filter((item) => item.status === QueueOperationStatus.Ready);
+      const payoutReady = readyItems.some((item) => item.id === payoutOperation.id);
       if (!payoutReady) return null;
 
       const batch: QueueOperation[] = [];
       let currentNonce = Number(queue.nextExecutableNonce);
-      for (const item of queue.items) {
+      for (const item of readyItems) {
         if (item.nonce !== currentNonce.toString()) break;
         if (item.signaturesCollected < item.signaturesRequired) break;
         batch.push(item);
@@ -373,7 +376,7 @@ runMain(async () => {
   const confirmedPayout = await waitForTxConfirmation(
     client,
     executeTxHash,
-    TransactionOperationType.Payout,
+    OperationTypeV2.Payout,
     pollInterval,
     pollTimeout,
   );
@@ -426,34 +429,55 @@ async function waitForReceipt(client: PublicClient, hash: `0x${string}`) {
 async function waitForTxConfirmation(
   apiClient: DefiClient,
   txHash: string,
-  operationType: TransactionOperationType,
+  operationType: OperationTypeV2,
   pollIntervalMs: number,
   pollTimeoutMs: number,
-): Promise<Transaction> {
-  const tx = await poll<Transaction>(
-    `${operationType} transaction`,
+): Promise<OperationV2> {
+  const operation = await poll<OperationV2>(
+    `${operationType} operation`,
     async () => {
-      const result = await apiClient.getTransactions({ operationTypes: [operationType], pageSize: 50 });
+      const result = await apiClient.getOperationsV2({ types: [operationType], pageSize: 50 });
       return result.items.find((item) => item.txHash === txHash) ?? null;
     },
     pollIntervalMs,
     pollTimeoutMs,
   );
 
-  if (tx.status === TransactionStatus.Confirmed) return tx;
+  assertOperationNotFailed(operationType, operation.status);
+  if (operation.status === OperationV2Status.Confirmed) return operation;
 
-  return poll<Transaction>(
+  return poll<OperationV2>(
     `${operationType} confirmation`,
     async () => {
-      const result = await apiClient.getTransactions({ operationTypes: [operationType], pageSize: 50 });
-      const found = result.items.find((item) => item.id === tx.id);
+      const result = await apiClient.getOperationsV2({ types: [operationType], pageSize: 50 });
+      const found = result.items.find((item) => item.id === operation.id);
       if (!found) return null;
       console.log(`  confirmations: ${found.confirmations}, status: ${found.status}`);
-      return found.status === TransactionStatus.Confirmed ? found : null;
+      assertOperationNotFailed(operationType, found.status);
+      return found.status === OperationV2Status.Confirmed ? found : null;
     },
     pollIntervalMs,
     pollTimeoutMs,
   );
+}
+
+const TERMINAL_FAILURE_STATUSES = new Set<OperationV2Status>([OperationV2Status.Failed, OperationV2Status.Cancelled]);
+
+function assertOperationNotFailed(operationType: OperationTypeV2, status: OperationV2Status): void {
+  if (TERMINAL_FAILURE_STATUSES.has(status)) {
+    throw new Error(`${operationType} operation reached terminal status ${status} on-chain — aborting flow.`);
+  }
+}
+
+const TERMINAL_QUEUE_FAILURE_STATUSES = new Set<QueueOperationStatus>([
+  QueueOperationStatus.Failed,
+  QueueOperationStatus.Cancelled,
+]);
+
+function assertQueueOperationNotFailed(status: QueueOperationStatus | undefined): void {
+  if (status != null && TERMINAL_QUEUE_FAILURE_STATUSES.has(status)) {
+    throw new Error(`Payout queue operation reached terminal status ${status} — aborting flow.`);
+  }
 }
 
 async function poll<T>(label: string, fn: () => Promise<T | null>, intervalMs: number, timeoutMs: number): Promise<T> {

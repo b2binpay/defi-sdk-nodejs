@@ -49,6 +49,50 @@ import {
     UpdateOperationNonceDtoToJSON,
 } from '../models/update-operation-nonce-dto';
 
+export interface QueueOperationsAliasControllerCreateMultisigConfigChangeOperationV1Request {
+    deploymentId: string;
+    createMultisigConfigChangeOperationDto: CreateMultisigConfigChangeOperationDto;
+}
+
+export interface QueueOperationsAliasControllerCreateRejectOperationV1Request {
+    deploymentId: string;
+    createRejectOperationDto: CreateRejectOperationDto;
+}
+
+export interface QueueOperationsAliasControllerDeleteOperationV1Request {
+    deploymentId: string;
+    operationId: string;
+}
+
+export interface QueueOperationsAliasControllerGetDeploymentQueueV1Request {
+    deploymentId: string;
+    page?: number;
+    pageSize?: number;
+    statuses?: Array<QueueOperationsAliasControllerGetDeploymentQueueV1StatusesEnum>;
+    operationTypes?: Array<QueueOperationsAliasControllerGetDeploymentQueueV1OperationTypesEnum>;
+    createdBy?: string;
+    sortOrder?: QueueOperationsAliasControllerGetDeploymentQueueV1SortOrderEnum;
+    createdAtFrom?: string;
+    createdAtTo?: string;
+}
+
+export interface QueueOperationsAliasControllerGetOperationByIdV1Request {
+    deploymentId: string;
+    operationId: string;
+}
+
+export interface QueueOperationsAliasControllerSubmitSignatureV1Request {
+    deploymentId: string;
+    operationId: string;
+    submitSignatureDto: SubmitSignatureDto;
+}
+
+export interface QueueOperationsAliasControllerUpdateOperationNonceV1Request {
+    deploymentId: string;
+    operationId: string;
+    updateOperationNonceDto: UpdateOperationNonceDto;
+}
+
 export interface QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request {
     deploymentId: string;
     createMultisigConfigChangeOperationDto: CreateMultisigConfigChangeOperationDto;
@@ -99,7 +143,468 @@ export interface QueueOperationsControllerUpdateOperationNonceV1Request {
 export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
+     * Creates request options for queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1 without sending the request
+     */
+    async queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1RequestOpts(requestParameters: QueueOperationsAliasControllerCreateMultisigConfigChangeOperationV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1().'
+            );
+        }
+
+        if (requestParameters['createMultisigConfigChangeOperationDto'] == null) {
+            throw new runtime.RequiredError(
+                'createMultisigConfigChangeOperationDto',
+                'Required parameter "createMultisigConfigChangeOperationDto" was null or undefined when calling queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/multisig-config`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreateMultisigConfigChangeOperationDtoToJSON(requestParameters['createMultisigConfigChangeOperationDto']),
+        };
+    }
+
+    /**
+     * Create account multisig configuration change operation
+     * Create account multisig config operation
+     */
+    async queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1Raw(requestParameters: QueueOperationsAliasControllerCreateMultisigConfigChangeOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Create account multisig configuration change operation
+     * Create account multisig config operation
+     */
+    async queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1(requestParameters: QueueOperationsAliasControllerCreateMultisigConfigChangeOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
+        const response = await this.queueOperationsAliasControllerCreateMultisigConfigChangeOperationV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for queueOperationsAliasControllerCreateRejectOperationV1 without sending the request
+     */
+    async queueOperationsAliasControllerCreateRejectOperationV1RequestOpts(requestParameters: QueueOperationsAliasControllerCreateRejectOperationV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerCreateRejectOperationV1().'
+            );
+        }
+
+        if (requestParameters['createRejectOperationDto'] == null) {
+            throw new runtime.RequiredError(
+                'createRejectOperationDto',
+                'Required parameter "createRejectOperationDto" was null or undefined when calling queueOperationsAliasControllerCreateRejectOperationV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/reject`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreateRejectOperationDtoToJSON(requestParameters['createRejectOperationDto']),
+        };
+    }
+
+    /**
+     * Reject operation by consuming nonce
+     * Reject operation
+     */
+    async queueOperationsAliasControllerCreateRejectOperationV1Raw(requestParameters: QueueOperationsAliasControllerCreateRejectOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsAliasControllerCreateRejectOperationV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Reject operation by consuming nonce
+     * Reject operation
+     */
+    async queueOperationsAliasControllerCreateRejectOperationV1(requestParameters: QueueOperationsAliasControllerCreateRejectOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
+        const response = await this.queueOperationsAliasControllerCreateRejectOperationV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for queueOperationsAliasControllerDeleteOperationV1 without sending the request
+     */
+    async queueOperationsAliasControllerDeleteOperationV1RequestOpts(requestParameters: QueueOperationsAliasControllerDeleteOperationV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerDeleteOperationV1().'
+            );
+        }
+
+        if (requestParameters['operationId'] == null) {
+            throw new runtime.RequiredError(
+                'operationId',
+                'Required parameter "operationId" was null or undefined when calling queueOperationsAliasControllerDeleteOperationV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/{operationId}`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Delete an operation. Only the creator can delete operations in PENDING or READY status.
+     * Delete operation
+     */
+    async queueOperationsAliasControllerDeleteOperationV1Raw(requestParameters: QueueOperationsAliasControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.queueOperationsAliasControllerDeleteOperationV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     * Delete an operation. Only the creator can delete operations in PENDING or READY status.
+     * Delete operation
+     */
+    async queueOperationsAliasControllerDeleteOperationV1(requestParameters: QueueOperationsAliasControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.queueOperationsAliasControllerDeleteOperationV1Raw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for queueOperationsAliasControllerGetDeploymentQueueV1 without sending the request
+     */
+    async queueOperationsAliasControllerGetDeploymentQueueV1RequestOpts(requestParameters: QueueOperationsAliasControllerGetDeploymentQueueV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerGetDeploymentQueueV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
+        if (requestParameters['statuses'] != null) {
+            queryParameters['statuses'] = requestParameters['statuses'];
+        }
+
+        if (requestParameters['operationTypes'] != null) {
+            queryParameters['operationTypes'] = requestParameters['operationTypes'];
+        }
+
+        if (requestParameters['createdBy'] != null) {
+            queryParameters['createdBy'] = requestParameters['createdBy'];
+        }
+
+        if (requestParameters['sortOrder'] != null) {
+            queryParameters['sortOrder'] = requestParameters['sortOrder'];
+        }
+
+        if (requestParameters['createdAtFrom'] != null) {
+            queryParameters['createdAtFrom'] = requestParameters['createdAtFrom'];
+        }
+
+        if (requestParameters['createdAtTo'] != null) {
+            queryParameters['createdAtTo'] = requestParameters['createdAtTo'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get deployment operations queue
+     * Get queue
+     */
+    async queueOperationsAliasControllerGetDeploymentQueueV1Raw(requestParameters: QueueOperationsAliasControllerGetDeploymentQueueV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeploymentQueueResponseDto>> {
+        const requestOptions = await this.queueOperationsAliasControllerGetDeploymentQueueV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => DeploymentQueueResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Get deployment operations queue
+     * Get queue
+     */
+    async queueOperationsAliasControllerGetDeploymentQueueV1(requestParameters: QueueOperationsAliasControllerGetDeploymentQueueV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DeploymentQueueResponseDto> {
+        const response = await this.queueOperationsAliasControllerGetDeploymentQueueV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for queueOperationsAliasControllerGetOperationByIdV1 without sending the request
+     */
+    async queueOperationsAliasControllerGetOperationByIdV1RequestOpts(requestParameters: QueueOperationsAliasControllerGetOperationByIdV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerGetOperationByIdV1().'
+            );
+        }
+
+        if (requestParameters['operationId'] == null) {
+            throw new runtime.RequiredError(
+                'operationId',
+                'Required parameter "operationId" was null or undefined when calling queueOperationsAliasControllerGetOperationByIdV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/{operationId}`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Get detailed information about a specific operation including signature status
+     * Get operation by ID
+     */
+    async queueOperationsAliasControllerGetOperationByIdV1Raw(requestParameters: QueueOperationsAliasControllerGetOperationByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsAliasControllerGetOperationByIdV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Get detailed information about a specific operation including signature status
+     * Get operation by ID
+     */
+    async queueOperationsAliasControllerGetOperationByIdV1(requestParameters: QueueOperationsAliasControllerGetOperationByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
+        const response = await this.queueOperationsAliasControllerGetOperationByIdV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for queueOperationsAliasControllerSubmitSignatureV1 without sending the request
+     */
+    async queueOperationsAliasControllerSubmitSignatureV1RequestOpts(requestParameters: QueueOperationsAliasControllerSubmitSignatureV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerSubmitSignatureV1().'
+            );
+        }
+
+        if (requestParameters['operationId'] == null) {
+            throw new runtime.RequiredError(
+                'operationId',
+                'Required parameter "operationId" was null or undefined when calling queueOperationsAliasControllerSubmitSignatureV1().'
+            );
+        }
+
+        if (requestParameters['submitSignatureDto'] == null) {
+            throw new runtime.RequiredError(
+                'submitSignatureDto',
+                'Required parameter "submitSignatureDto" was null or undefined when calling queueOperationsAliasControllerSubmitSignatureV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/{operationId}/sign`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: SubmitSignatureDtoToJSON(requestParameters['submitSignatureDto']),
+        };
+    }
+
+    /**
+     * Submit signature for operation
+     * Sign operation
+     */
+    async queueOperationsAliasControllerSubmitSignatureV1Raw(requestParameters: QueueOperationsAliasControllerSubmitSignatureV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SignatureResponseDto>> {
+        const requestOptions = await this.queueOperationsAliasControllerSubmitSignatureV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => SignatureResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Submit signature for operation
+     * Sign operation
+     */
+    async queueOperationsAliasControllerSubmitSignatureV1(requestParameters: QueueOperationsAliasControllerSubmitSignatureV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SignatureResponseDto> {
+        const response = await this.queueOperationsAliasControllerSubmitSignatureV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for queueOperationsAliasControllerUpdateOperationNonceV1 without sending the request
+     */
+    async queueOperationsAliasControllerUpdateOperationNonceV1RequestOpts(requestParameters: QueueOperationsAliasControllerUpdateOperationNonceV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsAliasControllerUpdateOperationNonceV1().'
+            );
+        }
+
+        if (requestParameters['operationId'] == null) {
+            throw new runtime.RequiredError(
+                'operationId',
+                'Required parameter "operationId" was null or undefined when calling queueOperationsAliasControllerUpdateOperationNonceV1().'
+            );
+        }
+
+        if (requestParameters['updateOperationNonceDto'] == null) {
+            throw new runtime.RequiredError(
+                'updateOperationNonceDto',
+                'Required parameter "updateOperationNonceDto" was null or undefined when calling queueOperationsAliasControllerUpdateOperationNonceV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/{operationId}/nonce`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{operationId}', encodeURIComponent(String(requestParameters['operationId'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UpdateOperationNonceDtoToJSON(requestParameters['updateOperationNonceDto']),
+        };
+    }
+
+    /**
+     * Change operation nonce and reset all collected signatures
+     * Change operation nonce
+     */
+    async queueOperationsAliasControllerUpdateOperationNonceV1Raw(requestParameters: QueueOperationsAliasControllerUpdateOperationNonceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
+        const requestOptions = await this.queueOperationsAliasControllerUpdateOperationNonceV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => QueueOperationResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Change operation nonce and reset all collected signatures
+     * Change operation nonce
+     */
+    async queueOperationsAliasControllerUpdateOperationNonceV1(requestParameters: QueueOperationsAliasControllerUpdateOperationNonceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
+        const response = await this.queueOperationsAliasControllerUpdateOperationNonceV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for queueOperationsControllerCreateMultisigConfigChangeOperationV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerCreateMultisigConfigChangeOperationV1RequestOpts(requestParameters: QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -142,6 +647,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Create account multisig configuration change operation
      * Create account multisig config operation
+     * @deprecated
      */
     async queueOperationsControllerCreateMultisigConfigChangeOperationV1Raw(requestParameters: QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
         const requestOptions = await this.queueOperationsControllerCreateMultisigConfigChangeOperationV1RequestOpts(requestParameters);
@@ -153,6 +659,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Create account multisig configuration change operation
      * Create account multisig config operation
+     * @deprecated
      */
     async queueOperationsControllerCreateMultisigConfigChangeOperationV1(requestParameters: QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
         const response = await this.queueOperationsControllerCreateMultisigConfigChangeOperationV1Raw(requestParameters, initOverrides);
@@ -161,6 +668,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for queueOperationsControllerCreateRejectOperationV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerCreateRejectOperationV1RequestOpts(requestParameters: QueueOperationsControllerCreateRejectOperationV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -203,6 +711,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Reject operation by consuming nonce
      * Reject operation
+     * @deprecated
      */
     async queueOperationsControllerCreateRejectOperationV1Raw(requestParameters: QueueOperationsControllerCreateRejectOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
         const requestOptions = await this.queueOperationsControllerCreateRejectOperationV1RequestOpts(requestParameters);
@@ -214,6 +723,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Reject operation by consuming nonce
      * Reject operation
+     * @deprecated
      */
     async queueOperationsControllerCreateRejectOperationV1(requestParameters: QueueOperationsControllerCreateRejectOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
         const response = await this.queueOperationsControllerCreateRejectOperationV1Raw(requestParameters, initOverrides);
@@ -222,6 +732,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for queueOperationsControllerDeleteOperationV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerDeleteOperationV1RequestOpts(requestParameters: QueueOperationsControllerDeleteOperationV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -262,6 +773,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Delete an operation. Only the creator can delete operations in PENDING or READY status.
      * Delete operation
+     * @deprecated
      */
     async queueOperationsControllerDeleteOperationV1Raw(requestParameters: QueueOperationsControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
         const requestOptions = await this.queueOperationsControllerDeleteOperationV1RequestOpts(requestParameters);
@@ -273,6 +785,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Delete an operation. Only the creator can delete operations in PENDING or READY status.
      * Delete operation
+     * @deprecated
      */
     async queueOperationsControllerDeleteOperationV1(requestParameters: QueueOperationsControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.queueOperationsControllerDeleteOperationV1Raw(requestParameters, initOverrides);
@@ -280,6 +793,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for queueOperationsControllerGetDeploymentQueueV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerGetDeploymentQueueV1RequestOpts(requestParameters: QueueOperationsControllerGetDeploymentQueueV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -344,6 +858,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Get deployment operations queue
      * Get queue
+     * @deprecated
      */
     async queueOperationsControllerGetDeploymentQueueV1Raw(requestParameters: QueueOperationsControllerGetDeploymentQueueV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<DeploymentQueueResponseDto>> {
         const requestOptions = await this.queueOperationsControllerGetDeploymentQueueV1RequestOpts(requestParameters);
@@ -355,6 +870,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Get deployment operations queue
      * Get queue
+     * @deprecated
      */
     async queueOperationsControllerGetDeploymentQueueV1(requestParameters: QueueOperationsControllerGetDeploymentQueueV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<DeploymentQueueResponseDto> {
         const response = await this.queueOperationsControllerGetDeploymentQueueV1Raw(requestParameters, initOverrides);
@@ -363,6 +879,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for queueOperationsControllerGetOperationByIdV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerGetOperationByIdV1RequestOpts(requestParameters: QueueOperationsControllerGetOperationByIdV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -403,6 +920,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Get detailed information about a specific operation including signature status
      * Get operation by ID
+     * @deprecated
      */
     async queueOperationsControllerGetOperationByIdV1Raw(requestParameters: QueueOperationsControllerGetOperationByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
         const requestOptions = await this.queueOperationsControllerGetOperationByIdV1RequestOpts(requestParameters);
@@ -414,6 +932,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Get detailed information about a specific operation including signature status
      * Get operation by ID
+     * @deprecated
      */
     async queueOperationsControllerGetOperationByIdV1(requestParameters: QueueOperationsControllerGetOperationByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
         const response = await this.queueOperationsControllerGetOperationByIdV1Raw(requestParameters, initOverrides);
@@ -422,6 +941,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for queueOperationsControllerSubmitSignatureV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerSubmitSignatureV1RequestOpts(requestParameters: QueueOperationsControllerSubmitSignatureV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -472,6 +992,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Submit signature for operation
      * Sign operation
+     * @deprecated
      */
     async queueOperationsControllerSubmitSignatureV1Raw(requestParameters: QueueOperationsControllerSubmitSignatureV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<SignatureResponseDto>> {
         const requestOptions = await this.queueOperationsControllerSubmitSignatureV1RequestOpts(requestParameters);
@@ -483,6 +1004,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Submit signature for operation
      * Sign operation
+     * @deprecated
      */
     async queueOperationsControllerSubmitSignatureV1(requestParameters: QueueOperationsControllerSubmitSignatureV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<SignatureResponseDto> {
         const response = await this.queueOperationsControllerSubmitSignatureV1Raw(requestParameters, initOverrides);
@@ -491,6 +1013,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for queueOperationsControllerUpdateOperationNonceV1 without sending the request
+     * @deprecated
      */
     async queueOperationsControllerUpdateOperationNonceV1RequestOpts(requestParameters: QueueOperationsControllerUpdateOperationNonceV1Request): Promise<runtime.RequestOpts> {
         if (requestParameters['deploymentId'] == null) {
@@ -541,6 +1064,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Change operation nonce and reset all collected signatures
      * Change operation nonce
+     * @deprecated
      */
     async queueOperationsControllerUpdateOperationNonceV1Raw(requestParameters: QueueOperationsControllerUpdateOperationNonceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<QueueOperationResponseDto>> {
         const requestOptions = await this.queueOperationsControllerUpdateOperationNonceV1RequestOpts(requestParameters);
@@ -552,6 +1076,7 @@ export class QueueOperationsApi extends runtime.BaseAPI {
     /**
      * Change operation nonce and reset all collected signatures
      * Change operation nonce
+     * @deprecated
      */
     async queueOperationsControllerUpdateOperationNonceV1(requestParameters: QueueOperationsControllerUpdateOperationNonceV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<QueueOperationResponseDto> {
         const response = await this.queueOperationsControllerUpdateOperationNonceV1Raw(requestParameters, initOverrides);
@@ -560,6 +1085,44 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
 }
 
+/**
+ * @export
+ */
+export const QueueOperationsAliasControllerGetDeploymentQueueV1StatusesEnum = {
+    Pending: 'PENDING',
+    Ready: 'READY',
+    Executed: 'EXECUTED',
+    Failed: 'FAILED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type QueueOperationsAliasControllerGetDeploymentQueueV1StatusesEnum = typeof QueueOperationsAliasControllerGetDeploymentQueueV1StatusesEnum[keyof typeof QueueOperationsAliasControllerGetDeploymentQueueV1StatusesEnum];
+/**
+ * @export
+ */
+export const QueueOperationsAliasControllerGetDeploymentQueueV1OperationTypesEnum = {
+    MultisigConfigChange: 'MULTISIG_CONFIG_CHANGE',
+    Reject: 'REJECT',
+    Payout: 'PAYOUT',
+    DappTransaction: 'DAPP_TRANSACTION',
+    CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Stake: 'STAKE',
+    Unstake: 'UNSTAKE',
+    CancelUnstaking: 'CANCEL_UNSTAKING',
+    StakingWithdraw: 'STAKING_WITHDRAW',
+    Vote: 'VOTE',
+    ClaimRewards: 'CLAIM_REWARDS',
+    Delegate: 'DELEGATE',
+    Reclaim: 'RECLAIM'
+} as const;
+export type QueueOperationsAliasControllerGetDeploymentQueueV1OperationTypesEnum = typeof QueueOperationsAliasControllerGetDeploymentQueueV1OperationTypesEnum[keyof typeof QueueOperationsAliasControllerGetDeploymentQueueV1OperationTypesEnum];
+/**
+ * @export
+ */
+export const QueueOperationsAliasControllerGetDeploymentQueueV1SortOrderEnum = {
+    Asc: 'asc',
+    Desc: 'desc'
+} as const;
+export type QueueOperationsAliasControllerGetDeploymentQueueV1SortOrderEnum = typeof QueueOperationsAliasControllerGetDeploymentQueueV1SortOrderEnum[keyof typeof QueueOperationsAliasControllerGetDeploymentQueueV1SortOrderEnum];
 /**
  * @export
  */
@@ -578,7 +1141,16 @@ export const QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum = {
     MultisigConfigChange: 'MULTISIG_CONFIG_CHANGE',
     Reject: 'REJECT',
     Payout: 'PAYOUT',
-    DappTransaction: 'DAPP_TRANSACTION'
+    DappTransaction: 'DAPP_TRANSACTION',
+    CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Stake: 'STAKE',
+    Unstake: 'UNSTAKE',
+    CancelUnstaking: 'CANCEL_UNSTAKING',
+    StakingWithdraw: 'STAKING_WITHDRAW',
+    Vote: 'VOTE',
+    ClaimRewards: 'CLAIM_REWARDS',
+    Delegate: 'DELEGATE',
+    Reclaim: 'RECLAIM'
 } as const;
 export type QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum = typeof QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum[keyof typeof QueueOperationsControllerGetDeploymentQueueV1OperationTypesEnum];
 /**

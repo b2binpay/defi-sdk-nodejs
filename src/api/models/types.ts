@@ -4,10 +4,35 @@ import type {
   AssetBalanceDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
+  BlockchainCancelUnstakingOperationResponseDto,
+  BlockchainClaimOperationResponseDto,
+  BlockchainClaimRewardsOperationResponseDto,
+  BlockchainCrossChainTransferOperationResponseDto,
+  BlockchainDappTransactionOperationResponseDto,
+  BlockchainDelegateOperationResponseDto,
+  BlockchainDeployOperationResponseDto,
+  BlockchainDirectDepositOperationResponseDto,
+  BlockchainInvoiceDepositOperationResponseDto,
+  BlockchainOperationListResponseDto,
+  BlockchainOperationResponseDto,
+  BlockchainPayoutOperationResponseDto,
+  BlockchainReclaimOperationResponseDto,
+  BlockchainRejectOperationResponseDto,
+  BlockchainSetMultisigConfigOperationResponseDto,
+  BlockchainStakeOperationResponseDto,
+  BlockchainStakingWithdrawOperationResponseDto,
+  BlockchainTransactionDetailsResponseDto,
+  BlockchainTransactionListResponseDto,
+  BlockchainUnstakeOperationResponseDto,
+  BlockchainVoteOperationResponseDto,
   CallbackResponseDto,
   CallDto,
   ClaimItemDto,
+  CrossChainChainResponseDto,
+  CrossChainQuotesResponseDto,
+  CrossChainTransferResponseDto,
   CurrencyResponseDto,
+  DelegationSummaryResponse,
   DeploymentParamsResponseDto,
   DeploymentQueueResponseDto,
   GetCallbacksResponseDto,
@@ -22,10 +47,15 @@ import type {
   QueueOperationResponseDto,
   ResendCallbacksResponseDto,
   SignatureResponseDto,
+  StakingDelegationsResponse,
+  StakingNetworkParamsResponse,
+  StakingSummaryResponse,
+  SuperRepresentativesResponse,
   TransactionDetailsDto,
   TransactionListResponseDto,
   TransactionListResponseDtoItemsInner,
   TransactionListResponseDtoItemsInnerInvoice,
+  VotingSummaryResponse,
 } from '../../../generated-contracts';
 
 export enum FiatCurrency {
@@ -172,6 +202,7 @@ export enum TransactionDirection {
   Out = 'OUT',
 }
 
+/** @deprecated v1 transactions are superseded by operations (`OperationV2Status`) and blockchain transactions (`BlockchainTransactionStatus`). */
 export enum TransactionStatus {
   Pending = 'PENDING',
   Executed = 'EXECUTED',
@@ -179,6 +210,7 @@ export enum TransactionStatus {
   Failed = 'FAILED',
 }
 
+/** @deprecated v1 transactions are superseded by operations history v2 — use `OperationTypeV2`. */
 export enum TransactionOperationType {
   Invoice = 'invoice',
   DirectDeposit = 'direct_deposit',
@@ -188,14 +220,24 @@ export enum TransactionOperationType {
   Reject = 'reject',
 }
 
+/** @deprecated v1 transactions are superseded by operations history v2 — use `OperationV2SortField`. */
 export enum TransactionSortField {
   Id = 'id',
+  ChainId = 'chainId',
+  OperationType = 'operationType',
+  CurrencyId = 'currencyId',
+  Amount = 'amount',
+  BlockchainFee = 'blockchainFee',
+  Status = 'status',
+  BlockNumber = 'blockNumber',
   CreatedAt = 'createdAt',
   UpdatedAt = 'updatedAt',
 }
 
+/** @deprecated v1 transactions are superseded by operations history v2 / blockchain transactions. */
 export type TransactionInvoice = TransactionListResponseDtoItemsInnerInvoice;
 
+/** @deprecated Use the operations history v2 (`OperationV2`, `getOperationsV2`) or blockchain transactions (`BlockchainTransaction`, `getBlockchainTransactions`) instead. */
 export type Transaction = Omit<
   TransactionListResponseDtoItemsInner,
   'direction' | 'status' | 'operationType' | 'currency' | 'invoice'
@@ -208,10 +250,12 @@ export type Transaction = Omit<
   currency: Currency | null;
 };
 
+/** @deprecated Use `OperationV2List` (`getOperationsV2`) or `BlockchainTransactionList` (`getBlockchainTransactions`) instead. */
 export type TransactionList = Omit<TransactionListResponseDto, 'items'> & {
   items: Transaction[];
 };
 
+/** @deprecated Use `getOperationDetailsV2` or `getBlockchainTransaction` instead. */
 export type TransactionDetails = Omit<TransactionDetailsDto, 'transaction' | 'currency' | 'invoice'> & {
   transaction: Transaction;
   currency: Currency | null;
@@ -282,3 +326,114 @@ export type Network = NetworkResponseDto;
 export type NonceInfo = NonceInfoResponseDto;
 
 export type DeploymentParams = DeploymentParamsResponseDto;
+
+export enum StakingResourceType {
+  Bandwidth = 'BANDWIDTH',
+  Energy = 'ENERGY',
+}
+
+export enum OperationTypeV2 {
+  Payout = 'PAYOUT',
+  InvoiceDeposit = 'INVOICE_DEPOSIT',
+  Claim = 'CLAIM',
+  Deploy = 'DEPLOY',
+  DirectDeposit = 'DIRECT_DEPOSIT',
+  Reject = 'REJECT',
+  SetConfig = 'SET_CONFIG',
+  DappTransaction = 'DAPP_TRANSACTION',
+  CrossChainTransfer = 'CROSS_CHAIN_TRANSFER',
+  Stake = 'STAKE',
+  Unstake = 'UNSTAKE',
+  CancelUnstaking = 'CANCEL_UNSTAKING',
+  StakingWithdraw = 'STAKING_WITHDRAW',
+  Vote = 'VOTE',
+  ClaimRewards = 'CLAIM_REWARDS',
+  Delegate = 'DELEGATE',
+  Reclaim = 'RECLAIM',
+}
+
+export type OperationV2 = BlockchainOperationResponseDto;
+
+export type OperationV2List = Omit<BlockchainOperationListResponseDto, 'items'> & {
+  items: OperationV2[];
+};
+
+export type OperationV2Details =
+  | BlockchainPayoutOperationResponseDto
+  | BlockchainInvoiceDepositOperationResponseDto
+  | BlockchainClaimOperationResponseDto
+  | BlockchainDeployOperationResponseDto
+  | BlockchainDirectDepositOperationResponseDto
+  | BlockchainRejectOperationResponseDto
+  | BlockchainSetMultisigConfigOperationResponseDto
+  | BlockchainDappTransactionOperationResponseDto
+  | BlockchainCrossChainTransferOperationResponseDto
+  | BlockchainStakeOperationResponseDto
+  | BlockchainUnstakeOperationResponseDto
+  | BlockchainCancelUnstakingOperationResponseDto
+  | BlockchainStakingWithdrawOperationResponseDto
+  | BlockchainVoteOperationResponseDto
+  | BlockchainClaimRewardsOperationResponseDto
+  | BlockchainDelegateOperationResponseDto
+  | BlockchainReclaimOperationResponseDto;
+
+export enum OperationV2Status {
+  Created = 'CREATED',
+  Pending = 'PENDING',
+  Confirmed = 'CONFIRMED',
+  Failed = 'FAILED',
+  Cancelled = 'CANCELLED',
+}
+
+export enum OperationV2SortField {
+  Id = 'id',
+  ChainId = 'chainId',
+  OperationType = 'operationType',
+  CurrencyId = 'currencyId',
+  Amount = 'amount',
+  BlockchainFee = 'blockchainFee',
+  Status = 'status',
+  BlockNumber = 'blockNumber',
+  CreatedAt = 'createdAt',
+  UpdatedAt = 'updatedAt',
+}
+
+export enum BlockchainTransactionStatus {
+  Executing = 'executing',
+  Pending = 'pending',
+  Confirmed = 'confirmed',
+  Failed = 'failed',
+}
+
+export enum BlockchainTransactionSortField {
+  Id = 'id',
+  CreatedAt = 'createdAt',
+  BlockNumber = 'blockNumber',
+}
+
+export type BlockchainTransaction = BlockchainTransactionListResponseDto['items'][number];
+
+export type BlockchainTransactionList = BlockchainTransactionListResponseDto;
+
+export type BlockchainTransactionDetails = BlockchainTransactionDetailsResponseDto;
+
+export type CrossChainChain = CrossChainChainResponseDto;
+
+export type CrossChainQuotes = CrossChainQuotesResponseDto;
+
+export type CrossChainTransfer = Omit<CrossChainTransferResponseDto, 'srcCurrency' | 'dstCurrency'> & {
+  srcCurrency: Currency;
+  dstCurrency: Currency;
+};
+
+export type StakingSummary = StakingSummaryResponse;
+
+export type StakingDelegations = StakingDelegationsResponse;
+
+export type StakingDelegationSummary = DelegationSummaryResponse;
+
+export type StakingNetworkParams = StakingNetworkParamsResponse;
+
+export type SuperRepresentatives = SuperRepresentativesResponse;
+
+export type VotingSummary = VotingSummaryResponse;

@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+    type BlockchainOperationListResponseDto,
+    BlockchainOperationListResponseDtoFromJSON,
+    BlockchainOperationListResponseDtoToJSON,
+} from '../models/blockchain-operation-list-response-dto';
+import {
     type CreateInvoiceDto,
     CreateInvoiceDtoFromJSON,
     CreateInvoiceDtoToJSON,
@@ -47,6 +52,25 @@ export interface InvoicesControllerCreateInvoiceV1Request {
 export interface InvoicesControllerFindInvoiceByIdV1Request {
     deploymentId: string;
     invoiceId: string;
+}
+
+export interface InvoicesControllerFindInvoiceOperationsV1Request {
+    deploymentId: string;
+    invoiceId: string;
+    page?: number;
+    pageSize?: number;
+    sortBy?: InvoicesControllerFindInvoiceOperationsV1SortByEnum;
+    sortOrder?: InvoicesControllerFindInvoiceOperationsV1SortOrderEnum;
+    id?: string;
+    txHash?: string;
+    txId?: string;
+    statuses?: Array<InvoicesControllerFindInvoiceOperationsV1StatusesEnum>;
+    currencyIds?: Array<string>;
+    createdFrom?: string;
+    createdTo?: string;
+    updatedFrom?: string;
+    updatedTo?: string;
+    operationTypes?: Array<InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum>;
 }
 
 export interface InvoicesControllerFindInvoicesByDeploymentV1Request {
@@ -193,6 +217,121 @@ export class InvoicesApi extends runtime.BaseAPI {
      */
     async invoicesControllerFindInvoiceByIdV1(requestParameters: InvoicesControllerFindInvoiceByIdV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<InvoiceDetailsDto> {
         const response = await this.invoicesControllerFindInvoiceByIdV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for invoicesControllerFindInvoiceOperationsV1 without sending the request
+     */
+    async invoicesControllerFindInvoiceOperationsV1RequestOpts(requestParameters: InvoicesControllerFindInvoiceOperationsV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling invoicesControllerFindInvoiceOperationsV1().'
+            );
+        }
+
+        if (requestParameters['invoiceId'] == null) {
+            throw new runtime.RequiredError(
+                'invoiceId',
+                'Required parameter "invoiceId" was null or undefined when calling invoicesControllerFindInvoiceOperationsV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['page'] != null) {
+            queryParameters['page'] = requestParameters['page'];
+        }
+
+        if (requestParameters['pageSize'] != null) {
+            queryParameters['pageSize'] = requestParameters['pageSize'];
+        }
+
+        if (requestParameters['sortBy'] != null) {
+            queryParameters['sortBy'] = requestParameters['sortBy'];
+        }
+
+        if (requestParameters['sortOrder'] != null) {
+            queryParameters['sortOrder'] = requestParameters['sortOrder'];
+        }
+
+        if (requestParameters['id'] != null) {
+            queryParameters['id'] = requestParameters['id'];
+        }
+
+        if (requestParameters['txHash'] != null) {
+            queryParameters['txHash'] = requestParameters['txHash'];
+        }
+
+        if (requestParameters['txId'] != null) {
+            queryParameters['txId'] = requestParameters['txId'];
+        }
+
+        if (requestParameters['statuses'] != null) {
+            queryParameters['statuses'] = requestParameters['statuses'];
+        }
+
+        if (requestParameters['currencyIds'] != null) {
+            queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['createdFrom'] != null) {
+            queryParameters['createdFrom'] = requestParameters['createdFrom'];
+        }
+
+        if (requestParameters['createdTo'] != null) {
+            queryParameters['createdTo'] = requestParameters['createdTo'];
+        }
+
+        if (requestParameters['updatedFrom'] != null) {
+            queryParameters['updatedFrom'] = requestParameters['updatedFrom'];
+        }
+
+        if (requestParameters['updatedTo'] != null) {
+            queryParameters['updatedTo'] = requestParameters['updatedTo'];
+        }
+
+        if (requestParameters['operationTypes'] != null) {
+            queryParameters['operationTypes'] = requestParameters['operationTypes'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/invoices/{invoiceId}/operations`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+        urlPath = urlPath.replace('{invoiceId}', encodeURIComponent(String(requestParameters['invoiceId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Returns a paginated list of INVOICE_DEPOSIT and CLAIM operations linked to the given invoice. Accepts the same filters and sort options as `/api/v2/deployments/:deploymentId/operations`; the `operationTypes` filter is intersected with {INVOICE_DEPOSIT, CLAIM}.
+     * List blockchain operations tied to an invoice
+     */
+    async invoicesControllerFindInvoiceOperationsV1Raw(requestParameters: InvoicesControllerFindInvoiceOperationsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BlockchainOperationListResponseDto>> {
+        const requestOptions = await this.invoicesControllerFindInvoiceOperationsV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BlockchainOperationListResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Returns a paginated list of INVOICE_DEPOSIT and CLAIM operations linked to the given invoice. Accepts the same filters and sort options as `/api/v2/deployments/:deploymentId/operations`; the `operationTypes` filter is intersected with {INVOICE_DEPOSIT, CLAIM}.
+     * List blockchain operations tied to an invoice
+     */
+    async invoicesControllerFindInvoiceOperationsV1(requestParameters: InvoicesControllerFindInvoiceOperationsV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BlockchainOperationListResponseDto> {
+        const response = await this.invoicesControllerFindInvoiceOperationsV1Raw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -366,6 +505,64 @@ export class InvoicesApi extends runtime.BaseAPI {
 
 }
 
+/**
+ * @export
+ */
+export const InvoicesControllerFindInvoiceOperationsV1SortByEnum = {
+    Id: 'id',
+    ChainId: 'chainId',
+    OperationType: 'operationType',
+    CurrencyId: 'currencyId',
+    Amount: 'amount',
+    BlockchainFee: 'blockchainFee',
+    Status: 'status',
+    BlockNumber: 'blockNumber',
+    CreatedAt: 'createdAt',
+    UpdatedAt: 'updatedAt'
+} as const;
+export type InvoicesControllerFindInvoiceOperationsV1SortByEnum = typeof InvoicesControllerFindInvoiceOperationsV1SortByEnum[keyof typeof InvoicesControllerFindInvoiceOperationsV1SortByEnum];
+/**
+ * @export
+ */
+export const InvoicesControllerFindInvoiceOperationsV1SortOrderEnum = {
+    Asc: 'asc',
+    Desc: 'desc'
+} as const;
+export type InvoicesControllerFindInvoiceOperationsV1SortOrderEnum = typeof InvoicesControllerFindInvoiceOperationsV1SortOrderEnum[keyof typeof InvoicesControllerFindInvoiceOperationsV1SortOrderEnum];
+/**
+ * @export
+ */
+export const InvoicesControllerFindInvoiceOperationsV1StatusesEnum = {
+    Created: 'CREATED',
+    Pending: 'PENDING',
+    Confirmed: 'CONFIRMED',
+    Failed: 'FAILED',
+    Cancelled: 'CANCELLED'
+} as const;
+export type InvoicesControllerFindInvoiceOperationsV1StatusesEnum = typeof InvoicesControllerFindInvoiceOperationsV1StatusesEnum[keyof typeof InvoicesControllerFindInvoiceOperationsV1StatusesEnum];
+/**
+ * @export
+ */
+export const InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum = {
+    Payout: 'PAYOUT',
+    InvoiceDeposit: 'INVOICE_DEPOSIT',
+    Claim: 'CLAIM',
+    Deploy: 'DEPLOY',
+    DirectDeposit: 'DIRECT_DEPOSIT',
+    Reject: 'REJECT',
+    SetConfig: 'SET_CONFIG',
+    DappTransaction: 'DAPP_TRANSACTION',
+    CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Stake: 'STAKE',
+    Unstake: 'UNSTAKE',
+    CancelUnstaking: 'CANCEL_UNSTAKING',
+    StakingWithdraw: 'STAKING_WITHDRAW',
+    Vote: 'VOTE',
+    ClaimRewards: 'CLAIM_REWARDS',
+    Delegate: 'DELEGATE',
+    Reclaim: 'RECLAIM'
+} as const;
+export type InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum = typeof InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum[keyof typeof InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum];
 /**
  * @export
  */

@@ -4,8 +4,17 @@ import type {
   AccountsControllerGetAssetBalancesV1SortByEnum,
   AccountsControllerGetAssetBalancesV1SortOrderEnum,
   AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum,
+  BlockchainOperationsControllerListGenericV2OperationTypesEnum,
+  BlockchainOperationsControllerListGenericV2SortByEnum,
+  BlockchainOperationsControllerListGenericV2SortOrderEnum,
+  BlockchainOperationsControllerListGenericV2StatusesEnum,
+  BlockchainTransactionsControllerListV1SortByEnum,
+  BlockchainTransactionsControllerListV1SortOrderEnum,
+  BlockchainTransactionsControllerListV1StatusesEnum,
   ClaimsControllerGetClaimsV1SortByEnum,
   ClaimsControllerGetClaimsV1SortOrderEnum,
+  CrossChainUserStepDto,
+  DelegateBodyDtoResourceTypeEnum,
   FetchAPI,
   HTTPHeaders,
   InvoicesControllerFindInvoicesByDeploymentV1SortByEnum,
@@ -15,26 +24,34 @@ import type {
   PayoutsControllerFindAllV1SortByEnum,
   PayoutsControllerFindAllV1SortOrderEnum,
   PayoutsControllerFindAllV1StatusesEnum,
+  ReclaimBodyDtoResourceTypeEnum,
+  StakeBodyDtoResourceTypeEnum,
   TransactionsControllerGetTransactionsV1OperationTypesEnum,
   TransactionsControllerGetTransactionsV1SortByEnum,
   TransactionsControllerGetTransactionsV1SortOrderEnum,
   TransactionsControllerGetTransactionsV1StatusesEnum,
+  UniversalAddress,
+  UnstakeBodyDtoResourceTypeEnum,
   UpdateInvoiceDto,
   UpdateInvoiceDtoStatusEnum,
   UpdatePayoutDto,
 } from '../../generated-contracts';
 import {
   AccountsApi,
+  BlockchainTransactionsApi,
   CallbacksApi,
   ClaimsApi,
   Configuration,
+  CrossChainTransfersApi,
   CurrenciesApi,
   InvoicesApi,
   NetworksApi,
+  OperationsV2Api,
   PayoutsApi,
   QueueOperationsApi,
   ResponseError,
   SmartContractVersionsApi,
+  TRXStakingApi,
   TransactionsApi,
 } from '../../generated-contracts';
 import { type AbiCacheEntry, AbiProvider } from '../abi-provider';
@@ -49,9 +66,16 @@ import type {
   AssetSortField,
   AssetSortOrder,
   BalanceSummary,
+  BlockchainTransactionDetails,
+  BlockchainTransactionList,
+  BlockchainTransactionSortField,
+  BlockchainTransactionStatus,
   CallbackList,
   ClaimsResponse,
   ClaimsSortField,
+  CrossChainChain,
+  CrossChainQuotes,
+  CrossChainTransfer,
   Currency,
   DeploymentParams,
   DeploymentQueue,
@@ -63,6 +87,10 @@ import type {
   InvoiceStatus,
   Network,
   NonceInfo,
+  OperationV2Details,
+  OperationV2List,
+  OperationV2SortField,
+  OperationV2Status,
   Payout,
   PayoutDetail,
   PayoutList,
@@ -72,32 +100,51 @@ import type {
   ResendCallbacksResult,
   Signature,
   SortOrder,
+  StakingDelegationSummary,
+  StakingDelegations,
+  StakingNetworkParams,
+  StakingResourceType,
+  StakingSummary,
+  SuperRepresentatives,
   TransactionDetails,
   TransactionList,
   TransactionOperationType,
   TransactionSortField,
   TransactionStatus,
+  VotingSummary,
 } from './models';
-import { QueueOperationStatus } from './models';
+import { OperationTypeV2, QueueOperationStatus } from './models';
 import {
   mapAccountDetails,
   mapAssetBalanceList,
   mapBalanceSummary,
+  mapBlockchainTransactionDetails,
+  mapBlockchainTransactionList,
   mapCallbackList,
   mapClaimsResponse,
+  mapCrossChainChain,
+  mapCrossChainQuotes,
+  mapCrossChainTransfer,
   mapCurrency,
   mapDeploymentQueue,
   mapInvoice,
   mapInvoiceDetails,
   mapInvoiceList,
   mapNetwork,
+  mapOperationV2List,
   mapPayout,
   mapPayoutDetail,
   mapPayoutList,
   mapQueueOperation,
   mapSignature,
+  mapStakingDelegationSummary,
+  mapStakingDelegations,
+  mapStakingNetworkParams,
+  mapStakingSummary,
+  mapSuperRepresentatives,
   mapTransactionDetails,
   mapTransactionList,
+  mapVotingSummary,
 } from './models/mappers';
 
 export interface DefiClientOptions {
@@ -242,6 +289,7 @@ export interface UpdatePayoutParams extends ChainScopedParams {
   callbackUrl?: string | null;
 }
 
+/** @deprecated Use `GetOperationsV2Params` (`getOperationsV2`) or `GetBlockchainTransactionsParams` (`getBlockchainTransactions`). */
 export interface GetTransactionsParams extends ChainScopedParams {
   id?: string;
   operationId?: string;
@@ -260,6 +308,7 @@ export interface GetTransactionsParams extends ChainScopedParams {
   pageSize?: number;
 }
 
+/** @deprecated Use `GetOperationDetailsV2Params` (`getOperationDetailsV2`) or `GetBlockchainTransactionParams` (`getBlockchainTransaction`). */
 export interface GetTransactionParams extends ChainScopedParams {
   transactionId: string;
 }
@@ -314,6 +363,104 @@ export interface GetQueueOperationParams extends ChainScopedParams {
   operationId: string;
 }
 
+export interface CreateStakeOperationParams extends ChainScopedParams {
+  amount: string;
+  resourceType: StakingResourceType;
+}
+
+export interface CreateUnstakeOperationParams extends ChainScopedParams {
+  amount: string;
+  resourceType: StakingResourceType;
+}
+
+export interface CreateDelegateOperationParams extends ChainScopedParams {
+  amount: string;
+  resourceType: StakingResourceType;
+  recipient: string;
+  /** Lock the delegation for the network-defined period. */
+  lock?: boolean;
+}
+
+export interface CreateReclaimOperationParams extends ChainScopedParams {
+  amount: string;
+  resourceType: StakingResourceType;
+  recipient: string;
+}
+
+export interface CreateVoteOperationParams extends ChainScopedParams {
+  /** Map of super-representative address to vote count. */
+  allocation: Record<string, string>;
+}
+
+export interface GetStakingDelegationsParams extends ChainScopedParams {
+  page?: number;
+  pageSize?: number;
+}
+
+export interface GetCrossChainDestinationCurrenciesParams extends ChainScopedParams {
+  srcCurrencyId?: string;
+}
+
+export interface GetCrossChainQuoteParams extends ChainScopedParams {
+  srcCurrencyId: string;
+  dstCurrencyId: string;
+  dstWalletAddress: UniversalAddress;
+  amount: string;
+}
+
+export interface CreateCrossChainTransferParams extends ChainScopedParams {
+  quoteId: string;
+  routeType: string;
+  srcCurrencyId: string;
+  srcAmount: string;
+  dstCurrencyId: string;
+  dstAmount: string;
+  dstWalletAddress: UniversalAddress;
+  userSteps: CrossChainUserStepDto[];
+  feeUsd?: string | null;
+  feePercent?: string | null;
+  estimatedDurationMs?: number | null;
+  expiresAt?: Date | null;
+  nonce?: string;
+}
+
+export interface GetOperationsV2Params extends ChainScopedParams {
+  types?: OperationTypeV2[];
+  statuses?: OperationV2Status[];
+  id?: string;
+  txHash?: string;
+  txId?: string;
+  currencyIds?: string[];
+  createdFrom?: string;
+  createdTo?: string;
+  updatedFrom?: string;
+  updatedTo?: string;
+  sortBy?: OperationV2SortField;
+  sortOrder?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface GetOperationDetailsV2Params extends ChainScopedParams {
+  type: OperationTypeV2;
+  operationId: string;
+}
+
+export interface GetBlockchainTransactionsParams extends ChainScopedParams {
+  statuses?: BlockchainTransactionStatus[];
+  txHash?: string;
+  blockNumberFrom?: string;
+  blockNumberTo?: string;
+  sortBy?: BlockchainTransactionSortField;
+  sortOrder?: SortOrder;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface GetBlockchainTransactionParams extends ChainScopedParams {
+  transactionId: string;
+}
+
 export class DefiClient {
   private readonly config: Configuration;
   private readonly accountsApi: AccountsApi;
@@ -326,6 +473,10 @@ export class DefiClient {
   private readonly smartContractVersionsApi: SmartContractVersionsApi;
   private readonly callbacksApi: CallbacksApi;
   private readonly networksApi: NetworksApi;
+  private readonly trxStakingApi: TRXStakingApi;
+  private readonly crossChainApi: CrossChainTransfersApi;
+  private readonly operationsV2Api: OperationsV2Api;
+  private readonly blockchainTransactionsApi: BlockchainTransactionsApi;
   private readonly abiProvider: AbiProvider;
   private accountInfoPromise?: Promise<{
     accountId: string;
@@ -367,6 +518,10 @@ export class DefiClient {
     this.smartContractVersionsApi = new SmartContractVersionsApi(this.config);
     this.callbacksApi = new CallbacksApi(this.config);
     this.networksApi = new NetworksApi(this.config);
+    this.trxStakingApi = new TRXStakingApi(this.config);
+    this.crossChainApi = new CrossChainTransfersApi(this.config);
+    this.operationsV2Api = new OperationsV2Api(this.config);
+    this.blockchainTransactionsApi = new BlockchainTransactionsApi(this.config);
     this.abiProvider = new AbiProvider(this.smartContractVersionsApi, options.abiCacheDir);
   }
 
@@ -708,6 +863,392 @@ export class DefiClient {
     return mapQueueOperation(response);
   }
 
+  /**
+   * Create a TRON stake operation. Returns the queue operation to sign and execute
+   * with the standard multisig flow (`getQueueOperation` → sign → `submitOperationSignature` → execute).
+   */
+  async createStakeOperation(params: CreateStakeOperationParams): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateStakeV1({
+        deploymentId,
+        stakeBodyDto: {
+          amount: params.amount,
+          resourceType: params.resourceType as StakeBodyDtoResourceTypeEnum,
+        },
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON unstake operation. Returns a signable queue operation. */
+  async createUnstakeOperation(params: CreateUnstakeOperationParams): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateUnstakeV1({
+        deploymentId,
+        unstakeBodyDto: {
+          amount: params.amount,
+          resourceType: params.resourceType as UnstakeBodyDtoResourceTypeEnum,
+        },
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON delegate-resource operation. Returns a signable queue operation. */
+  async createDelegateOperation(params: CreateDelegateOperationParams): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateDelegateV1({
+        deploymentId,
+        delegateBodyDto: {
+          amount: params.amount,
+          resourceType: params.resourceType as DelegateBodyDtoResourceTypeEnum,
+          recipient: params.recipient,
+          lock: params.lock,
+        },
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON reclaim (undelegate) operation. Returns a signable queue operation. */
+  async createReclaimOperation(params: CreateReclaimOperationParams): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateReclaimV1({
+        deploymentId,
+        reclaimBodyDto: {
+          amount: params.amount,
+          resourceType: params.resourceType as ReclaimBodyDtoResourceTypeEnum,
+          recipient: params.recipient,
+        },
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON vote operation allocating votes to super representatives. Returns a signable queue operation. */
+  async createVoteOperation(params: CreateVoteOperationParams): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateVoteV1({
+        deploymentId,
+        voteBodyDto: {
+          allocation: params.allocation,
+        },
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON cancel-unstaking operation. Returns a signable queue operation. */
+  async createCancelUnstakingOperation(params: ChainScopedParams = {}): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateCancelUnstakingV1({
+        deploymentId,
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON staking-withdraw operation. Returns a signable queue operation. */
+  async createStakingWithdrawOperation(params: ChainScopedParams = {}): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateStakingWithdrawV1({
+        deploymentId,
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Create a TRON claim-rewards operation. Returns a signable queue operation. */
+  async createClaimRewardsOperation(params: ChainScopedParams = {}): Promise<QueueOperation> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingOperationsControllerCreateClaimRewardsV1({
+        deploymentId,
+      }),
+    );
+
+    return mapQueueOperation(response);
+  }
+
+  /** Read the account's TRON staking summary. */
+  async getStakingSummary(chainId?: ChainIdentifier): Promise<StakingSummary> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingViewsControllerGetSummaryV1({ deploymentId }),
+    );
+
+    return mapStakingSummary(response);
+  }
+
+  /** Read the account's resource delegations (paginated). */
+  async getStakingDelegations(params: GetStakingDelegationsParams = {}): Promise<StakingDelegations> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingViewsControllerGetDelegationsV1({
+        deploymentId,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
+
+    return mapStakingDelegations(response);
+  }
+
+  /** Read the aggregated delegation summary. */
+  async getStakingDelegationSummary(chainId?: ChainIdentifier): Promise<StakingDelegationSummary> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingViewsControllerGetDelegationSummaryV1({ deploymentId }),
+    );
+
+    return mapStakingDelegationSummary(response);
+  }
+
+  /** Read TRON staking network params (e.g. unstaking period, resource prices). */
+  async getStakingNetworkParams(chainId?: ChainIdentifier): Promise<StakingNetworkParams> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingViewsControllerGetNetworkParamsV1({ deploymentId }),
+    );
+
+    return mapStakingNetworkParams(response);
+  }
+
+  /** Read the list of super representatives available for voting. */
+  async getSuperRepresentatives(chainId?: ChainIdentifier): Promise<SuperRepresentatives> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingViewsControllerGetSuperRepresentativesV1({ deploymentId }),
+    );
+
+    return mapSuperRepresentatives(response);
+  }
+
+  /** Read the account's current voting summary. */
+  async getVotingSummary(chainId?: ChainIdentifier): Promise<VotingSummary> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    const response = await this.callApi(() =>
+      this.trxStakingApi.deploymentStakingViewsControllerGetVotingSummaryV1({ deploymentId }),
+    );
+
+    return mapVotingSummary(response);
+  }
+
+  /** List chains supported for cross-chain transfers. */
+  async getCrossChainChains(): Promise<CrossChainChain[]> {
+    const response = await this.callApi(() => this.crossChainApi.crossChainControllerListChainsV1());
+    return response.map(mapCrossChainChain);
+  }
+
+  /** List currencies usable as the source of a cross-chain transfer. */
+  async getCrossChainSourceCurrencies(chainId?: ChainIdentifier): Promise<Currency[]> {
+    const deploymentId = await this.resolveDeploymentId(chainId);
+
+    const response = await this.callApi(() =>
+      this.crossChainApi.deploymentCrossChainControllerListSourceCurrenciesV1({ deploymentId }),
+    );
+
+    return response.map(mapCurrency);
+  }
+
+  /** List currencies usable as the destination of a cross-chain transfer. */
+  async getCrossChainDestinationCurrencies(params: GetCrossChainDestinationCurrenciesParams = {}): Promise<Currency[]> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.crossChainApi.crossChainControllerListDestinationCurrenciesV1({
+        deploymentId,
+        srcCurrencyId: params.srcCurrencyId,
+      }),
+    );
+
+    return response.map(mapCurrency);
+  }
+
+  /** Fetch cross-chain transfer route quotes for the given source/destination and amount. */
+  async getCrossChainQuote(params: GetCrossChainQuoteParams): Promise<CrossChainQuotes> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.crossChainApi.deploymentCrossChainControllerGetQuoteV1({
+        deploymentId,
+        quoteRequestDto: {
+          srcCurrencyId: params.srcCurrencyId,
+          dstCurrencyId: params.dstCurrencyId,
+          dstWalletAddress: params.dstWalletAddress,
+          amount: params.amount,
+        },
+      }),
+    );
+
+    return mapCrossChainQuotes(response);
+  }
+
+  /**
+   * Create a cross-chain transfer from a chosen quote. The returned entity carries
+   * `queueOperationId` + `nonce`; sign and execute it with the standard multisig flow.
+   */
+  async createCrossChainTransfer(params: CreateCrossChainTransferParams): Promise<CrossChainTransfer> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.crossChainApi.deploymentCrossChainControllerCreateTransferV1({
+        deploymentId,
+        createCrossChainTransferDto: {
+          quoteId: params.quoteId,
+          routeType: params.routeType,
+          srcCurrencyId: params.srcCurrencyId,
+          srcAmount: params.srcAmount,
+          dstCurrencyId: params.dstCurrencyId,
+          dstAmount: params.dstAmount,
+          dstWalletAddress: params.dstWalletAddress,
+          userSteps: params.userSteps,
+          feeUsd: params.feeUsd,
+          feePercent: params.feePercent,
+          estimatedDurationMs: params.estimatedDurationMs,
+          expiresAt: params.expiresAt,
+          nonce: params.nonce,
+        },
+      }),
+    );
+
+    return mapCrossChainTransfer(response);
+  }
+
+  /** List operations from the v2 operations history, optionally filtered by operation type. */
+  async getOperationsV2(params: GetOperationsV2Params = {}): Promise<OperationV2List> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.operationsV2Api.blockchainOperationsControllerListGenericV2({
+        deploymentId,
+        operationTypes: params.types as BlockchainOperationsControllerListGenericV2OperationTypesEnum[] | undefined,
+        statuses: params.statuses as BlockchainOperationsControllerListGenericV2StatusesEnum[] | undefined,
+        id: params.id,
+        txHash: params.txHash,
+        txId: params.txId,
+        currencyIds: params.currencyIds,
+        createdFrom: params.createdFrom,
+        createdTo: params.createdTo,
+        updatedFrom: params.updatedFrom,
+        updatedTo: params.updatedTo,
+        sortBy: params.sortBy as BlockchainOperationsControllerListGenericV2SortByEnum | undefined,
+        sortOrder: params.sortOrder as BlockchainOperationsControllerListGenericV2SortOrderEnum | undefined,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
+
+    return mapOperationV2List(response);
+  }
+
+  /** Fetch the typed details of a single v2 operation, dispatched by operation type. */
+  async getOperationDetailsV2(params: GetOperationDetailsV2Params): Promise<OperationV2Details> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+    const api = this.operationsV2Api;
+
+    const dispatch: Record<OperationTypeV2, (opId: string) => Promise<OperationV2Details>> = {
+      [OperationTypeV2.Payout]: (opId) => api.blockchainPayoutOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.InvoiceDeposit]: (opId) =>
+        api.blockchainInvoiceDepositOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Claim]: (opId) => api.blockchainClaimOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Deploy]: (opId) => api.blockchainDeployOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.DirectDeposit]: (opId) =>
+        api.blockchainDirectDepositOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Reject]: (opId) => api.blockchainRejectOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.SetConfig]: (opId) =>
+        api.blockchainSetMultisigConfigOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.DappTransaction]: (opId) =>
+        api.blockchainDappTransactionOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.CrossChainTransfer]: (opId) =>
+        api.blockchainCrossChainTransferOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Stake]: (opId) => api.blockchainStakeOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Unstake]: (opId) =>
+        api.blockchainUnstakeOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.CancelUnstaking]: (opId) =>
+        api.blockchainCancelUnstakingOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.StakingWithdraw]: (opId) =>
+        api.blockchainStakingWithdrawOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Vote]: (opId) => api.blockchainVoteOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.ClaimRewards]: (opId) =>
+        api.blockchainClaimRewardsOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Delegate]: (opId) =>
+        api.blockchainDelegateOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Reclaim]: (opId) =>
+        api.blockchainReclaimOperationsControllerGetDetailsV2({ deploymentId, opId }),
+    };
+
+    const fetchDetails = dispatch[params.type];
+    if (!fetchDetails) {
+      throw new Error(`Unsupported operation type for details: ${params.type}`);
+    }
+
+    return this.callApi(() => fetchDetails(params.operationId));
+  }
+
+  /** List blockchain transactions for the deployment. */
+  async getBlockchainTransactions(params: GetBlockchainTransactionsParams = {}): Promise<BlockchainTransactionList> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.blockchainTransactionsApi.blockchainTransactionsControllerListV1({
+        deploymentId,
+        statuses: params.statuses as BlockchainTransactionsControllerListV1StatusesEnum[] | undefined,
+        txHash: params.txHash,
+        blockNumberFrom: params.blockNumberFrom,
+        blockNumberTo: params.blockNumberTo,
+        sortBy: params.sortBy as BlockchainTransactionsControllerListV1SortByEnum | undefined,
+        sortOrder: params.sortOrder as BlockchainTransactionsControllerListV1SortOrderEnum | undefined,
+        page: params.page,
+        pageSize: params.pageSize,
+      }),
+    );
+
+    return mapBlockchainTransactionList(response);
+  }
+
+  /** Fetch a single blockchain transaction by id. */
+  async getBlockchainTransaction(params: GetBlockchainTransactionParams): Promise<BlockchainTransactionDetails> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.blockchainTransactionsApi.blockchainTransactionsControllerGetOneV1({
+        deploymentId,
+        blockchainTransactionId: params.transactionId,
+      }),
+    );
+
+    return mapBlockchainTransactionDetails(response);
+  }
+
   /** Fetch the current and last-executed nonce for the deployment. */
   async getNonceInfo(chainId?: ChainIdentifier): Promise<NonceInfo> {
     const deploymentId = await this.resolveDeploymentId(chainId);
@@ -761,6 +1302,10 @@ export class DefiClient {
     return deletedIds;
   }
 
+  /**
+   * @deprecated v1 transactions are superseded. Use `getOperationsV2` for logical
+   * operation history, or `getBlockchainTransactions` for on-chain transactions.
+   */
   async getTransactions(params: GetTransactionsParams): Promise<TransactionList> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
@@ -790,6 +1335,10 @@ export class DefiClient {
     return mapTransactionList(response);
   }
 
+  /**
+   * @deprecated v1 transactions are superseded. Use `getOperationDetailsV2` for a
+   * logical operation, or `getBlockchainTransaction` for an on-chain transaction.
+   */
   async getTransaction(params: GetTransactionParams): Promise<TransactionDetails> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 

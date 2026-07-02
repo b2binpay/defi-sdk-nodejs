@@ -5,11 +5,18 @@ import type {
   AssetBalanceDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
+  BlockchainOperationListResponseDto,
+  BlockchainTransactionDetailsResponseDto,
+  BlockchainTransactionListResponseDto,
   CallbackResponseDto,
   CallDto,
   ClaimItemDto,
   ClaimsResponseDto,
+  CrossChainChainResponseDto,
+  CrossChainQuotesResponseDto,
+  CrossChainTransferResponseDto,
   CurrencyResponseDto,
+  DelegationSummaryResponse,
   DeploymentQueueResponseDto,
   GetCallbacksResponseDto,
   InvoiceDetailsDto,
@@ -22,10 +29,15 @@ import type {
   PayoutResponseDto,
   QueueOperationResponseDto,
   SignatureResponseDto,
+  StakingDelegationsResponse,
+  StakingNetworkParamsResponse,
+  StakingSummaryResponse,
+  SuperRepresentativesResponse,
   TransactionDetailsDto,
   TransactionListResponseDto,
   TransactionListResponseDtoItemsInner,
   TransactionListResponseDtoItemsInnerInvoice,
+  VotingSummaryResponse,
 } from '../../../generated-contracts';
 import type {
   Account,
@@ -35,6 +47,8 @@ import type {
   AssetBalance,
   AssetBalanceList,
   BalanceSummary,
+  BlockchainTransactionDetails,
+  BlockchainTransactionList,
   Call,
   Callback,
   CallbackList,
@@ -43,6 +57,9 @@ import type {
   CallbackType,
   ClaimItem,
   ClaimsResponse,
+  CrossChainChain,
+  CrossChainQuotes,
+  CrossChainTransfer,
   Currency,
   DeploymentQueue,
   ExecuteBatchOperationsResult,
@@ -52,6 +69,8 @@ import type {
   InvoiceStatus,
   Network,
   OperationSignature,
+  OperationV2,
+  OperationV2List,
   Payout,
   PayoutDetail,
   PayoutList,
@@ -60,6 +79,11 @@ import type {
   QueueOperationStatus,
   QueueOperationType,
   Signature,
+  StakingDelegationSummary,
+  StakingDelegations,
+  StakingNetworkParams,
+  StakingSummary,
+  SuperRepresentatives,
   Transaction,
   TransactionDetails,
   TransactionDirection,
@@ -67,6 +91,7 @@ import type {
   TransactionList,
   TransactionOperationType,
   TransactionStatus,
+  VotingSummary,
 } from './types';
 
 const clone = <T>(value: T): T => ({ ...value });
@@ -203,6 +228,44 @@ export const mapClaimsResponse = (dto: ClaimsResponseDto): ClaimsResponse => ({
   pageSize: dto.pageSize,
   items: dto.items.map(mapClaimItem),
 });
+
+export const mapOperationV2 = (dto: BlockchainOperationListResponseDto['items'][number]): OperationV2 => clone(dto);
+
+export const mapOperationV2List = (dto: BlockchainOperationListResponseDto): OperationV2List => ({
+  total: dto.total,
+  page: dto.page,
+  pageSize: dto.pageSize,
+  items: dto.items.map(mapOperationV2),
+});
+
+export const mapBlockchainTransactionList = (dto: BlockchainTransactionListResponseDto): BlockchainTransactionList =>
+  clone(dto);
+
+export const mapBlockchainTransactionDetails = (
+  dto: BlockchainTransactionDetailsResponseDto,
+): BlockchainTransactionDetails => clone(dto);
+
+export const mapCrossChainChain = (dto: CrossChainChainResponseDto): CrossChainChain => clone(dto);
+
+export const mapCrossChainQuotes = (dto: CrossChainQuotesResponseDto): CrossChainQuotes => clone(dto);
+
+export const mapCrossChainTransfer = (dto: CrossChainTransferResponseDto): CrossChainTransfer => ({
+  ...dto,
+  srcCurrency: mapCurrency(dto.srcCurrency),
+  dstCurrency: mapCurrency(dto.dstCurrency),
+});
+
+export const mapStakingSummary = (dto: StakingSummaryResponse): StakingSummary => clone(dto);
+
+export const mapStakingDelegations = (dto: StakingDelegationsResponse): StakingDelegations => clone(dto);
+
+export const mapStakingDelegationSummary = (dto: DelegationSummaryResponse): StakingDelegationSummary => clone(dto);
+
+export const mapStakingNetworkParams = (dto: StakingNetworkParamsResponse): StakingNetworkParams => clone(dto);
+
+export const mapSuperRepresentatives = (dto: SuperRepresentativesResponse): SuperRepresentatives => clone(dto);
+
+export const mapVotingSummary = (dto: VotingSummaryResponse): VotingSummary => clone(dto);
 
 export const mapCallback = (dto: CallbackResponseDto): Callback => ({
   ...dto,
