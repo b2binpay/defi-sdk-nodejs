@@ -13,13 +13,20 @@
  */
 
 import { mapValues } from '../runtime';
-import type { UniversalAddress } from './universal-address';
+import type { TransactionListResponseDtoItemsInnerDelegate } from './transaction-list-response-dto-items-inner-delegate';
 import {
-    UniversalAddressFromJSON,
-    UniversalAddressFromJSONTyped,
-    UniversalAddressToJSON,
-    UniversalAddressToJSONTyped,
-} from './universal-address';
+    TransactionListResponseDtoItemsInnerDelegateFromJSON,
+    TransactionListResponseDtoItemsInnerDelegateFromJSONTyped,
+    TransactionListResponseDtoItemsInnerDelegateToJSON,
+    TransactionListResponseDtoItemsInnerDelegateToJSONTyped,
+} from './transaction-list-response-dto-items-inner-delegate';
+import type { TransactionListResponseDtoItemsInnerClaimRewards } from './transaction-list-response-dto-items-inner-claim-rewards';
+import {
+    TransactionListResponseDtoItemsInnerClaimRewardsFromJSON,
+    TransactionListResponseDtoItemsInnerClaimRewardsFromJSONTyped,
+    TransactionListResponseDtoItemsInnerClaimRewardsToJSON,
+    TransactionListResponseDtoItemsInnerClaimRewardsToJSONTyped,
+} from './transaction-list-response-dto-items-inner-claim-rewards';
 import type { TransactionListResponseDtoItemsInnerInvoice } from './transaction-list-response-dto-items-inner-invoice';
 import {
     TransactionListResponseDtoItemsInnerInvoiceFromJSON,
@@ -27,13 +34,6 @@ import {
     TransactionListResponseDtoItemsInnerInvoiceToJSON,
     TransactionListResponseDtoItemsInnerInvoiceToJSONTyped,
 } from './transaction-list-response-dto-items-inner-invoice';
-import type { TransactionDappMetadata } from './transaction-dapp-metadata';
-import {
-    TransactionDappMetadataFromJSON,
-    TransactionDappMetadataFromJSONTyped,
-    TransactionDappMetadataToJSON,
-    TransactionDappMetadataToJSONTyped,
-} from './transaction-dapp-metadata';
 import type { TransactionListResponseDtoItemsInnerCallsInner } from './transaction-list-response-dto-items-inner-calls-inner';
 import {
     TransactionListResponseDtoItemsInnerCallsInnerFromJSON,
@@ -48,6 +48,62 @@ import {
     CurrencyResponseDtoToJSON,
     CurrencyResponseDtoToJSONTyped,
 } from './currency-response-dto';
+import type { TransactionListResponseDtoItemsInnerStake } from './transaction-list-response-dto-items-inner-stake';
+import {
+    TransactionListResponseDtoItemsInnerStakeFromJSON,
+    TransactionListResponseDtoItemsInnerStakeFromJSONTyped,
+    TransactionListResponseDtoItemsInnerStakeToJSON,
+    TransactionListResponseDtoItemsInnerStakeToJSONTyped,
+} from './transaction-list-response-dto-items-inner-stake';
+import type { UniversalAddress } from './universal-address';
+import {
+    UniversalAddressFromJSON,
+    UniversalAddressFromJSONTyped,
+    UniversalAddressToJSON,
+    UniversalAddressToJSONTyped,
+} from './universal-address';
+import type { TransactionListResponseDtoItemsInnerReclaim } from './transaction-list-response-dto-items-inner-reclaim';
+import {
+    TransactionListResponseDtoItemsInnerReclaimFromJSON,
+    TransactionListResponseDtoItemsInnerReclaimFromJSONTyped,
+    TransactionListResponseDtoItemsInnerReclaimToJSON,
+    TransactionListResponseDtoItemsInnerReclaimToJSONTyped,
+} from './transaction-list-response-dto-items-inner-reclaim';
+import type { TransactionListResponseDtoItemsInnerStakingWithdraw } from './transaction-list-response-dto-items-inner-staking-withdraw';
+import {
+    TransactionListResponseDtoItemsInnerStakingWithdrawFromJSON,
+    TransactionListResponseDtoItemsInnerStakingWithdrawFromJSONTyped,
+    TransactionListResponseDtoItemsInnerStakingWithdrawToJSON,
+    TransactionListResponseDtoItemsInnerStakingWithdrawToJSONTyped,
+} from './transaction-list-response-dto-items-inner-staking-withdraw';
+import type { TransactionListResponseDtoItemsInnerVote } from './transaction-list-response-dto-items-inner-vote';
+import {
+    TransactionListResponseDtoItemsInnerVoteFromJSON,
+    TransactionListResponseDtoItemsInnerVoteFromJSONTyped,
+    TransactionListResponseDtoItemsInnerVoteToJSON,
+    TransactionListResponseDtoItemsInnerVoteToJSONTyped,
+} from './transaction-list-response-dto-items-inner-vote';
+import type { TransactionDappMetadata } from './transaction-dapp-metadata';
+import {
+    TransactionDappMetadataFromJSON,
+    TransactionDappMetadataFromJSONTyped,
+    TransactionDappMetadataToJSON,
+    TransactionDappMetadataToJSONTyped,
+} from './transaction-dapp-metadata';
+import type { TransactionListResponseDtoItemsInnerUnstake } from './transaction-list-response-dto-items-inner-unstake';
+import {
+    TransactionListResponseDtoItemsInnerUnstakeFromJSON,
+    TransactionListResponseDtoItemsInnerUnstakeFromJSONTyped,
+    TransactionListResponseDtoItemsInnerUnstakeToJSON,
+    TransactionListResponseDtoItemsInnerUnstakeToJSONTyped,
+} from './transaction-list-response-dto-items-inner-unstake';
+import type { CrossChainTransferDetailDto } from './cross-chain-transfer-detail-dto';
+import {
+    CrossChainTransferDetailDtoFromJSON,
+    CrossChainTransferDetailDtoFromJSONTyped,
+    CrossChainTransferDetailDtoToJSON,
+    CrossChainTransferDetailDtoToJSONTyped,
+} from './cross-chain-transfer-detail-dto';
 
 /**
  * 
@@ -96,7 +152,7 @@ export interface TransactionListResponseDtoItemsInner {
      * @type {string}
      * @memberof TransactionListResponseDtoItemsInner
      */
-    amount: string;
+    amount: string | null;
     /**
      * 
      * @type {UniversalAddress}
@@ -199,6 +255,54 @@ export interface TransactionListResponseDtoItemsInner {
      * @memberof TransactionListResponseDtoItemsInner
      */
     calls?: Array<TransactionListResponseDtoItemsInnerCallsInner>;
+    /**
+     * Cross-chain transfer details, present only when operationType is CROSS_CHAIN_TRANSFER (LayerZero VT integration).
+     * @type {CrossChainTransferDetailDto}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    crossChainTransfer?: CrossChainTransferDetailDto | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerStake}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    stake?: TransactionListResponseDtoItemsInnerStake | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerUnstake}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    unstake?: TransactionListResponseDtoItemsInnerUnstake | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerStakingWithdraw}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    stakingWithdraw?: TransactionListResponseDtoItemsInnerStakingWithdraw | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerClaimRewards}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    claimRewards?: TransactionListResponseDtoItemsInnerClaimRewards | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerVote}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    vote?: TransactionListResponseDtoItemsInnerVote | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerDelegate}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    delegate?: TransactionListResponseDtoItemsInnerDelegate | null;
+    /**
+     * 
+     * @type {TransactionListResponseDtoItemsInnerReclaim}
+     * @memberof TransactionListResponseDtoItemsInner
+     */
+    reclaim?: TransactionListResponseDtoItemsInnerReclaim | null;
 }
 
 
@@ -207,7 +311,8 @@ export interface TransactionListResponseDtoItemsInner {
  */
 export const TransactionListResponseDtoItemsInnerDirectionEnum = {
     In: 'IN',
-    Out: 'OUT'
+    Out: 'OUT',
+    Internal: 'INTERNAL'
 } as const;
 export type TransactionListResponseDtoItemsInnerDirectionEnum = typeof TransactionListResponseDtoItemsInnerDirectionEnum[keyof typeof TransactionListResponseDtoItemsInnerDirectionEnum];
 
@@ -233,7 +338,16 @@ export const TransactionListResponseDtoItemsInnerOperationTypeEnum = {
     Payout: 'payout',
     Reject: 'reject',
     Deploy: 'deploy',
-    DappTransaction: 'dapp_transaction'
+    DappTransaction: 'dapp_transaction',
+    CrossChainTransfer: 'cross_chain_transfer',
+    Stake: 'stake',
+    Unstake: 'unstake',
+    CancelUnstaking: 'cancel_unstaking',
+    StakingWithdraw: 'staking_withdraw',
+    Vote: 'vote',
+    ClaimRewards: 'claim_rewards',
+    Delegate: 'delegate',
+    Reclaim: 'reclaim'
 } as const;
 export type TransactionListResponseDtoItemsInnerOperationTypeEnum = typeof TransactionListResponseDtoItemsInnerOperationTypeEnum[keyof typeof TransactionListResponseDtoItemsInnerOperationTypeEnum];
 
@@ -300,6 +414,14 @@ export function TransactionListResponseDtoItemsInnerFromJSONTyped(json: any, ign
         'currency': CurrencyResponseDtoFromJSON(json['currency']),
         'dappMetadata': json['dappMetadata'] == null ? undefined : TransactionDappMetadataFromJSON(json['dappMetadata']),
         'calls': json['calls'] == null ? undefined : ((json['calls'] as Array<any>).map(TransactionListResponseDtoItemsInnerCallsInnerFromJSON)),
+        'crossChainTransfer': json['crossChainTransfer'] == null ? undefined : CrossChainTransferDetailDtoFromJSON(json['crossChainTransfer']),
+        'stake': json['stake'] == null ? undefined : TransactionListResponseDtoItemsInnerStakeFromJSON(json['stake']),
+        'unstake': json['unstake'] == null ? undefined : TransactionListResponseDtoItemsInnerUnstakeFromJSON(json['unstake']),
+        'stakingWithdraw': json['stakingWithdraw'] == null ? undefined : TransactionListResponseDtoItemsInnerStakingWithdrawFromJSON(json['stakingWithdraw']),
+        'claimRewards': json['claimRewards'] == null ? undefined : TransactionListResponseDtoItemsInnerClaimRewardsFromJSON(json['claimRewards']),
+        'vote': json['vote'] == null ? undefined : TransactionListResponseDtoItemsInnerVoteFromJSON(json['vote']),
+        'delegate': json['delegate'] == null ? undefined : TransactionListResponseDtoItemsInnerDelegateFromJSON(json['delegate']),
+        'reclaim': json['reclaim'] == null ? undefined : TransactionListResponseDtoItemsInnerReclaimFromJSON(json['reclaim']),
     };
 }
 
@@ -338,6 +460,14 @@ export function TransactionListResponseDtoItemsInnerToJSONTyped(value?: Transact
         'currency': CurrencyResponseDtoToJSON(value['currency']),
         'dappMetadata': TransactionDappMetadataToJSON(value['dappMetadata']),
         'calls': value['calls'] == null ? undefined : ((value['calls'] as Array<any>).map(TransactionListResponseDtoItemsInnerCallsInnerToJSON)),
+        'crossChainTransfer': CrossChainTransferDetailDtoToJSON(value['crossChainTransfer']),
+        'stake': TransactionListResponseDtoItemsInnerStakeToJSON(value['stake']),
+        'unstake': TransactionListResponseDtoItemsInnerUnstakeToJSON(value['unstake']),
+        'stakingWithdraw': TransactionListResponseDtoItemsInnerStakingWithdrawToJSON(value['stakingWithdraw']),
+        'claimRewards': TransactionListResponseDtoItemsInnerClaimRewardsToJSON(value['claimRewards']),
+        'vote': TransactionListResponseDtoItemsInnerVoteToJSON(value['vote']),
+        'delegate': TransactionListResponseDtoItemsInnerDelegateToJSON(value['delegate']),
+        'reclaim': TransactionListResponseDtoItemsInnerReclaimToJSON(value['reclaim']),
     };
 }
 

@@ -172,19 +172,32 @@ await client.submitOperationSignature({
 
 > **Signature packing:** The SDK automatically packs signatures to the format expected by the contract version. For v1.1.0 contracts, `signerAddress` is required. Pass the raw ECDSA hex from `signTypedData` — do not pre-pack.
 
-## Transactions
+## Operations & blockchain transactions
+
+History is read through two complementary APIs:
+
+- **Operations (v2)** — logical operations (payout, claim, stake, …) with typed details.
+- **Blockchain transactions** — on-chain transactions, each carrying its decoded operations.
 
 ```ts
-import { TransactionOperationType } from '@b2binpay/defi-sdk';
+import { OperationTypeV2 } from '@b2binpay/defi-sdk';
 
-const txList = await client.getTransactions({
-  operationTypes: [TransactionOperationType.Payout],
+// Logical operations
+const operations = await client.getOperationsV2({
+  types: [OperationTypeV2.Payout],
   pageSize: 20,
 });
+const details = await client.getOperationDetailsV2({
+  type: operations.items[0].operationType,
+  operationId: operations.items[0].id,
+});
 
-const tx = await client.getTransaction({ transactionId: txList.items[0].id });
-console.log('Claimed:', tx.isClaimed);
+// On-chain transactions
+const txList = await client.getBlockchainTransactions({ pageSize: 20 });
+const tx = await client.getBlockchainTransaction({ transactionId: txList.items[0].id });
 ```
+
+> **Deprecated:** the v1 `getTransactions()` / `getTransaction()` methods and `Transaction*` types are superseded by the two APIs above and will be removed in a future release.
 
 ## Claims
 

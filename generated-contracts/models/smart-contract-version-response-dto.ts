@@ -50,6 +50,12 @@ export interface SmartContractVersionResponseDto {
      */
     isLatest: boolean;
     /**
+     * True when this version exposes the TRON Stake 2.0 methods (TVM-only, version >= 1.2.1).
+     * @type {boolean}
+     * @memberof SmartContractVersionResponseDto
+     */
+    supportsStaking: boolean;
+    /**
      * 
      * @type {Date}
      * @memberof SmartContractVersionResponseDto
@@ -77,6 +83,7 @@ export function instanceOfSmartContractVersionResponseDto(value: object): value 
     if (!('networkType' in value) || value['networkType'] === undefined) return false;
     if (!('accountAbi' in value) || value['accountAbi'] === undefined) return false;
     if (!('isLatest' in value) || value['isLatest'] === undefined) return false;
+    if (!('supportsStaking' in value) || value['supportsStaking'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     return true;
 }
@@ -96,6 +103,7 @@ export function SmartContractVersionResponseDtoFromJSONTyped(json: any, ignoreDi
         'networkType': json['networkType'],
         'accountAbi': json['accountAbi'],
         'isLatest': json['isLatest'],
+        'supportsStaking': json['supportsStaking'],
         'createdAt': (new Date(json['createdAt'])),
     };
 }
@@ -115,6 +123,7 @@ export function SmartContractVersionResponseDtoToJSONTyped(value?: Omit<SmartCon
         'version': value['version'],
         'networkType': value['networkType'],
         'isLatest': value['isLatest'],
+        'supportsStaking': value['supportsStaking'],
         'createdAt': value['createdAt'].toISOString(),
     };
 }

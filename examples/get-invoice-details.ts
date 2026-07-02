@@ -6,7 +6,7 @@
  * - Retrieve claimable assets for that invoice to show what can be claimed.
  */
 import 'dotenv/config';
-import { DefiClient, InvoiceSortField, SortOrder, TransactionOperationType, TransactionSortField } from '../src';
+import { DefiClient, InvoiceSortField, OperationTypeV2, OperationV2SortField, SortOrder } from '../src';
 import { parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID'] as const;
@@ -15,20 +15,17 @@ runMain(async () => {
   const env = requireEnvVars(requiredEnv);
   const chainId = parseChainId(env.CHAIN_ID);
 
-  const INVOICE_ID = '119445670120656900';
-
   const client = new DefiClient({ baseUrl: env.API_BASE_URL, apiKey: env.API_KEY });
   await client.selectChain(chainId);
 
   const invoices = await client.getInvoices({
     chainId,
-    trackingId: 'API-EXAMPLE',
     sortBy: InvoiceSortField.CreatedAt,
     sortOrder: SortOrder.Desc,
     pageSize: 10,
   });
 
-  console.log(`Invoices (first page, filtered): ${invoices.total}`);
+  console.log(`Invoices (first page): ${invoices.total}`);
   console.table(
     invoices.items.map((item) => ({
       id: item.id,
@@ -38,7 +35,13 @@ runMain(async () => {
     })),
   );
 
-  const invoice = await client.getInvoice({ chainId, invoiceId: INVOICE_ID });
+  const invoiceId = process.env.INVOICE_ID ?? invoices.items[0]?.id;
+  if (!invoiceId) {
+    console.log('No invoices found — skipping details. Create one first (example:create-invoice).');
+    return;
+  }
+
+  const invoice = await client.getInvoice({ chainId, invoiceId });
   console.log('Invoice details:');
   console.table({
     id: invoice.invoice.id,
@@ -49,26 +52,25 @@ runMain(async () => {
     currencies: invoice.invoice.availableCurrencies.map((currency) => currency.symbol).join(', '),
   });
 
-  const recentDepositsResponse = await client.getTransactions({
+  const recentDepositsResponse = await client.getOperationsV2({
     chainId,
-    operationTypes: [TransactionOperationType.Invoice],
-    operationId: invoice.invoice.id,
-    sortBy: TransactionSortField.CreatedAt,
+    types: [OperationTypeV2.InvoiceDeposit],
+    sortBy: OperationV2SortField.CreatedAt,
     sortOrder: SortOrder.Desc,
     pageSize: 10,
   });
   const recentDeposits = recentDepositsResponse.items;
 
   if (recentDeposits.length === 0) {
-    console.log('No incoming transactions found for this invoice.');
+    console.log('No incoming deposit operations found.');
   } else {
-    console.log('Last incoming transactions:');
+    console.log('Recent invoice-deposit operations:');
     console.table(
-      recentDeposits.map((txn) => ({
-        id: txn.id,
-        status: txn.status,
-        txHash: txn.txHash,
-        amount: `${txn.amount} ${txn.currency?.symbol}`,
+      recentDeposits.map((op) => ({
+        id: op.id,
+        status: op.status,
+        txHash: op.txHash,
+        amount: `${op.amount} ${op.currency?.symbol}`,
       })),
     );
   }

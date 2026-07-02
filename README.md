@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/@b2binpay/defi-sdk.svg)](https://www.npmjs.com/package/@b2binpay/defi-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node.js](https://img.shields.io/badge/node-%5E22.16.0-brightgreen)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/node-%5E24.16.0-brightgreen)](https://nodejs.org)
 
 TypeScript SDK for the [B2BinPay DeFi](https://defi.b2binpay.com) platform — authenticated REST API access and blockchain transaction utilities for building non-custodial payment flows with multisig smart contracts.
 
@@ -11,6 +11,9 @@ TypeScript SDK for the [B2BinPay DeFi](https://defi.b2binpay.com) platform — a
 - **Multi-chain** — EVM-compatible networks (Ethereum, BSC, Sepolia, …) and TRON (Mainnet, Shasta)
 - **Invoices & Payouts** — full lifecycle management: create, query, update, cancel
 - **Multisig operations** — EIP-712 / TIP-712 typed-data signing, signature packing, on-chain execution
+- **TRON staking** — Stake 2.0 freeze/unfreeze, resource delegation, and Super Representative voting
+- **Cross-chain transfers** — quote and create transfers between chains
+- **Operation & transaction history** — logical operations (v2) and on-chain blockchain transactions
 - **Claims** — enumerate claimable deposits and build claim calldata
 - **Address validation** — checksum + network + currency compatibility checks before write operations
 - **Type-safe** — complete TypeScript types from the OpenAPI spec plus handcrafted blockchain types
@@ -18,8 +21,8 @@ TypeScript SDK for the [B2BinPay DeFi](https://defi.b2binpay.com) platform — a
 
 ## Requirements
 
-- Node.js `^22.16.0`
-- npm `^10.9.2`
+- Node.js `^24.16.0`
+- npm `^11.0.0`
 
 ## Installation
 
@@ -283,7 +286,16 @@ Available scripts:
 | `npm run example:claim-deposits`          | Build and broadcast a claim transaction                             |
 | `npm run example:evm-full-flow`           | End-to-end EVM flow: invoice → payout → sign → execute → claim     |
 | `npm run example:tron-get-account-info`   | TRON account info and balances                                      |
+| `npm run example:tron-create-invoice`     | Create a TRON invoice with currency lookup                          |
+| `npm run example:tron-create-payout`      | Create a TRON payout and surface the queued operation               |
+| `npm run example:tron-claim-deposits`     | Build and broadcast a TRON claim transaction                        |
+| `npm run example:tron-queue-sign`         | Build TIP-712 typed data, sign, and submit the signature            |
+| `npm run example:tron-queue-execute`      | Build and broadcast a TRON execute transaction                      |
+| `npm run example:tron-queue-execute-batch`| Execute two TRON operations in a single transaction                 |
 | `npm run example:tron-full-flow`          | End-to-end TRON flow                                                |
+| `npm run example:tron-staking-flow`       | Read staking summary, create a TRON stake, sign and execute it on-chain |
+| `npm run example:get-operations-v2`       | List v2 operations and fetch typed operation details                |
+| `npm run example:get-blockchain-transactions` | List blockchain transactions and fetch one by id                |
 
 ## Documentation
 

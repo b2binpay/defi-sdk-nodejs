@@ -18,7 +18,7 @@ runMain(async () => {
   const client = new DefiClient({ baseUrl: env.API_BASE_URL, apiKey: env.API_KEY });
   await client.selectChain(chainId);
 
-  const currency = await client.findCurrencyBySymbol({ symbol: 'USDT' });
+  const currency = await client.getNativeCurrency(chainId);
 
   const invoice = await client.createInvoice({
     requestedAmount: '100.56',

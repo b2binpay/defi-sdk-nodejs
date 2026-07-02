@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AccountResponseDtoInitialConfig } from './account-response-dto-initial-config';
+import {
+    AccountResponseDtoInitialConfigFromJSON,
+    AccountResponseDtoInitialConfigFromJSONTyped,
+    AccountResponseDtoInitialConfigToJSON,
+    AccountResponseDtoInitialConfigToJSONTyped,
+} from './account-response-dto-initial-config';
+
 /**
  * 
  * @export
@@ -50,11 +58,11 @@ export interface AccountResponseDto {
      */
     createdAt: string;
     /**
-     * Initial account configuration for all deployments
-     * @type {{ [key: string]: any; }}
+     * 
+     * @type {AccountResponseDtoInitialConfig}
      * @memberof AccountResponseDto
      */
-    initialConfig: { [key: string]: any; };
+    initialConfig: AccountResponseDtoInitialConfig;
     /**
      * Whether the entity relates to Tron (TVM)
      * @type {boolean}
@@ -111,7 +119,7 @@ export function AccountResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
         'contract': json['contract'],
         'members': json['members'],
         'createdAt': json['createdAt'],
-        'initialConfig': json['initialConfig'],
+        'initialConfig': AccountResponseDtoInitialConfigFromJSON(json['initialConfig']),
         'isTron': json['isTron'],
         'smartContractVersionId': json['smartContractVersionId'],
         'networkId': json['networkId'] == null ? undefined : json['networkId'],
@@ -135,7 +143,7 @@ export function AccountResponseDtoToJSONTyped(value?: AccountResponseDto | null,
         'contract': value['contract'],
         'members': value['members'],
         'createdAt': value['createdAt'],
-        'initialConfig': value['initialConfig'],
+        'initialConfig': AccountResponseDtoInitialConfigToJSON(value['initialConfig']),
         'isTron': value['isTron'],
         'smartContractVersionId': value['smartContractVersionId'],
         'networkId': value['networkId'],

@@ -25,7 +25,7 @@
 
 ### API Layer (`src/api`)
 
-`DefiClient` wraps the generated OpenAPI client and exposes convenience methods grouped by domain: accounts, balances, currencies, invoices, payouts, claims, transactions, and the deployment queue. It handles:
+`DefiClient` wraps the generated OpenAPI client and exposes convenience methods grouped by domain: accounts, balances, currencies, invoices, payouts, claims, operations & blockchain transactions, TRX staking, cross-chain transfers, and the deployment queue. It handles:
 
 - Automatic `x-api-key` injection on every request
 - Account resolution (API key → account → deployments)
@@ -81,6 +81,6 @@ The npm package exports:
 - `validateAddress` — address + network validator
 - Transaction helpers under the `transactions` namespace
 - `AbiProvider` and `AbiCacheEntry` — ABI fetching and caching
-- Enums: `FiatCurrency`, `InvoiceStatus`, `PayoutStatus`, `QueueOperationType`, `QueueOperationStatus`, `TransactionOperationType`, and more
+- Enums: `FiatCurrency`, `InvoiceStatus`, `PayoutStatus`, `QueueOperationType`, `QueueOperationStatus`, `OperationTypeV2`, `OperationV2Status`, `BlockchainTransactionStatus`, `StakingResourceType`, and more (`TransactionOperationType` and other v1 transaction enums are deprecated)
 
 Refer to [`docs/api-client.md`](api-client.md) and [`docs/transactions.md`](transactions.md) for detailed reference.

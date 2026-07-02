@@ -24,7 +24,7 @@ runMain(async () => {
 
   const payout = await client.createPayout({
     currencyId: currency.id,
-    amount: '0.001',
+    amount: '0.00005',
     recipient: env.PAYOUT_RECIPIENT,
     callbackUrl: undefined,
     trackingId: undefined,

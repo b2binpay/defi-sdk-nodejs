@@ -7,7 +7,7 @@
 import 'dotenv/config';
 import { type Address, createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { DefiClient, MultisigBlockchainClient } from '../src';
+import { DefiClient, MultisigBlockchainClient, QueueOperationStatus } from '../src';
 import { getEvmChainById } from '../src/blockchain/get-chain';
 import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
@@ -24,7 +24,7 @@ runMain(async () => {
   const accountDetails = await client.getAccount();
   await client.selectChain(chainId);
 
-  const queue = await client.getDeploymentQueue({ pageSize: 50 });
+  const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Pending], pageSize: 50 });
   const operation = queue.items.find((item) => {
     const signed = item.signatures.some((sig) => sig.user.toLowerCase() === signer.address.toLowerCase());
 
@@ -32,7 +32,9 @@ runMain(async () => {
   });
 
   if (!operation) {
-    throw new Error('No signable operations found in the queue.');
+    throw new Error(
+      'No signable (PENDING, unsigned) operations found in the queue. Create one first (example:create-payout).',
+    );
   }
 
   console.log('Signing operation:');

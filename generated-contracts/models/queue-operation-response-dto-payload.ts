@@ -12,6 +12,13 @@
  * Do not edit the class manually.
  */
 
+import type { CrossChainTransferPayload } from './cross-chain-transfer-payload';
+import {
+    instanceOfCrossChainTransferPayload,
+    CrossChainTransferPayloadFromJSON,
+    CrossChainTransferPayloadFromJSONTyped,
+    CrossChainTransferPayloadToJSON,
+} from './cross-chain-transfer-payload';
 import type { DappTransactionPayload } from './dapp-transaction-payload';
 import {
     instanceOfDappTransactionPayload,
@@ -19,6 +26,13 @@ import {
     DappTransactionPayloadFromJSONTyped,
     DappTransactionPayloadToJSON,
 } from './dapp-transaction-payload';
+import type { DelegatePayload } from './delegate-payload';
+import {
+    instanceOfDelegatePayload,
+    DelegatePayloadFromJSON,
+    DelegatePayloadFromJSONTyped,
+    DelegatePayloadToJSON,
+} from './delegate-payload';
 import type { MultisigConfigChangePayload } from './multisig-config-change-payload';
 import {
     instanceOfMultisigConfigChangePayload,
@@ -33,13 +47,34 @@ import {
     PayoutPayloadFromJSONTyped,
     PayoutPayloadToJSON,
 } from './payout-payload';
+import type { ReclaimPayload } from './reclaim-payload';
+import {
+    instanceOfReclaimPayload,
+    ReclaimPayloadFromJSON,
+    ReclaimPayloadFromJSONTyped,
+    ReclaimPayloadToJSON,
+} from './reclaim-payload';
+import type { StakeResourcePayload } from './stake-resource-payload';
+import {
+    instanceOfStakeResourcePayload,
+    StakeResourcePayloadFromJSON,
+    StakeResourcePayloadFromJSONTyped,
+    StakeResourcePayloadToJSON,
+} from './stake-resource-payload';
+import type { VotePayload } from './vote-payload';
+import {
+    instanceOfVotePayload,
+    VotePayloadFromJSON,
+    VotePayloadFromJSONTyped,
+    VotePayloadToJSON,
+} from './vote-payload';
 
 /**
  * @type QueueOperationResponseDtoPayload
  * Operation-specific data (team config changes, reject details, etc.)
  * @export
  */
-export type QueueOperationResponseDtoPayload = DappTransactionPayload | MultisigConfigChangePayload | PayoutPayload | object;
+export type QueueOperationResponseDtoPayload = CrossChainTransferPayload | DappTransactionPayload | DelegatePayload | MultisigConfigChangePayload | PayoutPayload | ReclaimPayload | StakeResourcePayload | VotePayload | object;
 
 export function QueueOperationResponseDtoPayloadFromJSON(json: any): QueueOperationResponseDtoPayload {
     return QueueOperationResponseDtoPayloadFromJSONTyped(json, false);

@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Node.js `^22.16.0` and npm `^10.9.2`
+- Node.js `^24.16.0` and npm `^11.0.0`
 - Access to the OpenAPI specification for regenerating `generated-contracts/`
 - A wallet private key and API credentials for running integration examples
 

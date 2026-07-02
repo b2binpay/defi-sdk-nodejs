@@ -197,7 +197,16 @@ export const QueueOperationResponseDtoOperationTypeEnum = {
     MultisigConfigChange: 'MULTISIG_CONFIG_CHANGE',
     Reject: 'REJECT',
     Payout: 'PAYOUT',
-    DappTransaction: 'DAPP_TRANSACTION'
+    DappTransaction: 'DAPP_TRANSACTION',
+    CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Stake: 'STAKE',
+    Unstake: 'UNSTAKE',
+    CancelUnstaking: 'CANCEL_UNSTAKING',
+    StakingWithdraw: 'STAKING_WITHDRAW',
+    Vote: 'VOTE',
+    ClaimRewards: 'CLAIM_REWARDS',
+    Delegate: 'DELEGATE',
+    Reclaim: 'RECLAIM'
 } as const;
 export type QueueOperationResponseDtoOperationTypeEnum = typeof QueueOperationResponseDtoOperationTypeEnum[keyof typeof QueueOperationResponseDtoOperationTypeEnum];
 

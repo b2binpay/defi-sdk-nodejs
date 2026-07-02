@@ -255,6 +255,13 @@ export class TransactionsApi extends runtime.BaseAPI {
  */
 export const TransactionsControllerGetTransactionsV1SortByEnum = {
     Id: 'id',
+    ChainId: 'chainId',
+    OperationType: 'operationType',
+    CurrencyId: 'currencyId',
+    Amount: 'amount',
+    BlockchainFee: 'blockchainFee',
+    Status: 'status',
+    BlockNumber: 'blockNumber',
     CreatedAt: 'createdAt',
     UpdatedAt: 'updatedAt'
 } as const;
@@ -288,6 +295,15 @@ export const TransactionsControllerGetTransactionsV1OperationTypesEnum = {
     Payout: 'payout',
     Reject: 'reject',
     Deploy: 'deploy',
-    DappTransaction: 'dapp_transaction'
+    DappTransaction: 'dapp_transaction',
+    CrossChainTransfer: 'cross_chain_transfer',
+    Stake: 'stake',
+    Unstake: 'unstake',
+    CancelUnstaking: 'cancel_unstaking',
+    StakingWithdraw: 'staking_withdraw',
+    Vote: 'vote',
+    ClaimRewards: 'claim_rewards',
+    Delegate: 'delegate',
+    Reclaim: 'reclaim'
 } as const;
 export type TransactionsControllerGetTransactionsV1OperationTypesEnum = typeof TransactionsControllerGetTransactionsV1OperationTypesEnum[keyof typeof TransactionsControllerGetTransactionsV1OperationTypesEnum];
