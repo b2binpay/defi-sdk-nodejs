@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { NativeCurrencyResponseDto } from './native-currency-response-dto';
+import {
+    NativeCurrencyResponseDtoFromJSON,
+    NativeCurrencyResponseDtoFromJSONTyped,
+    NativeCurrencyResponseDtoToJSON,
+    NativeCurrencyResponseDtoToJSONTyped,
+} from './native-currency-response-dto';
+
 /**
  * 
  * @export
@@ -50,6 +58,12 @@ export interface NetworkResponseDto {
      */
     isTron: boolean;
     /**
+     * 
+     * @type {NativeCurrencyResponseDto}
+     * @memberof NetworkResponseDto
+     */
+    nativeCurrency: NativeCurrencyResponseDto;
+    /**
      * Transaction explorer URL template with {txHash} placeholder
      * @type {string}
      * @memberof NetworkResponseDto
@@ -84,6 +98,7 @@ export function instanceOfNetworkResponseDto(value: object): value is NetworkRes
     if (!('isTestnet' in value) || value['isTestnet'] === undefined) return false;
     if (!('isActive' in value) || value['isActive'] === undefined) return false;
     if (!('isTron' in value) || value['isTron'] === undefined) return false;
+    if (!('nativeCurrency' in value) || value['nativeCurrency'] === undefined) return false;
     if (!('transactionExplorerUrl' in value) || value['transactionExplorerUrl'] === undefined) return false;
     if (!('addressExplorerUrl' in value) || value['addressExplorerUrl'] === undefined) return false;
     if (!('tokenExplorerUrl' in value) || value['tokenExplorerUrl'] === undefined) return false;
@@ -106,6 +121,7 @@ export function NetworkResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
         'isTestnet': json['isTestnet'],
         'isActive': json['isActive'],
         'isTron': json['isTron'],
+        'nativeCurrency': NativeCurrencyResponseDtoFromJSON(json['nativeCurrency']),
         'transactionExplorerUrl': json['transactionExplorerUrl'],
         'addressExplorerUrl': json['addressExplorerUrl'],
         'tokenExplorerUrl': json['tokenExplorerUrl'],
@@ -129,6 +145,7 @@ export function NetworkResponseDtoToJSONTyped(value?: NetworkResponseDto | null,
         'isTestnet': value['isTestnet'],
         'isActive': value['isActive'],
         'isTron': value['isTron'],
+        'nativeCurrency': NativeCurrencyResponseDtoToJSON(value['nativeCurrency']),
         'transactionExplorerUrl': value['transactionExplorerUrl'],
         'addressExplorerUrl': value['addressExplorerUrl'],
         'tokenExplorerUrl': value['tokenExplorerUrl'],

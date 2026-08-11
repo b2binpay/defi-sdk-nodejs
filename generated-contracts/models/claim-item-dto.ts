@@ -69,6 +69,12 @@ export interface ClaimItemDto {
      * @memberof ClaimItemDto
      */
     transactions: number;
+    /**
+     * True when the invoice chain native coin is risky. Claiming this group sweeps the native balance too, so the claim collects risky funds even when this group currency is itself clean.
+     * @type {boolean}
+     * @memberof ClaimItemDto
+     */
+    hasRiskyNativeDeposit: boolean;
 }
 
 /**
@@ -82,6 +88,7 @@ export function instanceOfClaimItemDto(value: object): value is ClaimItemDto {
     if (!('currency' in value) || value['currency'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('transactions' in value) || value['transactions'] === undefined) return false;
+    if (!('hasRiskyNativeDeposit' in value) || value['hasRiskyNativeDeposit'] === undefined) return false;
     return true;
 }
 
@@ -102,6 +109,7 @@ export function ClaimItemDtoFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'currency': CurrencyResponseDtoFromJSON(json['currency']),
         'amount': json['amount'],
         'transactions': json['transactions'],
+        'hasRiskyNativeDeposit': json['hasRiskyNativeDeposit'],
     };
 }
 
@@ -123,6 +131,7 @@ export function ClaimItemDtoToJSONTyped(value?: ClaimItemDto | null, ignoreDiscr
         'currency': CurrencyResponseDtoToJSON(value['currency']),
         'amount': value['amount'],
         'transactions': value['transactions'],
+        'hasRiskyNativeDeposit': value['hasRiskyNativeDeposit'],
     };
 }
 

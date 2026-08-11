@@ -39,7 +39,7 @@ Chain-aware helpers that bridge the API layer with on-chain operations:
 - **`MultisigBlockchainClient`** (EVM) — uses a viem `PublicClient` for RPC reads; builds EIP-712 typed data for signing, encodes `execute` transactions, and assembles claim calldata
 - **`TronMultisigBlockchainClient`** (TVM) — uses TronWeb; builds TIP-712 typed data, encodes `execute` and `claim` transactions for TRON
 
-Both clients accept an `AbiCacheEntry` from `client.getContractAbi()` to support v1.0.0 and v1.1.0 signature packing formats.
+Both clients accept a `ContractAbi` (`{ abi, version }` — an `AbiCacheEntry` from `client.getContractAbi()` satisfies it) to support v1.0.0 and v1.1.0 signature packing formats.
 
 ### Transaction Utilities (`src/utils/transactions`)
 
@@ -80,7 +80,7 @@ The npm package exports:
 - `getEvmChainById`, `getTronChainById`, `getChainById` — chain resolver utilities
 - `validateAddress` — address + network validator
 - Transaction helpers under the `transactions` namespace
-- `AbiProvider` and `AbiCacheEntry` — ABI fetching and caching
+- `AbiProvider`, `AbiCacheEntry`, `ContractAbi` and `SmartContractCapabilities` — ABI fetching, caching and contract version feature flags
 - Enums: `FiatCurrency`, `InvoiceStatus`, `PayoutStatus`, `QueueOperationType`, `QueueOperationStatus`, `OperationTypeV2`, `OperationV2Status`, `BlockchainTransactionStatus`, `StakingResourceType`, and more (`TransactionOperationType` and other v1 transaction enums are deprecated)
 
 Refer to [`docs/api-client.md`](api-client.md) and [`docs/transactions.md`](transactions.md) for detailed reference.

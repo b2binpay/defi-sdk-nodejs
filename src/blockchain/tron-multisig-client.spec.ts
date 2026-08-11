@@ -1,4 +1,5 @@
-import type { AbiCacheEntry } from '../abi-provider';
+import type { Abi } from 'viem';
+import type { AbiCacheEntry, SmartContractCapabilities } from '../abi-provider';
 import type { TronAddress } from '../utils/tron-validation';
 import { TronMultisigBlockchainClient } from './tron-multisig-client';
 
@@ -7,7 +8,7 @@ const CALLER: TronAddress = 'TRKAeHHtjKTfmKYVpt1K7vf4dHCrdNtAdv' as TronAddress;
 const RECIPIENT: TronAddress = 'TNPeeaaFB7K9cmo4uQpcU32zGK8G1NYqeL' as TronAddress;
 const TOKEN: TronAddress = 'TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW' as TronAddress;
 
-const MOCK_ABI = [
+const MOCK_ABI: Abi = [
   {
     inputs: [],
     name: 'eip712Domain',
@@ -71,10 +72,17 @@ const MOCK_ABI = [
   },
 ];
 
+const MOCK_CAPABILITIES: SmartContractCapabilities = {
+  supportsInvoices: true,
+  supportsWhitelist: false,
+  supportsStaking: false,
+};
+
 const mockAbiEntry: AbiCacheEntry = {
-  abi: MOCK_ABI as unknown[],
+  abi: MOCK_ABI,
   version: '1.1.0',
-} as AbiCacheEntry;
+  capabilities: MOCK_CAPABILITIES,
+};
 
 describe('TronMultisigBlockchainClient', () => {
   describe('constructor', () => {
@@ -89,7 +97,11 @@ describe('TronMultisigBlockchainClient', () => {
     });
 
     it('accepts unknown contract version without error', () => {
-      const unknownAbi: AbiCacheEntry = { abi: MOCK_ABI as unknown[], version: '9.9.9' } as AbiCacheEntry;
+      const unknownAbi: AbiCacheEntry = {
+        abi: MOCK_ABI,
+        version: '9.9.9',
+        capabilities: MOCK_CAPABILITIES,
+      };
       const client = new TronMultisigBlockchainClient({
         chainId: '728126428',
         tronWeb: {} as never,

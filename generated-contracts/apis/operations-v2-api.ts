@@ -188,6 +188,11 @@ import {
     BlockchainVoteOperationResponseDtoFromJSON,
     BlockchainVoteOperationResponseDtoToJSON,
 } from '../models/blockchain-vote-operation-response-dto';
+import {
+    type BooleanQueryFilter,
+    BooleanQueryFilterFromJSON,
+    BooleanQueryFilterToJSON,
+} from '../models/boolean-query-filter';
 
 export interface BlockchainCancelUnstakingOperationsControllerGetDetailsV2Request {
     deploymentId: string;
@@ -205,6 +210,8 @@ export interface BlockchainCancelUnstakingOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainCancelUnstakingOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -227,6 +234,8 @@ export interface BlockchainClaimOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainClaimOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -249,6 +258,8 @@ export interface BlockchainClaimRewardsOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainClaimRewardsOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -271,6 +282,8 @@ export interface BlockchainCrossChainTransferOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainCrossChainTransferOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -293,6 +306,8 @@ export interface BlockchainDappTransactionOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainDappTransactionOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -315,6 +330,8 @@ export interface BlockchainDelegateOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainDelegateOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -337,6 +354,8 @@ export interface BlockchainDeployOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainDeployOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -359,6 +378,8 @@ export interface BlockchainDirectDepositOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainDirectDepositOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -381,6 +402,8 @@ export interface BlockchainInvoiceDepositOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainInvoiceDepositOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -398,6 +421,8 @@ export interface BlockchainOperationsControllerListGenericV2Request {
     txId?: string;
     statuses?: Array<BlockchainOperationsControllerListGenericV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -421,6 +446,8 @@ export interface BlockchainPayoutOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainPayoutOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -443,6 +470,8 @@ export interface BlockchainReclaimOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainReclaimOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -465,6 +494,8 @@ export interface BlockchainRejectOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainRejectOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -487,6 +518,8 @@ export interface BlockchainSetMultisigConfigOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainSetMultisigConfigOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -509,6 +542,8 @@ export interface BlockchainStakeOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainStakeOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -531,6 +566,8 @@ export interface BlockchainStakingWithdrawOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainStakingWithdrawOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -553,6 +590,8 @@ export interface BlockchainUnstakeOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainUnstakeOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -575,6 +614,8 @@ export interface BlockchainVoteOperationsControllerListV2Request {
     txId?: string;
     statuses?: Array<BlockchainVoteOperationsControllerListV2StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -692,6 +733,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -856,6 +905,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -1016,6 +1073,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -1180,6 +1245,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -1340,6 +1413,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -1504,6 +1585,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -1664,6 +1753,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -1828,6 +1925,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -1990,6 +2095,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -2091,6 +2204,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -2259,6 +2380,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -2419,6 +2548,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -2583,6 +2720,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -2743,6 +2888,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -2907,6 +3060,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -3067,6 +3228,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
 
         if (requestParameters['currencyIds'] != null) {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
         }
 
         if (requestParameters['createdFrom'] != null) {
@@ -3231,6 +3400,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -3393,6 +3570,14 @@ export class OperationsV2Api extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -3478,8 +3663,11 @@ export type BlockchainCancelUnstakingOperationsControllerListV2SortOrderEnum = t
  */
 export const BlockchainCancelUnstakingOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3513,8 +3701,11 @@ export type BlockchainClaimOperationsControllerListV2SortOrderEnum = typeof Bloc
  */
 export const BlockchainClaimOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3548,8 +3739,11 @@ export type BlockchainClaimRewardsOperationsControllerListV2SortOrderEnum = type
  */
 export const BlockchainClaimRewardsOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3583,8 +3777,11 @@ export type BlockchainCrossChainTransferOperationsControllerListV2SortOrderEnum 
  */
 export const BlockchainCrossChainTransferOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3618,8 +3815,11 @@ export type BlockchainDappTransactionOperationsControllerListV2SortOrderEnum = t
  */
 export const BlockchainDappTransactionOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3653,8 +3853,11 @@ export type BlockchainDelegateOperationsControllerListV2SortOrderEnum = typeof B
  */
 export const BlockchainDelegateOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3688,8 +3891,11 @@ export type BlockchainDeployOperationsControllerListV2SortOrderEnum = typeof Blo
  */
 export const BlockchainDeployOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3723,8 +3929,11 @@ export type BlockchainDirectDepositOperationsControllerListV2SortOrderEnum = typ
  */
 export const BlockchainDirectDepositOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3758,8 +3967,11 @@ export type BlockchainInvoiceDepositOperationsControllerListV2SortOrderEnum = ty
  */
 export const BlockchainInvoiceDepositOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3793,8 +4005,11 @@ export type BlockchainOperationsControllerListGenericV2SortOrderEnum = typeof Bl
  */
 export const BlockchainOperationsControllerListGenericV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3806,12 +4021,15 @@ export const BlockchainOperationsControllerListGenericV2OperationTypesEnum = {
     Payout: 'PAYOUT',
     InvoiceDeposit: 'INVOICE_DEPOSIT',
     Claim: 'CLAIM',
+    ClaimTo: 'CLAIM_TO',
     Deploy: 'DEPLOY',
     DirectDeposit: 'DIRECT_DEPOSIT',
     Reject: 'REJECT',
     SetConfig: 'SET_CONFIG',
     DappTransaction: 'DAPP_TRANSACTION',
     CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Cowswap: 'COWSWAP',
+    SetWhitelist: 'SET_WHITELIST',
     Stake: 'STAKE',
     Unstake: 'UNSTAKE',
     CancelUnstaking: 'CANCEL_UNSTAKING',
@@ -3851,8 +4069,11 @@ export type BlockchainPayoutOperationsControllerListV2SortOrderEnum = typeof Blo
  */
 export const BlockchainPayoutOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3886,8 +4107,11 @@ export type BlockchainReclaimOperationsControllerListV2SortOrderEnum = typeof Bl
  */
 export const BlockchainReclaimOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3921,8 +4145,11 @@ export type BlockchainRejectOperationsControllerListV2SortOrderEnum = typeof Blo
  */
 export const BlockchainRejectOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3956,8 +4183,11 @@ export type BlockchainSetMultisigConfigOperationsControllerListV2SortOrderEnum =
  */
 export const BlockchainSetMultisigConfigOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -3991,8 +4221,11 @@ export type BlockchainStakeOperationsControllerListV2SortOrderEnum = typeof Bloc
  */
 export const BlockchainStakeOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -4026,8 +4259,11 @@ export type BlockchainStakingWithdrawOperationsControllerListV2SortOrderEnum = t
  */
 export const BlockchainStakingWithdrawOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -4061,8 +4297,11 @@ export type BlockchainUnstakeOperationsControllerListV2SortOrderEnum = typeof Bl
  */
 export const BlockchainUnstakeOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -4096,8 +4335,11 @@ export type BlockchainVoteOperationsControllerListV2SortOrderEnum = typeof Block
  */
 export const BlockchainVoteOperationsControllerListV2StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;

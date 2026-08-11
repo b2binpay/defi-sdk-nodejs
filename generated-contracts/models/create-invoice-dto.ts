@@ -55,6 +55,12 @@ export interface CreateInvoiceDto {
      * @memberof CreateInvoiceDto
      */
     currencyIds?: Array<string>;
+    /**
+     * Absolute expiration timestamp; CREATED invoice becomes EXPIRED after this moment; omit for never-expire
+     * @type {Date}
+     * @memberof CreateInvoiceDto
+     */
+    expiresAt?: Date | null;
 }
 
 /**
@@ -83,6 +89,7 @@ export function CreateInvoiceDtoFromJSONTyped(json: any, ignoreDiscriminator: bo
         'paymentPageButtonUrl': json['paymentPageButtonUrl'],
         'paymentPageButtonText': json['paymentPageButtonText'],
         'currencyIds': json['currencyIds'] == null ? undefined : json['currencyIds'],
+        'expiresAt': json['expiresAt'] == null ? undefined : (new Date(json['expiresAt'])),
     };
 }
 
@@ -103,6 +110,7 @@ export function CreateInvoiceDtoToJSONTyped(value?: CreateInvoiceDto | null, ign
         'paymentPageButtonUrl': value['paymentPageButtonUrl'],
         'paymentPageButtonText': value['paymentPageButtonText'],
         'currencyIds': value['currencyIds'],
+        'expiresAt': value['expiresAt'] == null ? value['expiresAt'] : value['expiresAt'].toISOString(),
     };
 }
 

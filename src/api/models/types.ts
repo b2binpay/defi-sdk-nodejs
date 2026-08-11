@@ -7,6 +7,8 @@ import type {
   BlockchainCancelUnstakingOperationResponseDto,
   BlockchainClaimOperationResponseDto,
   BlockchainClaimRewardsOperationResponseDto,
+  BlockchainClaimToOperationResponseDto,
+  BlockchainCowswapOperationResponseDto,
   BlockchainCrossChainTransferOperationResponseDto,
   BlockchainDappTransactionOperationResponseDto,
   BlockchainDelegateOperationResponseDto,
@@ -19,6 +21,7 @@ import type {
   BlockchainReclaimOperationResponseDto,
   BlockchainRejectOperationResponseDto,
   BlockchainSetMultisigConfigOperationResponseDto,
+  BlockchainSetWhitelistOperationResponseDto,
   BlockchainStakeOperationResponseDto,
   BlockchainStakingWithdrawOperationResponseDto,
   BlockchainTransactionDetailsResponseDto,
@@ -51,10 +54,6 @@ import type {
   StakingNetworkParamsResponse,
   StakingSummaryResponse,
   SuperRepresentativesResponse,
-  TransactionDetailsDto,
-  TransactionListResponseDto,
-  TransactionListResponseDtoItemsInner,
-  TransactionListResponseDtoItemsInnerInvoice,
   VotingSummaryResponse,
 } from '../../../generated-contracts';
 
@@ -107,6 +106,7 @@ export enum InvoiceStatus {
   Created = 'CREATED',
   Paid = 'PAID',
   Unresolved = 'UNRESOLVED',
+  Expired = 'EXPIRED',
 }
 
 export type Invoice = Omit<InvoiceResponseDto, 'status' | 'availableCurrencies'> & {
@@ -126,6 +126,7 @@ export enum InvoiceSortField {
   Id = 'id',
   CreatedAt = 'createdAt',
   UpdatedAt = 'updatedAt',
+  ExpiresAt = 'expiresAt',
 }
 
 export enum SortOrder {
@@ -171,6 +172,18 @@ export enum QueueOperationType {
   Reject = 'REJECT',
   Payout = 'PAYOUT',
   DappTransaction = 'DAPP_TRANSACTION',
+  CrossChainTransfer = 'CROSS_CHAIN_TRANSFER',
+  Cowswap = 'COWSWAP',
+  ClaimWhitelistChange = 'CLAIM_WHITELIST_CHANGE',
+  ClaimTo = 'CLAIM_TO',
+  Stake = 'STAKE',
+  Unstake = 'UNSTAKE',
+  CancelUnstaking = 'CANCEL_UNSTAKING',
+  StakingWithdraw = 'STAKING_WITHDRAW',
+  Vote = 'VOTE',
+  ClaimRewards = 'CLAIM_REWARDS',
+  Delegate = 'DELEGATE',
+  Reclaim = 'RECLAIM',
 }
 
 export enum QueueOperationStatus {
@@ -197,71 +210,6 @@ export interface ExecuteBatchOperationsResult {
 }
 
 /** @deprecated Use `operationType` to determine transaction direction instead. */
-export enum TransactionDirection {
-  In = 'IN',
-  Out = 'OUT',
-}
-
-/** @deprecated v1 transactions are superseded by operations (`OperationV2Status`) and blockchain transactions (`BlockchainTransactionStatus`). */
-export enum TransactionStatus {
-  Pending = 'PENDING',
-  Executed = 'EXECUTED',
-  Confirmed = 'CONFIRMED',
-  Failed = 'FAILED',
-}
-
-/** @deprecated v1 transactions are superseded by operations history v2 — use `OperationTypeV2`. */
-export enum TransactionOperationType {
-  Invoice = 'invoice',
-  DirectDeposit = 'direct_deposit',
-  SetConfig = 'set_config',
-  Claim = 'claim',
-  Payout = 'payout',
-  Reject = 'reject',
-}
-
-/** @deprecated v1 transactions are superseded by operations history v2 — use `OperationV2SortField`. */
-export enum TransactionSortField {
-  Id = 'id',
-  ChainId = 'chainId',
-  OperationType = 'operationType',
-  CurrencyId = 'currencyId',
-  Amount = 'amount',
-  BlockchainFee = 'blockchainFee',
-  Status = 'status',
-  BlockNumber = 'blockNumber',
-  CreatedAt = 'createdAt',
-  UpdatedAt = 'updatedAt',
-}
-
-/** @deprecated v1 transactions are superseded by operations history v2 / blockchain transactions. */
-export type TransactionInvoice = TransactionListResponseDtoItemsInnerInvoice;
-
-/** @deprecated Use the operations history v2 (`OperationV2`, `getOperationsV2`) or blockchain transactions (`BlockchainTransaction`, `getBlockchainTransactions`) instead. */
-export type Transaction = Omit<
-  TransactionListResponseDtoItemsInner,
-  'direction' | 'status' | 'operationType' | 'currency' | 'invoice'
-> & {
-  /** @deprecated Use `operationType` to determine transaction direction instead. */
-  direction: TransactionDirection;
-  status: TransactionStatus;
-  operationType: TransactionOperationType;
-  invoice: TransactionInvoice | null;
-  currency: Currency | null;
-};
-
-/** @deprecated Use `OperationV2List` (`getOperationsV2`) or `BlockchainTransactionList` (`getBlockchainTransactions`) instead. */
-export type TransactionList = Omit<TransactionListResponseDto, 'items'> & {
-  items: Transaction[];
-};
-
-/** @deprecated Use `getOperationDetailsV2` or `getBlockchainTransaction` instead. */
-export type TransactionDetails = Omit<TransactionDetailsDto, 'transaction' | 'currency' | 'invoice'> & {
-  transaction: Transaction;
-  currency: Currency | null;
-  invoice: TransactionInvoice | null;
-};
-
 export type Signature = Omit<SignatureResponseDto, 'signatures'> & {
   signatures: OperationSignature[];
 };
@@ -286,8 +234,10 @@ export enum CallbackType {
   InvoiceCreated = 'INVOICE_CREATED',
   InvoiceDepositReceived = 'INVOICE_DEPOSIT_RECEIVED',
   InvoiceDepositConfirmed = 'INVOICE_DEPOSIT_CONFIRMED',
+  InvoiceDepositBlocked = 'INVOICE_DEPOSIT_BLOCKED',
   InvoicePaid = 'INVOICE_PAID',
   InvoiceUnresolved = 'INVOICE_UNRESOLVED',
+  InvoiceExpired = 'INVOICE_EXPIRED',
   InvoiceClaimed = 'INVOICE_CLAIMED',
   PayoutCreated = 'PAYOUT_CREATED',
   PayoutSent = 'PAYOUT_SENT',
@@ -336,12 +286,15 @@ export enum OperationTypeV2 {
   Payout = 'PAYOUT',
   InvoiceDeposit = 'INVOICE_DEPOSIT',
   Claim = 'CLAIM',
+  ClaimTo = 'CLAIM_TO',
   Deploy = 'DEPLOY',
   DirectDeposit = 'DIRECT_DEPOSIT',
   Reject = 'REJECT',
   SetConfig = 'SET_CONFIG',
   DappTransaction = 'DAPP_TRANSACTION',
   CrossChainTransfer = 'CROSS_CHAIN_TRANSFER',
+  Cowswap = 'COWSWAP',
+  SetWhitelist = 'SET_WHITELIST',
   Stake = 'STAKE',
   Unstake = 'UNSTAKE',
   CancelUnstaking = 'CANCEL_UNSTAKING',
@@ -362,6 +315,9 @@ export type OperationV2Details =
   | BlockchainPayoutOperationResponseDto
   | BlockchainInvoiceDepositOperationResponseDto
   | BlockchainClaimOperationResponseDto
+  | BlockchainClaimToOperationResponseDto
+  | BlockchainCowswapOperationResponseDto
+  | BlockchainSetWhitelistOperationResponseDto
   | BlockchainDeployOperationResponseDto
   | BlockchainDirectDepositOperationResponseDto
   | BlockchainRejectOperationResponseDto
@@ -379,8 +335,11 @@ export type OperationV2Details =
 
 export enum OperationV2Status {
   Created = 'CREATED',
+  AmlCheck = 'AML_CHECK',
   Pending = 'PENDING',
   Confirmed = 'CONFIRMED',
+  Blocked = 'BLOCKED',
+  Refunded = 'REFUNDED',
   Failed = 'FAILED',
   Cancelled = 'CANCELLED',
 }

@@ -44,6 +44,12 @@ export interface AccountDeploymentDto {
      */
     approvers: Array<string>;
     /**
+     * Addresses currently on the claim whitelist (confirmed on-chain), parallel concept to approvers
+     * @type {Array<string>}
+     * @memberof AccountDeploymentDto
+     */
+    whitelist: Array<string>;
+    /**
      * Required signatures for multisig operations (must not exceed number of approvers)
      * @type {number}
      * @memberof AccountDeploymentDto
@@ -89,6 +95,7 @@ export function instanceOfAccountDeploymentDto(value: object): value is AccountD
     if (!('chainId' in value) || value['chainId'] === undefined) return false;
     if (!('networkName' in value) || value['networkName'] === undefined) return false;
     if (!('approvers' in value) || value['approvers'] === undefined) return false;
+    if (!('whitelist' in value) || value['whitelist'] === undefined) return false;
     if (!('threshold' in value) || value['threshold'] === undefined) return false;
     if (!('deploymentStatus' in value) || value['deploymentStatus'] === undefined) return false;
     if (!('transactionHash' in value) || value['transactionHash'] === undefined) return false;
@@ -110,6 +117,7 @@ export function AccountDeploymentDtoFromJSONTyped(json: any, ignoreDiscriminator
         'chainId': json['chainId'],
         'networkName': json['networkName'],
         'approvers': json['approvers'],
+        'whitelist': json['whitelist'],
         'threshold': json['threshold'],
         'deploymentStatus': json['deploymentStatus'],
         'transactionHash': json['transactionHash'],
@@ -132,6 +140,7 @@ export function AccountDeploymentDtoToJSONTyped(value?: AccountDeploymentDto | n
         'chainId': value['chainId'],
         'networkName': value['networkName'],
         'approvers': value['approvers'],
+        'whitelist': value['whitelist'],
         'threshold': value['threshold'],
         'deploymentStatus': value['deploymentStatus'],
         'transactionHash': value['transactionHash'],

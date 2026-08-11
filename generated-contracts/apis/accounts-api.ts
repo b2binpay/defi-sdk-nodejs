@@ -24,6 +24,11 @@ import {
     AccountResponseDtoToJSON,
 } from '../models/account-response-dto';
 import {
+    type AssetAggregatedBalanceResponseDto,
+    AssetAggregatedBalanceResponseDtoFromJSON,
+    AssetAggregatedBalanceResponseDtoToJSON,
+} from '../models/asset-aggregated-balance-response-dto';
+import {
     type AssetBalanceShortResponseDto,
     AssetBalanceShortResponseDtoFromJSON,
     AssetBalanceShortResponseDtoToJSON,
@@ -39,10 +44,15 @@ import {
     BalanceSummaryResponseDtoToJSON,
 } from '../models/balance-summary-response-dto';
 import {
-    type CurrenciesControllerFindAllV1IsNativeParameter,
-    CurrenciesControllerFindAllV1IsNativeParameterFromJSON,
-    CurrenciesControllerFindAllV1IsNativeParameterToJSON,
-} from '../models/currencies-controller-find-all-v1-is-native-parameter';
+    type BlockchainBalanceResponseDto,
+    BlockchainBalanceResponseDtoFromJSON,
+    BlockchainBalanceResponseDtoToJSON,
+} from '../models/blockchain-balance-response-dto';
+import {
+    type BooleanQueryFilter,
+    BooleanQueryFilterFromJSON,
+    BooleanQueryFilterToJSON,
+} from '../models/boolean-query-filter';
 import {
     type DeploymentParamsResponseDto,
     DeploymentParamsResponseDtoFromJSON,
@@ -53,11 +63,6 @@ import {
     NonceInfoResponseDtoFromJSON,
     NonceInfoResponseDtoToJSON,
 } from '../models/nonce-info-response-dto';
-import {
-    type TransactionsControllerGetTransactionsV1IsClaimedParameter,
-    TransactionsControllerGetTransactionsV1IsClaimedParameterFromJSON,
-    TransactionsControllerGetTransactionsV1IsClaimedParameterToJSON,
-} from '../models/transactions-controller-get-transactions-v1-is-claimed-parameter';
 import {
     type UpdateAccountDto,
     UpdateAccountDtoFromJSON,
@@ -73,7 +78,7 @@ export interface AccountsControllerFindAccountByIdV1Request {
 }
 
 export interface AccountsControllerFindUserAccountsV1Request {
-    isHidden?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
+    isHidden?: BooleanQueryFilter;
 }
 
 export interface AccountsControllerGetAssetBalancesV1Request {
@@ -85,15 +90,35 @@ export interface AccountsControllerGetAssetBalancesV1Request {
     sortBy?: AccountsControllerGetAssetBalancesV1SortByEnum;
     sortOrder?: AccountsControllerGetAssetBalancesV1SortOrderEnum;
     currencyIds?: Array<string>;
-    isScam?: CurrenciesControllerFindAllV1IsNativeParameter;
-    isVerified?: CurrenciesControllerFindAllV1IsNativeParameter;
-    isHidden?: CurrenciesControllerFindAllV1IsNativeParameter;
+    isScam?: BooleanQueryFilter;
+    isVerified?: BooleanQueryFilter;
+    isHidden?: BooleanQueryFilter;
 }
 
 export interface AccountsControllerGetBalanceSummaryV1Request {
     accountId: string;
     baseCurrency: AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum;
     chainId: string;
+}
+
+export interface AccountsControllerGetBalancesByAssetV1Request {
+    accountId: string;
+    baseCurrency: AccountsControllerGetBalancesByAssetV1BaseCurrencyEnum;
+    includeTestnets?: BooleanQueryFilter;
+    currencyIds?: Array<string>;
+    isScam?: BooleanQueryFilter;
+    isVerified?: BooleanQueryFilter;
+    isHidden?: BooleanQueryFilter;
+}
+
+export interface AccountsControllerGetBalancesByBlockchainV1Request {
+    accountId: string;
+    baseCurrency: AccountsControllerGetBalancesByBlockchainV1BaseCurrencyEnum;
+    includeTestnets?: BooleanQueryFilter;
+    currencyIds?: Array<string>;
+    isScam?: BooleanQueryFilter;
+    isVerified?: BooleanQueryFilter;
+    isHidden?: BooleanQueryFilter;
 }
 
 export interface AccountsControllerGetDeploymentInfoV1Request {
@@ -104,9 +129,9 @@ export interface AccountsControllerGetShortAssetBalancesV1Request {
     accountId: string;
     chainId: string;
     currencyIds?: Array<string>;
-    isScam?: CurrenciesControllerFindAllV1IsNativeParameter;
-    isVerified?: CurrenciesControllerFindAllV1IsNativeParameter;
-    isHidden?: CurrenciesControllerFindAllV1IsNativeParameter;
+    isScam?: BooleanQueryFilter;
+    isVerified?: BooleanQueryFilter;
+    isHidden?: BooleanQueryFilter;
 }
 
 export interface AccountsControllerUpdateAccountV1Request {
@@ -447,6 +472,170 @@ export class AccountsApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for accountsControllerGetBalancesByAssetV1 without sending the request
+     */
+    async accountsControllerGetBalancesByAssetV1RequestOpts(requestParameters: AccountsControllerGetBalancesByAssetV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['accountId'] == null) {
+            throw new runtime.RequiredError(
+                'accountId',
+                'Required parameter "accountId" was null or undefined when calling accountsControllerGetBalancesByAssetV1().'
+            );
+        }
+
+        if (requestParameters['baseCurrency'] == null) {
+            throw new runtime.RequiredError(
+                'baseCurrency',
+                'Required parameter "baseCurrency" was null or undefined when calling accountsControllerGetBalancesByAssetV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['baseCurrency'] != null) {
+            queryParameters['baseCurrency'] = requestParameters['baseCurrency'];
+        }
+
+        if (requestParameters['includeTestnets'] != null) {
+            queryParameters['includeTestnets'] = requestParameters['includeTestnets'];
+        }
+
+        if (requestParameters['currencyIds'] != null) {
+            queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['isScam'] != null) {
+            queryParameters['isScam'] = requestParameters['isScam'];
+        }
+
+        if (requestParameters['isVerified'] != null) {
+            queryParameters['isVerified'] = requestParameters['isVerified'];
+        }
+
+        if (requestParameters['isHidden'] != null) {
+            queryParameters['isHidden'] = requestParameters['isHidden'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/accounts/{accountId}/balance/by-asset`;
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Returns the total account balance aggregated across all deployments and chains, grouped by canonical asset and converted to base currency.
+     * Get balance grouped by asset
+     */
+    async accountsControllerGetBalancesByAssetV1Raw(requestParameters: AccountsControllerGetBalancesByAssetV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AssetAggregatedBalanceResponseDto>>> {
+        const requestOptions = await this.accountsControllerGetBalancesByAssetV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AssetAggregatedBalanceResponseDtoFromJSON));
+    }
+
+    /**
+     * Returns the total account balance aggregated across all deployments and chains, grouped by canonical asset and converted to base currency.
+     * Get balance grouped by asset
+     */
+    async accountsControllerGetBalancesByAssetV1(requestParameters: AccountsControllerGetBalancesByAssetV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AssetAggregatedBalanceResponseDto>> {
+        const response = await this.accountsControllerGetBalancesByAssetV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for accountsControllerGetBalancesByBlockchainV1 without sending the request
+     */
+    async accountsControllerGetBalancesByBlockchainV1RequestOpts(requestParameters: AccountsControllerGetBalancesByBlockchainV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['accountId'] == null) {
+            throw new runtime.RequiredError(
+                'accountId',
+                'Required parameter "accountId" was null or undefined when calling accountsControllerGetBalancesByBlockchainV1().'
+            );
+        }
+
+        if (requestParameters['baseCurrency'] == null) {
+            throw new runtime.RequiredError(
+                'baseCurrency',
+                'Required parameter "baseCurrency" was null or undefined when calling accountsControllerGetBalancesByBlockchainV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['baseCurrency'] != null) {
+            queryParameters['baseCurrency'] = requestParameters['baseCurrency'];
+        }
+
+        if (requestParameters['includeTestnets'] != null) {
+            queryParameters['includeTestnets'] = requestParameters['includeTestnets'];
+        }
+
+        if (requestParameters['currencyIds'] != null) {
+            queryParameters['currencyIds'] = requestParameters['currencyIds'];
+        }
+
+        if (requestParameters['isScam'] != null) {
+            queryParameters['isScam'] = requestParameters['isScam'];
+        }
+
+        if (requestParameters['isVerified'] != null) {
+            queryParameters['isVerified'] = requestParameters['isVerified'];
+        }
+
+        if (requestParameters['isHidden'] != null) {
+            queryParameters['isHidden'] = requestParameters['isHidden'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/accounts/{accountId}/balance/by-blockchain`;
+        urlPath = urlPath.replace('{accountId}', encodeURIComponent(String(requestParameters['accountId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Returns the total account balance aggregated across all deployments, grouped by blockchain and converted to base currency.
+     * Get balance grouped by blockchain
+     */
+    async accountsControllerGetBalancesByBlockchainV1Raw(requestParameters: AccountsControllerGetBalancesByBlockchainV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<BlockchainBalanceResponseDto>>> {
+        const requestOptions = await this.accountsControllerGetBalancesByBlockchainV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(BlockchainBalanceResponseDtoFromJSON));
+    }
+
+    /**
+     * Returns the total account balance aggregated across all deployments, grouped by blockchain and converted to base currency.
+     * Get balance grouped by blockchain
+     */
+    async accountsControllerGetBalancesByBlockchainV1(requestParameters: AccountsControllerGetBalancesByBlockchainV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<BlockchainBalanceResponseDto>> {
+        const response = await this.accountsControllerGetBalancesByBlockchainV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for accountsControllerGetDeploymentInfoV1 without sending the request
      */
     async accountsControllerGetDeploymentInfoV1RequestOpts(requestParameters: AccountsControllerGetDeploymentInfoV1Request): Promise<runtime.RequestOpts> {
@@ -672,3 +861,21 @@ export const AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum = {
     Cny: 'cny'
 } as const;
 export type AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum = typeof AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum[keyof typeof AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum];
+/**
+ * @export
+ */
+export const AccountsControllerGetBalancesByAssetV1BaseCurrencyEnum = {
+    Usd: 'usd',
+    Eur: 'eur',
+    Cny: 'cny'
+} as const;
+export type AccountsControllerGetBalancesByAssetV1BaseCurrencyEnum = typeof AccountsControllerGetBalancesByAssetV1BaseCurrencyEnum[keyof typeof AccountsControllerGetBalancesByAssetV1BaseCurrencyEnum];
+/**
+ * @export
+ */
+export const AccountsControllerGetBalancesByBlockchainV1BaseCurrencyEnum = {
+    Usd: 'usd',
+    Eur: 'eur',
+    Cny: 'cny'
+} as const;
+export type AccountsControllerGetBalancesByBlockchainV1BaseCurrencyEnum = typeof AccountsControllerGetBalancesByBlockchainV1BaseCurrencyEnum[keyof typeof AccountsControllerGetBalancesByBlockchainV1BaseCurrencyEnum];

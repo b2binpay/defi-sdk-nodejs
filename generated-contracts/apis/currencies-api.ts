@@ -14,10 +14,10 @@
 
 import * as runtime from '../runtime';
 import {
-    type CurrenciesControllerFindAllV1IsNativeParameter,
-    CurrenciesControllerFindAllV1IsNativeParameterFromJSON,
-    CurrenciesControllerFindAllV1IsNativeParameterToJSON,
-} from '../models/currencies-controller-find-all-v1-is-native-parameter';
+    type BooleanQueryFilter,
+    BooleanQueryFilterFromJSON,
+    BooleanQueryFilterToJSON,
+} from '../models/boolean-query-filter';
 import {
     type CurrencyResponseDto,
     CurrencyResponseDtoFromJSON,
@@ -36,9 +36,9 @@ export interface CurrenciesControllerFindAllV1Request {
     name?: string;
     chainId?: string;
     address?: UniversalAddress;
-    isNative?: CurrenciesControllerFindAllV1IsNativeParameter;
-    isScam?: CurrenciesControllerFindAllV1IsNativeParameter;
-    isVerified?: CurrenciesControllerFindAllV1IsNativeParameter;
+    isNative?: BooleanQueryFilter;
+    isScam?: BooleanQueryFilter;
+    isVerified?: BooleanQueryFilter;
 }
 
 export interface CurrenciesControllerFindOneV1Request {

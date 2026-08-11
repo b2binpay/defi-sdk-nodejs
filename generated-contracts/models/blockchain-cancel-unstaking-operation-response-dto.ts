@@ -131,6 +131,12 @@ export interface BlockchainCancelUnstakingOperationResponseDto {
      */
     currency: CurrencyResponseDto | null;
     /**
+     * Nonce (transaction ordering) as a non-negative integer string
+     * @type {string}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    nonce: string | null;
+    /**
      * Creation timestamp
      * @type {string}
      * @memberof BlockchainCancelUnstakingOperationResponseDto
@@ -142,6 +148,48 @@ export interface BlockchainCancelUnstakingOperationResponseDto {
      * @memberof BlockchainCancelUnstakingOperationResponseDto
      */
     updatedAt: string;
+    /**
+     * AML risk score (0–100); null when the operation has not been scored
+     * @type {number}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    riskScore: number | null;
+    /**
+     * AML severity bucket (low/medium/high/severe); null when not scored
+     * @type {BlockchainCancelUnstakingOperationResponseDtoSeverityEnum}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    severity: BlockchainCancelUnstakingOperationResponseDtoSeverityEnum | null;
+    /**
+     * AML decision reason; null when not scored or not applicable
+     * @type {BlockchainCancelUnstakingOperationResponseDtoReasonEnum}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    reason: BlockchainCancelUnstakingOperationResponseDtoReasonEnum | null;
+    /**
+     * AML scoring provider ('crystal' when scored); null when operation has not been AML-scored
+     * @type {BlockchainCancelUnstakingOperationResponseDtoAmlProviderEnum}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    amlProvider: BlockchainCancelUnstakingOperationResponseDtoAmlProviderEnum | null;
+    /**
+     * ISO 8601 of the latest concluded AML check; null when not scored
+     * @type {string}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    amlScoredAt: string | null;
+    /**
+     * True while an AML check (initial scoring or rescore) is in flight for this operation
+     * @type {boolean}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    amlCheckInProgress: boolean;
+    /**
+     * Id of the most recent AML check row for this operation; null when never checked
+     * @type {string}
+     * @memberof BlockchainCancelUnstakingOperationResponseDto
+     */
+    latestAmlCheckId: string | null;
 }
 
 
@@ -152,12 +200,15 @@ export const BlockchainCancelUnstakingOperationResponseDtoOperationTypeEnum = {
     Payout: 'PAYOUT',
     InvoiceDeposit: 'INVOICE_DEPOSIT',
     Claim: 'CLAIM',
+    ClaimTo: 'CLAIM_TO',
     Deploy: 'DEPLOY',
     DirectDeposit: 'DIRECT_DEPOSIT',
     Reject: 'REJECT',
     SetConfig: 'SET_CONFIG',
     DappTransaction: 'DAPP_TRANSACTION',
     CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Cowswap: 'COWSWAP',
+    SetWhitelist: 'SET_WHITELIST',
     Stake: 'STAKE',
     Unstake: 'UNSTAKE',
     CancelUnstaking: 'CANCEL_UNSTAKING',
@@ -174,12 +225,46 @@ export type BlockchainCancelUnstakingOperationResponseDtoOperationTypeEnum = typ
  */
 export const BlockchainCancelUnstakingOperationResponseDtoStatusEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
 export type BlockchainCancelUnstakingOperationResponseDtoStatusEnum = typeof BlockchainCancelUnstakingOperationResponseDtoStatusEnum[keyof typeof BlockchainCancelUnstakingOperationResponseDtoStatusEnum];
+
+/**
+ * @export
+ */
+export const BlockchainCancelUnstakingOperationResponseDtoSeverityEnum = {
+    Low: 'low',
+    Medium: 'medium',
+    High: 'high',
+    Severe: 'severe'
+} as const;
+export type BlockchainCancelUnstakingOperationResponseDtoSeverityEnum = typeof BlockchainCancelUnstakingOperationResponseDtoSeverityEnum[keyof typeof BlockchainCancelUnstakingOperationResponseDtoSeverityEnum];
+
+/**
+ * @export
+ */
+export const BlockchainCancelUnstakingOperationResponseDtoReasonEnum = {
+    ThresholdExceeded: 'threshold_exceeded',
+    SevereAlert: 'severe_alert',
+    BudgetExhausted: 'budget_exhausted',
+    ProviderFailed: 'provider_failed',
+    CurrencyUnsupported: 'currency_unsupported'
+} as const;
+export type BlockchainCancelUnstakingOperationResponseDtoReasonEnum = typeof BlockchainCancelUnstakingOperationResponseDtoReasonEnum[keyof typeof BlockchainCancelUnstakingOperationResponseDtoReasonEnum];
+
+/**
+ * @export
+ */
+export const BlockchainCancelUnstakingOperationResponseDtoAmlProviderEnum = {
+    Crystal: 'crystal'
+} as const;
+export type BlockchainCancelUnstakingOperationResponseDtoAmlProviderEnum = typeof BlockchainCancelUnstakingOperationResponseDtoAmlProviderEnum[keyof typeof BlockchainCancelUnstakingOperationResponseDtoAmlProviderEnum];
 
 
 /**
@@ -202,8 +287,16 @@ export function instanceOfBlockchainCancelUnstakingOperationResponseDto(value: o
     if (!('currencyId' in value) || value['currencyId'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('currency' in value) || value['currency'] === undefined) return false;
+    if (!('nonce' in value) || value['nonce'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
+    if (!('riskScore' in value) || value['riskScore'] === undefined) return false;
+    if (!('severity' in value) || value['severity'] === undefined) return false;
+    if (!('reason' in value) || value['reason'] === undefined) return false;
+    if (!('amlProvider' in value) || value['amlProvider'] === undefined) return false;
+    if (!('amlScoredAt' in value) || value['amlScoredAt'] === undefined) return false;
+    if (!('amlCheckInProgress' in value) || value['amlCheckInProgress'] === undefined) return false;
+    if (!('latestAmlCheckId' in value) || value['latestAmlCheckId'] === undefined) return false;
     return true;
 }
 
@@ -233,8 +326,16 @@ export function BlockchainCancelUnstakingOperationResponseDtoFromJSONTyped(json:
         'currencyId': json['currencyId'],
         'amount': json['amount'],
         'currency': CurrencyResponseDtoFromJSON(json['currency']),
+        'nonce': json['nonce'],
         'createdAt': json['createdAt'],
         'updatedAt': json['updatedAt'],
+        'riskScore': json['riskScore'],
+        'severity': json['severity'],
+        'reason': json['reason'],
+        'amlProvider': json['amlProvider'],
+        'amlScoredAt': json['amlScoredAt'],
+        'amlCheckInProgress': json['amlCheckInProgress'],
+        'latestAmlCheckId': json['latestAmlCheckId'],
     };
 }
 
@@ -265,8 +366,16 @@ export function BlockchainCancelUnstakingOperationResponseDtoToJSONTyped(value?:
         'currencyId': value['currencyId'],
         'amount': value['amount'],
         'currency': CurrencyResponseDtoToJSON(value['currency']),
+        'nonce': value['nonce'],
         'createdAt': value['createdAt'],
         'updatedAt': value['updatedAt'],
+        'riskScore': value['riskScore'],
+        'severity': value['severity'],
+        'reason': value['reason'],
+        'amlProvider': value['amlProvider'],
+        'amlScoredAt': value['amlScoredAt'],
+        'amlCheckInProgress': value['amlCheckInProgress'],
+        'latestAmlCheckId': value['latestAmlCheckId'],
     };
 }
 

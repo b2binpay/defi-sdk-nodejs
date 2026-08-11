@@ -23,6 +23,18 @@ export function requireEnvVars<const TKeys extends readonly string[]>(keys: TKey
   return output;
 }
 
+const GAS_BUFFER_NUMERATOR = 13n;
+const GAS_BUFFER_DENOMINATOR = 10n;
+
+/**
+ * Pad an estimated gas limit by 30%. viem sends transactions with the raw `estimateGas` result and no
+ * headroom; a claim/execute whose real path touches cold storage can exceed that estimate at mine-time
+ * and revert out-of-gas. The padded limit only raises the ceiling — unused gas is refunded.
+ */
+export function bufferGas(estimate: bigint): bigint {
+  return (estimate * GAS_BUFFER_NUMERATOR) / GAS_BUFFER_DENOMINATOR;
+}
+
 export function parseChainId(value: string): string {
   const chainId = Number.parseInt(value, 10);
 

@@ -19,6 +19,11 @@ import {
     BlockchainOperationListResponseDtoToJSON,
 } from '../models/blockchain-operation-list-response-dto';
 import {
+    type BooleanQueryFilter,
+    BooleanQueryFilterFromJSON,
+    BooleanQueryFilterToJSON,
+} from '../models/boolean-query-filter';
+import {
     type CreateInvoiceDto,
     CreateInvoiceDtoFromJSON,
     CreateInvoiceDtoToJSON,
@@ -66,6 +71,8 @@ export interface InvoicesControllerFindInvoiceOperationsV1Request {
     txId?: string;
     statuses?: Array<InvoicesControllerFindInvoiceOperationsV1StatusesEnum>;
     currencyIds?: Array<string>;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
     createdFrom?: string;
     createdTo?: string;
     updatedFrom?: string;
@@ -84,6 +91,8 @@ export interface InvoicesControllerFindInvoicesByDeploymentV1Request {
     createdTo?: string;
     updatedFrom?: string;
     updatedTo?: string;
+    expiresFrom?: string;
+    expiresTo?: string;
     currencyIds?: Array<string>;
     statuses?: Array<InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum>;
     trackingId?: string;
@@ -276,6 +285,14 @@ export class InvoicesApi extends runtime.BaseAPI {
             queryParameters['currencyIds'] = requestParameters['currencyIds'];
         }
 
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
         if (requestParameters['createdFrom'] != null) {
             queryParameters['createdFrom'] = requestParameters['createdFrom'];
         }
@@ -382,6 +399,14 @@ export class InvoicesApi extends runtime.BaseAPI {
 
         if (requestParameters['updatedTo'] != null) {
             queryParameters['updatedTo'] = requestParameters['updatedTo'];
+        }
+
+        if (requestParameters['expiresFrom'] != null) {
+            queryParameters['expiresFrom'] = requestParameters['expiresFrom'];
+        }
+
+        if (requestParameters['expiresTo'] != null) {
+            queryParameters['expiresTo'] = requestParameters['expiresTo'];
         }
 
         if (requestParameters['currencyIds'] != null) {
@@ -534,8 +559,11 @@ export type InvoicesControllerFindInvoiceOperationsV1SortOrderEnum = typeof Invo
  */
 export const InvoicesControllerFindInvoiceOperationsV1StatusesEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
@@ -547,12 +575,15 @@ export const InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum = {
     Payout: 'PAYOUT',
     InvoiceDeposit: 'INVOICE_DEPOSIT',
     Claim: 'CLAIM',
+    ClaimTo: 'CLAIM_TO',
     Deploy: 'DEPLOY',
     DirectDeposit: 'DIRECT_DEPOSIT',
     Reject: 'REJECT',
     SetConfig: 'SET_CONFIG',
     DappTransaction: 'DAPP_TRANSACTION',
     CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Cowswap: 'COWSWAP',
+    SetWhitelist: 'SET_WHITELIST',
     Stake: 'STAKE',
     Unstake: 'UNSTAKE',
     CancelUnstaking: 'CANCEL_UNSTAKING',
@@ -569,7 +600,8 @@ export type InvoicesControllerFindInvoiceOperationsV1OperationTypesEnum = typeof
 export const InvoicesControllerFindInvoicesByDeploymentV1SortByEnum = {
     Id: 'id',
     CreatedAt: 'createdAt',
-    UpdatedAt: 'updatedAt'
+    UpdatedAt: 'updatedAt',
+    ExpiresAt: 'expiresAt'
 } as const;
 export type InvoicesControllerFindInvoicesByDeploymentV1SortByEnum = typeof InvoicesControllerFindInvoicesByDeploymentV1SortByEnum[keyof typeof InvoicesControllerFindInvoicesByDeploymentV1SortByEnum];
 /**
@@ -586,6 +618,7 @@ export type InvoicesControllerFindInvoicesByDeploymentV1SortOrderEnum = typeof I
 export const InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum = {
     Created: 'CREATED',
     Paid: 'PAID',
-    Unresolved: 'UNRESOLVED'
+    Unresolved: 'UNRESOLVED',
+    Expired: 'EXPIRED'
 } as const;
 export type InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum = typeof InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum[keyof typeof InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum];

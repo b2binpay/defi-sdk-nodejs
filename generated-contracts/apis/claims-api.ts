@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+    type BooleanQueryFilter,
+    BooleanQueryFilterFromJSON,
+    BooleanQueryFilterToJSON,
+} from '../models/boolean-query-filter';
+import {
     type ClaimsResponseDto,
     ClaimsResponseDtoFromJSON,
     ClaimsResponseDtoToJSON,
@@ -23,19 +28,10 @@ import {
     CurrencyResponseDtoFromJSON,
     CurrencyResponseDtoToJSON,
 } from '../models/currency-response-dto';
-import {
-    type TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter,
-    TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterFromJSON,
-    TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameterToJSON,
-} from '../models/transactions-controller-get-transactions-v1-currency-is-verified-parameter';
-import {
-    type TransactionsControllerGetTransactionsV1IsClaimedParameter,
-    TransactionsControllerGetTransactionsV1IsClaimedParameterFromJSON,
-    TransactionsControllerGetTransactionsV1IsClaimedParameterToJSON,
-} from '../models/transactions-controller-get-transactions-v1-is-claimed-parameter';
 
 export interface ClaimsControllerGetClaimableCurrenciesV1Request {
     deploymentId: string;
+    isScam?: BooleanQueryFilter;
 }
 
 export interface ClaimsControllerGetClaimsV1Request {
@@ -50,9 +46,9 @@ export interface ClaimsControllerGetClaimsV1Request {
     updatedTo?: string;
     currencyIds?: Array<string>;
     invoiceId?: string;
-    currencyIsScam?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
-    currencyIsVerified?: TransactionsControllerGetTransactionsV1CurrencyIsVerifiedParameter;
-    currencyIsHidden?: TransactionsControllerGetTransactionsV1IsClaimedParameter;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsVerified?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
 }
 
 /**
@@ -72,6 +68,10 @@ export class ClaimsApi extends runtime.BaseAPI {
         }
 
         const queryParameters: any = {};
+
+        if (requestParameters['isScam'] != null) {
+            queryParameters['isScam'] = requestParameters['isScam'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 

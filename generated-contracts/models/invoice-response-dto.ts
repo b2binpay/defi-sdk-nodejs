@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { InvoiceDetailsDtoInvoiceLatestAmlCheck } from './invoice-details-dto-invoice-latest-aml-check';
+import {
+    InvoiceDetailsDtoInvoiceLatestAmlCheckFromJSON,
+    InvoiceDetailsDtoInvoiceLatestAmlCheckFromJSONTyped,
+    InvoiceDetailsDtoInvoiceLatestAmlCheckToJSON,
+    InvoiceDetailsDtoInvoiceLatestAmlCheckToJSONTyped,
+} from './invoice-details-dto-invoice-latest-aml-check';
 import type { CurrencyResponseDto } from './currency-response-dto';
 import {
     CurrencyResponseDtoFromJSON,
@@ -70,6 +77,12 @@ export interface InvoiceResponseDto {
      */
     createdAt: string;
     /**
+     * Invoice expiration timestamp; null = never expires
+     * @type {string}
+     * @memberof InvoiceResponseDto
+     */
+    expiresAt: string | null;
+    /**
      * Whether the entity relates to Tron (TVM)
      * @type {boolean}
      * @memberof InvoiceResponseDto
@@ -123,6 +136,24 @@ export interface InvoiceResponseDto {
      * @memberof InvoiceResponseDto
      */
     updatedAt: string;
+    /**
+     * Currency IDs flagged as risky by AML scoring for this invoice
+     * @type {Array<string>}
+     * @memberof InvoiceResponseDto
+     */
+    riskyCurrencyIds?: Array<string>;
+    /**
+     * True when the chain native coin is among the risky currencies. Any claim sweeps the native balance, so with this set every claim on the invoice collects risky funds — the risk gate must cover all currencies, not just riskyCurrencyIds.
+     * @type {boolean}
+     * @memberof InvoiceResponseDto
+     */
+    hasRiskyNativeDeposit: boolean;
+    /**
+     * 
+     * @type {InvoiceDetailsDtoInvoiceLatestAmlCheck}
+     * @memberof InvoiceResponseDto
+     */
+    latestAmlCheck?: InvoiceDetailsDtoInvoiceLatestAmlCheck | null;
 }
 
 
@@ -132,7 +163,8 @@ export interface InvoiceResponseDto {
 export const InvoiceResponseDtoStatusEnum = {
     Created: 'CREATED',
     Paid: 'PAID',
-    Unresolved: 'UNRESOLVED'
+    Unresolved: 'UNRESOLVED',
+    Expired: 'EXPIRED'
 } as const;
 export type InvoiceResponseDtoStatusEnum = typeof InvoiceResponseDtoStatusEnum[keyof typeof InvoiceResponseDtoStatusEnum];
 
@@ -148,6 +180,7 @@ export function instanceOfInvoiceResponseDto(value: object): value is InvoiceRes
     if (!('paymentPageUrl' in value) || value['paymentPageUrl'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
+    if (!('expiresAt' in value) || value['expiresAt'] === undefined) return false;
     if (!('isTron' in value) || value['isTron'] === undefined) return false;
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('publicId' in value) || value['publicId'] === undefined) return false;
@@ -157,6 +190,7 @@ export function instanceOfInvoiceResponseDto(value: object): value is InvoiceRes
     if (!('trackingId' in value) || value['trackingId'] === undefined) return false;
     if (!('callbackUrl' in value) || value['callbackUrl'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
+    if (!('hasRiskyNativeDeposit' in value) || value['hasRiskyNativeDeposit'] === undefined) return false;
     return true;
 }
 
@@ -177,6 +211,7 @@ export function InvoiceResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
         'paymentPageUrl': json['paymentPageUrl'],
         'status': json['status'],
         'createdAt': json['createdAt'],
+        'expiresAt': json['expiresAt'],
         'isTron': json['isTron'],
         'id': json['id'],
         'publicId': json['publicId'],
@@ -186,6 +221,9 @@ export function InvoiceResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
         'trackingId': json['trackingId'],
         'callbackUrl': json['callbackUrl'],
         'updatedAt': json['updatedAt'],
+        'riskyCurrencyIds': json['riskyCurrencyIds'] == null ? undefined : json['riskyCurrencyIds'],
+        'hasRiskyNativeDeposit': json['hasRiskyNativeDeposit'],
+        'latestAmlCheck': json['latestAmlCheck'] == null ? undefined : InvoiceDetailsDtoInvoiceLatestAmlCheckFromJSON(json['latestAmlCheck']),
     };
 }
 
@@ -207,6 +245,7 @@ export function InvoiceResponseDtoToJSONTyped(value?: InvoiceResponseDto | null,
         'paymentPageUrl': value['paymentPageUrl'],
         'status': value['status'],
         'createdAt': value['createdAt'],
+        'expiresAt': value['expiresAt'],
         'isTron': value['isTron'],
         'id': value['id'],
         'publicId': value['publicId'],
@@ -216,6 +255,9 @@ export function InvoiceResponseDtoToJSONTyped(value?: InvoiceResponseDto | null,
         'trackingId': value['trackingId'],
         'callbackUrl': value['callbackUrl'],
         'updatedAt': value['updatedAt'],
+        'riskyCurrencyIds': value['riskyCurrencyIds'],
+        'hasRiskyNativeDeposit': value['hasRiskyNativeDeposit'],
+        'latestAmlCheck': InvoiceDetailsDtoInvoiceLatestAmlCheckToJSON(value['latestAmlCheck']),
     };
 }
 

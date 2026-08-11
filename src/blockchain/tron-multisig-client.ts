@@ -2,7 +2,7 @@ import type { TronWeb } from 'tronweb';
 import type { Abi } from 'viem';
 import { concatHex, encodeFunctionData, type Hex } from 'viem';
 import type { QueueOperationResponseDto } from '../../generated-contracts';
-import type { AbiCacheEntry } from '../abi-provider';
+import type { ContractAbi } from '../abi-provider';
 import { ensureHexPrefix, normalizeCalls } from '../utils/transactions/builders';
 import {
   buildTronExecuteTypedData,
@@ -14,7 +14,7 @@ import type { TronAddress } from '../utils/tron-types';
 export interface TronMultisigBlockchainClientOptions {
   chainId: string;
   tronWeb: TronWeb;
-  contractAbi: AbiCacheEntry;
+  contractAbi: ContractAbi;
   defaultFeeLimit: number;
 }
 

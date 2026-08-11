@@ -65,6 +65,28 @@ const contractAbi = await client.getContractAbi('1.0.0');
 
 Pass the result directly to `MultisigBlockchainClient` or `TronMultisigBlockchainClient`.
 
+## Contract Capabilities
+
+Each contract version reports what it supports. `getContractCapabilities` returns those flags from the same cache entry as `getContractAbi`, so it costs no extra request once the ABI is loaded.
+
+```ts
+const capabilities = await client.getContractCapabilities();
+
+if (capabilities?.supportsInvoices === false) {
+  // TVM accounts below v1.2.2 cannot create invoices — hide the flow instead of hitting a 400
+}
+```
+
+The result is `undefined` when the API deployment does not report the flags — they were added per flag over time, so an older API omits them. Gate on an explicit `false`, never on falsiness: `!capabilities?.supportsInvoices` is also true for "unknown" and would hide a flow that works.
+
+| Flag                | True when                                                                  |
+|---------------------|----------------------------------------------------------------------------|
+| `supportsInvoices`  | invoices may be created — always on EVM, TVM requires version >= 1.2.2     |
+| `supportsWhitelist` | `claim()` is gated behind the whitelist (EVM + TVM, version >= 1.2.0)      |
+| `supportsStaking`   | the TRON Stake 2.0 methods are exposed (TVM-only, version >= 1.2.1)        |
+
+The API remains the authority: a gated call still returns `400` if the flags are stale, so treat these as UI/flow hints rather than a replacement for error handling.
+
 ## Balances & Assets
 
 ```ts

@@ -70,7 +70,8 @@ export interface UpdateInvoiceDto {
 export const UpdateInvoiceDtoStatusEnum = {
     Created: 'CREATED',
     Paid: 'PAID',
-    Unresolved: 'UNRESOLVED'
+    Unresolved: 'UNRESOLVED',
+    Expired: 'EXPIRED'
 } as const;
 export type UpdateInvoiceDtoStatusEnum = typeof UpdateInvoiceDtoStatusEnum[keyof typeof UpdateInvoiceDtoStatusEnum];
 

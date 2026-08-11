@@ -32,8 +32,6 @@ export type {
   GetPayoutParams,
   GetPayoutsParams,
   GetStakingDelegationsParams,
-  GetTransactionParams,
-  GetTransactionsParams,
   SubmitOperationSignatureParams,
   UpdateInvoiceParams,
   UpdatePayoutParams,
@@ -75,10 +73,6 @@ export type {
   StakingNetworkParams,
   StakingSummary,
   SuperRepresentatives,
-  Transaction,
-  TransactionDetails,
-  TransactionInvoice,
-  TransactionList,
   VotingSummary,
 } from './models';
 export {
@@ -99,8 +93,4 @@ export {
   QueueOperationType,
   SortOrder,
   StakingResourceType,
-  TransactionDirection,
-  TransactionOperationType,
-  TransactionSortField,
-  TransactionStatus,
 } from './models';

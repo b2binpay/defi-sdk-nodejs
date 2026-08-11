@@ -131,6 +131,12 @@ export interface BlockchainCrossChainTransferOperationResponseDto {
      */
     currency: CurrencyResponseDto | null;
     /**
+     * Nonce (transaction ordering) as a non-negative integer string
+     * @type {string}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    nonce: string | null;
+    /**
      * Creation timestamp
      * @type {string}
      * @memberof BlockchainCrossChainTransferOperationResponseDto
@@ -142,6 +148,48 @@ export interface BlockchainCrossChainTransferOperationResponseDto {
      * @memberof BlockchainCrossChainTransferOperationResponseDto
      */
     updatedAt: string;
+    /**
+     * AML risk score (0–100); null when the operation has not been scored
+     * @type {number}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    riskScore: number | null;
+    /**
+     * AML severity bucket (low/medium/high/severe); null when not scored
+     * @type {BlockchainCrossChainTransferOperationResponseDtoSeverityEnum}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    severity: BlockchainCrossChainTransferOperationResponseDtoSeverityEnum | null;
+    /**
+     * AML decision reason; null when not scored or not applicable
+     * @type {BlockchainCrossChainTransferOperationResponseDtoReasonEnum}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    reason: BlockchainCrossChainTransferOperationResponseDtoReasonEnum | null;
+    /**
+     * AML scoring provider ('crystal' when scored); null when operation has not been AML-scored
+     * @type {BlockchainCrossChainTransferOperationResponseDtoAmlProviderEnum}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    amlProvider: BlockchainCrossChainTransferOperationResponseDtoAmlProviderEnum | null;
+    /**
+     * ISO 8601 of the latest concluded AML check; null when not scored
+     * @type {string}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    amlScoredAt: string | null;
+    /**
+     * True while an AML check (initial scoring or rescore) is in flight for this operation
+     * @type {boolean}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    amlCheckInProgress: boolean;
+    /**
+     * Id of the most recent AML check row for this operation; null when never checked
+     * @type {string}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     */
+    latestAmlCheckId: string | null;
     /**
      * Provider quote id used when the bridge was initiated
      * @type {string}
@@ -230,12 +278,15 @@ export const BlockchainCrossChainTransferOperationResponseDtoOperationTypeEnum =
     Payout: 'PAYOUT',
     InvoiceDeposit: 'INVOICE_DEPOSIT',
     Claim: 'CLAIM',
+    ClaimTo: 'CLAIM_TO',
     Deploy: 'DEPLOY',
     DirectDeposit: 'DIRECT_DEPOSIT',
     Reject: 'REJECT',
     SetConfig: 'SET_CONFIG',
     DappTransaction: 'DAPP_TRANSACTION',
     CrossChainTransfer: 'CROSS_CHAIN_TRANSFER',
+    Cowswap: 'COWSWAP',
+    SetWhitelist: 'SET_WHITELIST',
     Stake: 'STAKE',
     Unstake: 'UNSTAKE',
     CancelUnstaking: 'CANCEL_UNSTAKING',
@@ -252,12 +303,46 @@ export type BlockchainCrossChainTransferOperationResponseDtoOperationTypeEnum = 
  */
 export const BlockchainCrossChainTransferOperationResponseDtoStatusEnum = {
     Created: 'CREATED',
+    AmlCheck: 'AML_CHECK',
     Pending: 'PENDING',
     Confirmed: 'CONFIRMED',
+    Blocked: 'BLOCKED',
+    Refunded: 'REFUNDED',
     Failed: 'FAILED',
     Cancelled: 'CANCELLED'
 } as const;
 export type BlockchainCrossChainTransferOperationResponseDtoStatusEnum = typeof BlockchainCrossChainTransferOperationResponseDtoStatusEnum[keyof typeof BlockchainCrossChainTransferOperationResponseDtoStatusEnum];
+
+/**
+ * @export
+ */
+export const BlockchainCrossChainTransferOperationResponseDtoSeverityEnum = {
+    Low: 'low',
+    Medium: 'medium',
+    High: 'high',
+    Severe: 'severe'
+} as const;
+export type BlockchainCrossChainTransferOperationResponseDtoSeverityEnum = typeof BlockchainCrossChainTransferOperationResponseDtoSeverityEnum[keyof typeof BlockchainCrossChainTransferOperationResponseDtoSeverityEnum];
+
+/**
+ * @export
+ */
+export const BlockchainCrossChainTransferOperationResponseDtoReasonEnum = {
+    ThresholdExceeded: 'threshold_exceeded',
+    SevereAlert: 'severe_alert',
+    BudgetExhausted: 'budget_exhausted',
+    ProviderFailed: 'provider_failed',
+    CurrencyUnsupported: 'currency_unsupported'
+} as const;
+export type BlockchainCrossChainTransferOperationResponseDtoReasonEnum = typeof BlockchainCrossChainTransferOperationResponseDtoReasonEnum[keyof typeof BlockchainCrossChainTransferOperationResponseDtoReasonEnum];
+
+/**
+ * @export
+ */
+export const BlockchainCrossChainTransferOperationResponseDtoAmlProviderEnum = {
+    Crystal: 'crystal'
+} as const;
+export type BlockchainCrossChainTransferOperationResponseDtoAmlProviderEnum = typeof BlockchainCrossChainTransferOperationResponseDtoAmlProviderEnum[keyof typeof BlockchainCrossChainTransferOperationResponseDtoAmlProviderEnum];
 
 /**
  * @export
@@ -293,8 +378,16 @@ export function instanceOfBlockchainCrossChainTransferOperationResponseDto(value
     if (!('currencyId' in value) || value['currencyId'] === undefined) return false;
     if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('currency' in value) || value['currency'] === undefined) return false;
+    if (!('nonce' in value) || value['nonce'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
+    if (!('riskScore' in value) || value['riskScore'] === undefined) return false;
+    if (!('severity' in value) || value['severity'] === undefined) return false;
+    if (!('reason' in value) || value['reason'] === undefined) return false;
+    if (!('amlProvider' in value) || value['amlProvider'] === undefined) return false;
+    if (!('amlScoredAt' in value) || value['amlScoredAt'] === undefined) return false;
+    if (!('amlCheckInProgress' in value) || value['amlCheckInProgress'] === undefined) return false;
+    if (!('latestAmlCheckId' in value) || value['latestAmlCheckId'] === undefined) return false;
     if (!('quoteId' in value) || value['quoteId'] === undefined) return false;
     if (!('routeType' in value) || value['routeType'] === undefined) return false;
     if (!('srcCurrencyId' in value) || value['srcCurrencyId'] === undefined) return false;
@@ -337,8 +430,16 @@ export function BlockchainCrossChainTransferOperationResponseDtoFromJSONTyped(js
         'currencyId': json['currencyId'],
         'amount': json['amount'],
         'currency': CurrencyResponseDtoFromJSON(json['currency']),
+        'nonce': json['nonce'],
         'createdAt': json['createdAt'],
         'updatedAt': json['updatedAt'],
+        'riskScore': json['riskScore'],
+        'severity': json['severity'],
+        'reason': json['reason'],
+        'amlProvider': json['amlProvider'],
+        'amlScoredAt': json['amlScoredAt'],
+        'amlCheckInProgress': json['amlCheckInProgress'],
+        'latestAmlCheckId': json['latestAmlCheckId'],
         'quoteId': json['quoteId'],
         'routeType': json['routeType'],
         'srcCurrencyId': json['srcCurrencyId'],
@@ -382,8 +483,16 @@ export function BlockchainCrossChainTransferOperationResponseDtoToJSONTyped(valu
         'currencyId': value['currencyId'],
         'amount': value['amount'],
         'currency': CurrencyResponseDtoToJSON(value['currency']),
+        'nonce': value['nonce'],
         'createdAt': value['createdAt'],
         'updatedAt': value['updatedAt'],
+        'riskScore': value['riskScore'],
+        'severity': value['severity'],
+        'reason': value['reason'],
+        'amlProvider': value['amlProvider'],
+        'amlScoredAt': value['amlScoredAt'],
+        'amlCheckInProgress': value['amlCheckInProgress'],
+        'latestAmlCheckId': value['latestAmlCheckId'],
         'quoteId': value['quoteId'],
         'routeType': value['routeType'],
         'srcCurrencyId': value['srcCurrencyId'],

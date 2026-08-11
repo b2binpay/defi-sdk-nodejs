@@ -12,6 +12,20 @@
  * Do not edit the class manually.
  */
 
+import type { ClaimToRefundPayload } from './claim-to-refund-payload';
+import {
+    instanceOfClaimToRefundPayload,
+    ClaimToRefundPayloadFromJSON,
+    ClaimToRefundPayloadFromJSONTyped,
+    ClaimToRefundPayloadToJSON,
+} from './claim-to-refund-payload';
+import type { CowswapPayload } from './cowswap-payload';
+import {
+    instanceOfCowswapPayload,
+    CowswapPayloadFromJSON,
+    CowswapPayloadFromJSONTyped,
+    CowswapPayloadToJSON,
+} from './cowswap-payload';
 import type { CrossChainTransferPayload } from './cross-chain-transfer-payload';
 import {
     instanceOfCrossChainTransferPayload,
@@ -74,7 +88,7 @@ import {
  * Operation-specific data (team config changes, reject details, etc.)
  * @export
  */
-export type QueueOperationResponseDtoPayload = CrossChainTransferPayload | DappTransactionPayload | DelegatePayload | MultisigConfigChangePayload | PayoutPayload | ReclaimPayload | StakeResourcePayload | VotePayload | object;
+export type QueueOperationResponseDtoPayload = ClaimToRefundPayload | CowswapPayload | CrossChainTransferPayload | DappTransactionPayload | DelegatePayload | MultisigConfigChangePayload | PayoutPayload | ReclaimPayload | StakeResourcePayload | VotePayload | object;
 
 export function QueueOperationResponseDtoPayloadFromJSON(json: any): QueueOperationResponseDtoPayload {
     return QueueOperationResponseDtoPayloadFromJSONTyped(json, false);

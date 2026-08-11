@@ -1,7 +1,7 @@
 import type { Abi, Account, Address, Hex, PublicClient, TypedDataDomain } from 'viem';
 import { encodeFunctionData } from 'viem';
 import type { QueueOperationResponseDto } from '../../generated-contracts';
-import type { AbiCacheEntry } from '../abi-provider';
+import type { ContractAbi } from '../abi-provider';
 import type { PreparedTransaction } from '../utils/transactions/builders';
 import { buildExecuteOperationsTransaction, ensureHexPrefix, normalizeCalls } from '../utils/transactions/builders';
 import type { ExecuteTypedDataPayload } from '../utils/transactions/eip712';
@@ -14,7 +14,7 @@ import {
 export interface MultisigBlockchainClientOptions {
   chainId: string;
   publicClient: PublicClient;
-  contractAbi: AbiCacheEntry;
+  contractAbi: ContractAbi;
 }
 
 export interface CreateExecuteTypedDataArgs {

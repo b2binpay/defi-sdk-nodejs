@@ -56,6 +56,18 @@ export interface SmartContractVersionResponseDto {
      */
     supportsStaking: boolean;
     /**
+     * True when this version gates claim() behind the whitelist (setWhitelist/isWhitelisted, EVM + TVM, version >= 1.2.0).
+     * @type {boolean}
+     * @memberof SmartContractVersionResponseDto
+     */
+    supportsWhitelist: boolean;
+    /**
+     * True when invoices may be created on this version — always true on EVM, TVM requires version >= 1.2.2 because earlier TVM accounts have problems with claims.
+     * @type {boolean}
+     * @memberof SmartContractVersionResponseDto
+     */
+    supportsInvoices: boolean;
+    /**
      * 
      * @type {Date}
      * @memberof SmartContractVersionResponseDto
@@ -84,6 +96,8 @@ export function instanceOfSmartContractVersionResponseDto(value: object): value 
     if (!('accountAbi' in value) || value['accountAbi'] === undefined) return false;
     if (!('isLatest' in value) || value['isLatest'] === undefined) return false;
     if (!('supportsStaking' in value) || value['supportsStaking'] === undefined) return false;
+    if (!('supportsWhitelist' in value) || value['supportsWhitelist'] === undefined) return false;
+    if (!('supportsInvoices' in value) || value['supportsInvoices'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     return true;
 }
@@ -104,6 +118,8 @@ export function SmartContractVersionResponseDtoFromJSONTyped(json: any, ignoreDi
         'accountAbi': json['accountAbi'],
         'isLatest': json['isLatest'],
         'supportsStaking': json['supportsStaking'],
+        'supportsWhitelist': json['supportsWhitelist'],
+        'supportsInvoices': json['supportsInvoices'],
         'createdAt': (new Date(json['createdAt'])),
     };
 }
@@ -124,6 +140,8 @@ export function SmartContractVersionResponseDtoToJSONTyped(value?: Omit<SmartCon
         'networkType': value['networkType'],
         'isLatest': value['isLatest'],
         'supportsStaking': value['supportsStaking'],
+        'supportsWhitelist': value['supportsWhitelist'],
+        'supportsInvoices': value['supportsInvoices'],
         'createdAt': value['createdAt'].toISOString(),
     };
 }

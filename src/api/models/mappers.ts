@@ -33,10 +33,6 @@ import type {
   StakingNetworkParamsResponse,
   StakingSummaryResponse,
   SuperRepresentativesResponse,
-  TransactionDetailsDto,
-  TransactionListResponseDto,
-  TransactionListResponseDtoItemsInner,
-  TransactionListResponseDtoItemsInnerInvoice,
   VotingSummaryResponse,
 } from '../../../generated-contracts';
 import type {
@@ -84,13 +80,6 @@ import type {
   StakingNetworkParams,
   StakingSummary,
   SuperRepresentatives,
-  Transaction,
-  TransactionDetails,
-  TransactionDirection,
-  TransactionInvoice,
-  TransactionList,
-  TransactionOperationType,
-  TransactionStatus,
   VotingSummary,
 } from './types';
 
@@ -184,32 +173,6 @@ export const mapDeploymentQueue = (dto: DeploymentQueueResponseDto): DeploymentQ
 
 export const mapExecuteBatchOperationsResult = (): ExecuteBatchOperationsResult => ({
   success: true,
-});
-
-const mapTransactionInvoice = (dto: TransactionListResponseDtoItemsInnerInvoice): TransactionInvoice => clone(dto);
-
-export const mapTransaction = (dto: TransactionListResponseDtoItemsInner): Transaction => ({
-  ...dto,
-  direction: dto.direction as TransactionDirection,
-  status: dto.status as TransactionStatus,
-  operationType: dto.operationType as TransactionOperationType,
-  invoice: dto.invoice ? mapTransactionInvoice(dto.invoice) : null,
-  currency: dto.currency ? mapCurrency(dto.currency) : null,
-});
-
-export const mapTransactionList = (dto: TransactionListResponseDto): TransactionList => ({
-  total: dto.total,
-  page: dto.page,
-  pageSize: dto.pageSize,
-  items: dto.items.map(mapTransaction),
-});
-
-export const mapTransactionDetails = (dto: TransactionDetailsDto): TransactionDetails => ({
-  transaction: mapTransaction(dto.transaction),
-  canClaim: dto.canClaim,
-  isClaimed: dto.isClaimed,
-  invoice: dto.invoice ? mapTransactionInvoice(dto.invoice) : null,
-  currency: dto.currency ? mapCurrency(dto.currency) : null,
 });
 
 export const mapSignature = (dto: SignatureResponseDto): Signature => ({

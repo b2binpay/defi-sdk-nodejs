@@ -474,9 +474,14 @@ async function waitForTxConfirmation(
   );
 }
 
-const TERMINAL_FAILURE_STATUSES = new Set<OperationV2Status>([OperationV2Status.Failed, OperationV2Status.Cancelled]);
+const TERMINAL_FAILURE_STATUSES = new Set<OperationV2['status']>([
+  OperationV2Status.Failed,
+  OperationV2Status.Cancelled,
+  OperationV2Status.Blocked,
+  OperationV2Status.Refunded,
+]);
 
-function assertOperationNotFailed(operationType: OperationTypeV2, status: OperationV2Status): void {
+function assertOperationNotFailed(operationType: OperationTypeV2, status: OperationV2['status']): void {
   if (TERMINAL_FAILURE_STATUSES.has(status)) {
     throw new Error(`${operationType} operation reached terminal status ${status} on-chain — aborting flow.`);
   }

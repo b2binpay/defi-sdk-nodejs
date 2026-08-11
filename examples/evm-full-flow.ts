@@ -50,7 +50,7 @@ import {
   QueueOperationStatus,
 } from '../src';
 import { getEvmChainById } from '../src/blockchain/get-chain';
-import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
+import { bufferGas, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const REQUIRED_ENV = [
   'API_BASE_URL',
@@ -203,11 +203,17 @@ runMain(async () => {
 
     console.log(`Claiming ${currency.symbol} for ${items.length} invoice(s)...`);
 
+    const claimTo = accountDetails.account.contract as Address;
+    const claimGas = bufferGas(
+      await publicClient.estimateGas({ account: signer.address, to: claimTo, data: claimCalldata, value: 0n }),
+    );
+
     const claimTxHash = await walletClient.sendTransaction({
-      to: accountDetails.account.contract as Address,
+      to: claimTo,
       account: signer,
       data: claimCalldata,
       value: 0n,
+      gas: claimGas,
     });
 
     console.log('Claim tx broadcasted:', claimTxHash);
@@ -461,9 +467,14 @@ async function waitForTxConfirmation(
   );
 }
 
-const TERMINAL_FAILURE_STATUSES = new Set<OperationV2Status>([OperationV2Status.Failed, OperationV2Status.Cancelled]);
+const TERMINAL_FAILURE_STATUSES = new Set<OperationV2['status']>([
+  OperationV2Status.Failed,
+  OperationV2Status.Cancelled,
+  OperationV2Status.Blocked,
+  OperationV2Status.Refunded,
+]);
 
-function assertOperationNotFailed(operationType: OperationTypeV2, status: OperationV2Status): void {
+function assertOperationNotFailed(operationType: OperationTypeV2, status: OperationV2['status']): void {
   if (TERMINAL_FAILURE_STATUSES.has(status)) {
     throw new Error(`${operationType} operation reached terminal status ${status} on-chain — aborting flow.`);
   }

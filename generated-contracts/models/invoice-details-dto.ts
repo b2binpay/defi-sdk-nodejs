@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { InvoiceResponseDto } from './invoice-response-dto';
+import type { InvoiceDetailsDtoInvoice } from './invoice-details-dto-invoice';
 import {
-    InvoiceResponseDtoFromJSON,
-    InvoiceResponseDtoFromJSONTyped,
-    InvoiceResponseDtoToJSON,
-    InvoiceResponseDtoToJSONTyped,
-} from './invoice-response-dto';
+    InvoiceDetailsDtoInvoiceFromJSON,
+    InvoiceDetailsDtoInvoiceFromJSONTyped,
+    InvoiceDetailsDtoInvoiceToJSON,
+    InvoiceDetailsDtoInvoiceToJSONTyped,
+} from './invoice-details-dto-invoice';
 
 /**
  * 
@@ -29,10 +29,10 @@ import {
 export interface InvoiceDetailsDto {
     /**
      * 
-     * @type {InvoiceResponseDto}
+     * @type {InvoiceDetailsDtoInvoice}
      * @memberof InvoiceDetailsDto
      */
-    invoice: InvoiceResponseDto;
+    invoice: InvoiceDetailsDtoInvoice;
 }
 
 /**
@@ -53,7 +53,7 @@ export function InvoiceDetailsDtoFromJSONTyped(json: any, ignoreDiscriminator: b
     }
     return {
         
-        'invoice': InvoiceResponseDtoFromJSON(json['invoice']),
+        'invoice': InvoiceDetailsDtoInvoiceFromJSON(json['invoice']),
     };
 }
 
@@ -68,7 +68,7 @@ export function InvoiceDetailsDtoToJSONTyped(value?: InvoiceDetailsDto | null, i
 
     return {
         
-        'invoice': InvoiceResponseDtoToJSON(value['invoice']),
+        'invoice': InvoiceDetailsDtoInvoiceToJSON(value['invoice']),
     };
 }
 

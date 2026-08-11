@@ -26,10 +26,6 @@ import type {
   PayoutsControllerFindAllV1StatusesEnum,
   ReclaimBodyDtoResourceTypeEnum,
   StakeBodyDtoResourceTypeEnum,
-  TransactionsControllerGetTransactionsV1OperationTypesEnum,
-  TransactionsControllerGetTransactionsV1SortByEnum,
-  TransactionsControllerGetTransactionsV1SortOrderEnum,
-  TransactionsControllerGetTransactionsV1StatusesEnum,
   UniversalAddress,
   UnstakeBodyDtoResourceTypeEnum,
   UpdateInvoiceDto,
@@ -46,15 +42,17 @@ import {
   CurrenciesApi,
   InvoicesApi,
   NetworksApi,
+  OperationsClaimToApi,
+  OperationsCowswapApi,
+  OperationsSetWhitelistApi,
   OperationsV2Api,
   PayoutsApi,
   QueueOperationsApi,
   ResponseError,
   SmartContractVersionsApi,
   TRXStakingApi,
-  TransactionsApi,
 } from '../../generated-contracts';
-import { type AbiCacheEntry, AbiProvider } from '../abi-provider';
+import { type AbiCacheEntry, AbiProvider, type SmartContractCapabilities } from '../abi-provider';
 import { TRON_CHAIN_IDS } from '../blockchain/tron-chains';
 import { formatCreditsWarning, parseCreditsError } from '../errors';
 import { packSignatures } from '../utils/transactions/signatures';
@@ -106,11 +104,6 @@ import type {
   StakingResourceType,
   StakingSummary,
   SuperRepresentatives,
-  TransactionDetails,
-  TransactionList,
-  TransactionOperationType,
-  TransactionSortField,
-  TransactionStatus,
   VotingSummary,
 } from './models';
 import { OperationTypeV2, QueueOperationStatus } from './models';
@@ -142,8 +135,6 @@ import {
   mapStakingNetworkParams,
   mapStakingSummary,
   mapSuperRepresentatives,
-  mapTransactionDetails,
-  mapTransactionList,
   mapVotingSummary,
 } from './models/mappers';
 
@@ -225,6 +216,8 @@ export interface GetInvoicesParams extends ChainScopedParams {
   createdTo?: string;
   updatedFrom?: string;
   updatedTo?: string;
+  expiresFrom?: string;
+  expiresTo?: string;
   currencyIds?: string[];
   statuses?: InvoiceStatus[];
   trackingId?: string;
@@ -287,30 +280,6 @@ export interface UpdatePayoutParams extends ChainScopedParams {
   payoutId: string;
   trackingId?: string | null;
   callbackUrl?: string | null;
-}
-
-/** @deprecated Use `GetOperationsV2Params` (`getOperationsV2`) or `GetBlockchainTransactionsParams` (`getBlockchainTransactions`). */
-export interface GetTransactionsParams extends ChainScopedParams {
-  id?: string;
-  operationId?: string;
-  operationTypes?: TransactionOperationType[];
-  statuses?: TransactionStatus[];
-  txHash?: string;
-  currencyIds?: string[];
-  createdFrom?: string;
-  createdTo?: string;
-  updatedFrom?: string;
-  updatedTo?: string;
-  isClaimed?: boolean;
-  sortBy?: TransactionSortField;
-  sortOrder?: SortOrder;
-  page?: number;
-  pageSize?: number;
-}
-
-/** @deprecated Use `GetOperationDetailsV2Params` (`getOperationDetailsV2`) or `GetBlockchainTransactionParams` (`getBlockchainTransaction`). */
-export interface GetTransactionParams extends ChainScopedParams {
-  transactionId: string;
 }
 
 export interface GetClaimsParams extends ChainScopedParams {
@@ -469,13 +438,15 @@ export class DefiClient {
   private readonly claimsApi: ClaimsApi;
   private readonly payoutsApi: PayoutsApi;
   private readonly queueOperationsApi: QueueOperationsApi;
-  private readonly transactionsApi: TransactionsApi;
   private readonly smartContractVersionsApi: SmartContractVersionsApi;
   private readonly callbacksApi: CallbacksApi;
   private readonly networksApi: NetworksApi;
   private readonly trxStakingApi: TRXStakingApi;
   private readonly crossChainApi: CrossChainTransfersApi;
   private readonly operationsV2Api: OperationsV2Api;
+  private readonly operationsClaimToApi: OperationsClaimToApi;
+  private readonly operationsCowswapApi: OperationsCowswapApi;
+  private readonly operationsSetWhitelistApi: OperationsSetWhitelistApi;
   private readonly blockchainTransactionsApi: BlockchainTransactionsApi;
   private readonly abiProvider: AbiProvider;
   private accountInfoPromise?: Promise<{
@@ -514,13 +485,15 @@ export class DefiClient {
     this.claimsApi = new ClaimsApi(this.config);
     this.payoutsApi = new PayoutsApi(this.config);
     this.queueOperationsApi = new QueueOperationsApi(this.config);
-    this.transactionsApi = new TransactionsApi(this.config);
     this.smartContractVersionsApi = new SmartContractVersionsApi(this.config);
     this.callbacksApi = new CallbacksApi(this.config);
     this.networksApi = new NetworksApi(this.config);
     this.trxStakingApi = new TRXStakingApi(this.config);
     this.crossChainApi = new CrossChainTransfersApi(this.config);
     this.operationsV2Api = new OperationsV2Api(this.config);
+    this.operationsClaimToApi = new OperationsClaimToApi(this.config);
+    this.operationsCowswapApi = new OperationsCowswapApi(this.config);
+    this.operationsSetWhitelistApi = new OperationsSetWhitelistApi(this.config);
     this.blockchainTransactionsApi = new BlockchainTransactionsApi(this.config);
     this.abiProvider = new AbiProvider(this.smartContractVersionsApi, options.abiCacheDir);
   }
@@ -528,6 +501,19 @@ export class DefiClient {
   async getContractAbi(versionId?: string): Promise<AbiCacheEntry> {
     const resolvedVersionId = versionId ?? (await this.resolveSmartContractVersionId());
     return this.abiProvider.getAbi(resolvedVersionId);
+  }
+
+  /**
+   * Feature flags of the account's multisig contract version — use them to gate UI and flows
+   * (e.g. hide invoice creation when `supportsInvoices` is false). Shares the ABI cache, so this
+   * costs no extra request once the ABI has been fetched.
+   *
+   * Returns `undefined` when the API does not report the flags: an older deployment omits them, and
+   * treating that as all-false would hide flows that in fact work. Fall back to attempting the call.
+   */
+  async getContractCapabilities(versionId?: string): Promise<SmartContractCapabilities | undefined> {
+    const entry = await this.getContractAbi(versionId);
+    return entry.capabilities;
   }
 
   async getAssetBalances(params: GetAssetBalancesParams): Promise<AssetBalanceList> {
@@ -698,6 +684,8 @@ export class DefiClient {
         createdTo: params.createdTo,
         updatedFrom: params.updatedFrom,
         updatedTo: params.updatedTo,
+        expiresFrom: params.expiresFrom,
+        expiresTo: params.expiresTo,
         currencyIds: params.currencyIds,
         statuses: params.statuses as InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum[] | undefined,
         trackingId: params.trackingId,
@@ -1180,6 +1168,12 @@ export class DefiClient {
       [OperationTypeV2.InvoiceDeposit]: (opId) =>
         api.blockchainInvoiceDepositOperationsControllerGetDetailsV2({ deploymentId, opId }),
       [OperationTypeV2.Claim]: (opId) => api.blockchainClaimOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.ClaimTo]: (opId) =>
+        this.operationsClaimToApi.blockchainClaimToOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.Cowswap]: (opId) =>
+        this.operationsCowswapApi.blockchainCowswapOperationsControllerGetDetailsV2({ deploymentId, opId }),
+      [OperationTypeV2.SetWhitelist]: (opId) =>
+        this.operationsSetWhitelistApi.blockchainSetWhitelistOperationsControllerGetDetailsV2({ deploymentId, opId }),
       [OperationTypeV2.Deploy]: (opId) => api.blockchainDeployOperationsControllerGetDetailsV2({ deploymentId, opId }),
       [OperationTypeV2.DirectDeposit]: (opId) =>
         api.blockchainDirectDepositOperationsControllerGetDetailsV2({ deploymentId, opId }),
@@ -1300,56 +1294,6 @@ export class DefiClient {
     }
 
     return deletedIds;
-  }
-
-  /**
-   * @deprecated v1 transactions are superseded. Use `getOperationsV2` for logical
-   * operation history, or `getBlockchainTransactions` for on-chain transactions.
-   */
-  async getTransactions(params: GetTransactionsParams): Promise<TransactionList> {
-    const deploymentId = await this.resolveDeploymentId(params.chainId);
-
-    const response = await this.callApi(() =>
-      this.transactionsApi.transactionsControllerGetTransactionsV1({
-        deploymentId,
-        id: params.id,
-        operationId: params.operationId,
-        operationTypes: params.operationTypes as
-          | TransactionsControllerGetTransactionsV1OperationTypesEnum[]
-          | undefined,
-        statuses: params.statuses as TransactionsControllerGetTransactionsV1StatusesEnum[] | undefined,
-        txHash: params.txHash,
-        currencyIds: params.currencyIds,
-        createdFrom: params.createdFrom,
-        createdTo: params.createdTo,
-        updatedFrom: params.updatedFrom,
-        updatedTo: params.updatedTo,
-        isClaimed: params.isClaimed,
-        sortBy: params.sortBy as TransactionsControllerGetTransactionsV1SortByEnum | undefined,
-        sortOrder: params.sortOrder as TransactionsControllerGetTransactionsV1SortOrderEnum | undefined,
-        page: params.page,
-        pageSize: params.pageSize,
-      }),
-    );
-
-    return mapTransactionList(response);
-  }
-
-  /**
-   * @deprecated v1 transactions are superseded. Use `getOperationDetailsV2` for a
-   * logical operation, or `getBlockchainTransaction` for an on-chain transaction.
-   */
-  async getTransaction(params: GetTransactionParams): Promise<TransactionDetails> {
-    const deploymentId = await this.resolveDeploymentId(params.chainId);
-
-    const response = await this.callApi(() =>
-      this.transactionsApi.transactionsControllerGetTransactionDetailsV1({
-        deploymentId,
-        transactionId: params.transactionId,
-      }),
-    );
-
-    return mapTransactionDetails(response);
   }
 
   async submitOperationSignature(params: SubmitOperationSignatureParams): Promise<Signature> {

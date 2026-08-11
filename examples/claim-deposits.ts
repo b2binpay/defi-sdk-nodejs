@@ -10,7 +10,7 @@ import { type Address, createPublicClient, createWalletClient, http, zeroAddress
 import { privateKeyToAccount } from 'viem/accounts';
 import { DefiClient, MultisigBlockchainClient } from '../src';
 import { getEvmChainById } from '../src/blockchain/get-chain';
-import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
+import { bufferGas, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
 
@@ -82,11 +82,17 @@ runMain(async () => {
     })),
   );
 
+  const claimTo = accountDetails.account.contract as Address;
+  const gas = bufferGas(
+    await publicClient.estimateGas({ account: wallet.address, to: claimTo, data: claimTxData, value: 0n }),
+  );
+
   const txHash = await walletClient.sendTransaction({
-    to: accountDetails.account.contract as Address,
+    to: claimTo,
     account: wallet,
     data: claimTxData,
     value: 0n,
+    gas,
   });
 
   console.log('Claim transaction broadcasted:', txHash);
