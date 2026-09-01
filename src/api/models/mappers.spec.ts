@@ -2,9 +2,10 @@ import type {
   BlockchainOperationListResponseDto,
   CrossChainTransferResponseDto,
   CurrencyResponseDto,
+  InvoiceDetailsDto,
   StakingSummaryResponse,
 } from '../../../generated-contracts';
-import { mapCrossChainTransfer, mapOperationV2List, mapStakingSummary } from './mappers';
+import { mapCrossChainTransfer, mapInvoiceDetails, mapOperationV2List, mapStakingSummary } from './mappers';
 
 const currency = (id: string, symbol: string): CurrencyResponseDto =>
   ({ id, symbol }) as unknown as CurrencyResponseDto;
@@ -50,6 +51,24 @@ describe('cross-chain / staking / operations-v2 mappers', () => {
       expect(result.items).toHaveLength(1);
       expect(result.items[0].id).toBe('op-1');
       expect(result.items[0]).not.toBe(item);
+    });
+  });
+
+  describe('mapInvoiceDetails', () => {
+    it('carries blockedAmounts through to the mapped invoice', () => {
+      const dto = {
+        invoice: {
+          id: 'inv-1',
+          status: 'UNRESOLVED',
+          availableCurrencies: [currency('cur-1', 'USDT')],
+          blockedAmounts: [{ currencyId: 'cur-1', amount: '25' }],
+        },
+      } as unknown as InvoiceDetailsDto;
+
+      const result = mapInvoiceDetails(dto);
+
+      expect(result.invoice.blockedAmounts).toEqual([{ currencyId: 'cur-1', amount: '25' }]);
+      expect(result.invoice.availableCurrencies[0].symbol).toBe('USDT');
     });
   });
 

@@ -77,11 +77,11 @@ export interface PayoutDetailResponseDto {
      */
     trackingId: string | null;
     /**
-     * Callback URL for notifications
-     * @type {string}
+     * When true, suppresses callbacks for the queue operation and its downstream operation
+     * @type {boolean}
      * @memberof PayoutDetailResponseDto
      */
-    callbackUrl: string | null;
+    skipCallbacks: boolean;
     /**
      * Queue operation ID associated with this payout
      * @type {string}
@@ -152,7 +152,7 @@ export function instanceOfPayoutDetailResponseDto(value: object): value is Payou
     if (!('isTron' in value) || value['isTron'] === undefined) return false;
     if (!('deploymentId' in value) || value['deploymentId'] === undefined) return false;
     if (!('trackingId' in value) || value['trackingId'] === undefined) return false;
-    if (!('callbackUrl' in value) || value['callbackUrl'] === undefined) return false;
+    if (!('skipCallbacks' in value) || value['skipCallbacks'] === undefined) return false;
     if (!('queueOperationId' in value) || value['queueOperationId'] === undefined) return false;
     if (!('nonce' in value) || value['nonce'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
@@ -180,7 +180,7 @@ export function PayoutDetailResponseDtoFromJSONTyped(json: any, ignoreDiscrimina
         'isTron': json['isTron'],
         'deploymentId': json['deploymentId'],
         'trackingId': json['trackingId'],
-        'callbackUrl': json['callbackUrl'],
+        'skipCallbacks': json['skipCallbacks'],
         'queueOperationId': json['queueOperationId'],
         'nonce': json['nonce'],
         'status': json['status'],
@@ -209,7 +209,7 @@ export function PayoutDetailResponseDtoToJSONTyped(value?: PayoutDetailResponseD
         'isTron': value['isTron'],
         'deploymentId': value['deploymentId'],
         'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
+        'skipCallbacks': value['skipCallbacks'],
         'queueOperationId': value['queueOperationId'],
         'nonce': value['nonce'],
         'status': value['status'],

@@ -65,17 +65,31 @@ export interface BlockchainTransactionDetailsResponseDto {
      */
     toAddress: UniversalAddress | null;
     /**
-     * Native value transferred with the transaction (wei / sun, integer string)
+     * Native value transferred with the transaction (wei / sun, integer string). Deprecated: use `valueFormatted`.
      * @type {string}
      * @memberof BlockchainTransactionDetailsResponseDto
+     * @deprecated
      */
     value: string;
     /**
-     * Blockchain transaction fee
+     * Native value converted to the native coin decimals of `chainId`; null when the chain is unknown
      * @type {string}
      * @memberof BlockchainTransactionDetailsResponseDto
      */
+    valueFormatted: string | null;
+    /**
+     * Total blockchain fee paid for the transaction in raw base units (wei / sun, integer string). Deprecated: use `blockchainFeeFormatted`.
+     * @type {string}
+     * @memberof BlockchainTransactionDetailsResponseDto
+     * @deprecated
+     */
     blockchainFee: string;
+    /**
+     * Blockchain fee converted to the native coin decimals of `chainId`; null when the chain is unknown
+     * @type {string}
+     * @memberof BlockchainTransactionDetailsResponseDto
+     */
+    blockchainFeeFormatted: string | null;
     /**
      * Block hash containing the transaction (null while pending)
      * @type {string}
@@ -143,7 +157,9 @@ export function instanceOfBlockchainTransactionDetailsResponseDto(value: object)
     if (!('fromAddress' in value) || value['fromAddress'] === undefined) return false;
     if (!('toAddress' in value) || value['toAddress'] === undefined) return false;
     if (!('value' in value) || value['value'] === undefined) return false;
+    if (!('valueFormatted' in value) || value['valueFormatted'] === undefined) return false;
     if (!('blockchainFee' in value) || value['blockchainFee'] === undefined) return false;
+    if (!('blockchainFeeFormatted' in value) || value['blockchainFeeFormatted'] === undefined) return false;
     if (!('blockHash' in value) || value['blockHash'] === undefined) return false;
     if (!('blockNumber' in value) || value['blockNumber'] === undefined) return false;
     if (!('status' in value) || value['status'] === undefined) return false;
@@ -170,7 +186,9 @@ export function BlockchainTransactionDetailsResponseDtoFromJSONTyped(json: any, 
         'fromAddress': UniversalAddressFromJSON(json['fromAddress']),
         'toAddress': UniversalAddressFromJSON(json['toAddress']),
         'value': json['value'],
+        'valueFormatted': json['valueFormatted'],
         'blockchainFee': json['blockchainFee'],
+        'blockchainFeeFormatted': json['blockchainFeeFormatted'],
         'blockHash': json['blockHash'],
         'blockNumber': json['blockNumber'],
         'status': json['status'],
@@ -198,7 +216,9 @@ export function BlockchainTransactionDetailsResponseDtoToJSONTyped(value?: Block
         'fromAddress': UniversalAddressToJSON(value['fromAddress']),
         'toAddress': UniversalAddressToJSON(value['toAddress']),
         'value': value['value'],
+        'valueFormatted': value['valueFormatted'],
         'blockchainFee': value['blockchainFee'],
+        'blockchainFeeFormatted': value['blockchainFeeFormatted'],
         'blockHash': value['blockHash'],
         'blockNumber': value['blockNumber'],
         'status': value['status'],

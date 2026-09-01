@@ -25,12 +25,6 @@ export interface UpdatePayoutDto {
      * @memberof UpdatePayoutDto
      */
     trackingId?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdatePayoutDto
-     */
-    callbackUrl?: string | null;
 }
 
 /**
@@ -51,7 +45,6 @@ export function UpdatePayoutDtoFromJSONTyped(json: any, ignoreDiscriminator: boo
     return {
         
         'trackingId': json['trackingId'] == null ? undefined : json['trackingId'],
-        'callbackUrl': json['callbackUrl'] == null ? undefined : json['callbackUrl'],
     };
 }
 
@@ -67,7 +60,6 @@ export function UpdatePayoutDtoToJSONTyped(value?: UpdatePayoutDto | null, ignor
     return {
         
         'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
     };
 }
 

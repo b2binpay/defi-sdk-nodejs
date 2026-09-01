@@ -57,7 +57,6 @@ const usdt = await client.findCurrencyBySymbol({ symbol: 'USDT', chainId: 1 });
 const invoice = await client.createInvoice({
   requestedAmount: '100',
   currencyIds: [usdt.id],
-  callbackUrl: 'https://merchant.example/webhook',
   trackingId: 'order-42',
 });
 console.log('Invoice ID:', invoice.id);
@@ -282,7 +281,7 @@ Available scripts:
 | `npm run example:create-payout`           | Create a payout and surface the queued operation                    |
 | `npm run example:queue-sign`              | Build EIP-712 typed data, sign, and submit the signature            |
 | `npm run example:queue-execute`           | Build and broadcast an execute transaction                          |
-| `npm run example:queue-execute-batch`     | Execute two operations in a single transaction                      |
+| `npm run example:queue-execute-batch`     | Execute the backend-reported batch candidates in a single transaction |
 | `npm run example:claim-deposits`          | Build and broadcast a claim transaction                             |
 | `npm run example:evm-full-flow`           | End-to-end EVM flow: invoice → payout → sign → execute → claim     |
 | `npm run example:tron-get-account-info`   | TRON account info and balances                                      |
@@ -291,7 +290,7 @@ Available scripts:
 | `npm run example:tron-claim-deposits`     | Build and broadcast a TRON claim transaction                        |
 | `npm run example:tron-queue-sign`         | Build TIP-712 typed data, sign, and submit the signature            |
 | `npm run example:tron-queue-execute`      | Build and broadcast a TRON execute transaction                      |
-| `npm run example:tron-queue-execute-batch`| Execute two TRON operations in a single transaction                 |
+| `npm run example:tron-queue-execute-batch`| Execute the backend-reported TRON batch candidates in one transaction |
 | `npm run example:tron-full-flow`          | End-to-end TRON flow                                                |
 | `npm run example:tron-staking-flow`       | Read staking summary, create a TRON stake, sign and execute it on-chain |
 | `npm run example:get-operations-v2`       | List v2 operations and fetch typed operation details                |

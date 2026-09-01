@@ -5,6 +5,9 @@ import type {
   AssetBalanceDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
+  BatchCandidatesResponseDto,
+  BatchCandidatesResponseDtoCandidatesInner,
+  BatchCandidatesResponseDtoCandidatesInnerOperationsInner,
   BlockchainOperationListResponseDto,
   BlockchainTransactionDetailsResponseDto,
   BlockchainTransactionListResponseDto,
@@ -20,6 +23,7 @@ import type {
   DeploymentQueueResponseDto,
   GetCallbacksResponseDto,
   InvoiceDetailsDto,
+  InvoiceDetailsDtoInvoice,
   InvoiceResponseDto,
   InvoicesResponseDto,
   NetworkResponseDto,
@@ -43,6 +47,9 @@ import type {
   AssetBalance,
   AssetBalanceList,
   BalanceSummary,
+  BatchCandidateNonceGroup,
+  BatchCandidateOperation,
+  BatchCandidates,
   BlockchainTransactionDetails,
   BlockchainTransactionList,
   Call,
@@ -60,6 +67,7 @@ import type {
   DeploymentQueue,
   ExecuteBatchOperationsResult,
   Invoice,
+  InvoiceDetail,
   InvoiceDetails,
   InvoiceList,
   InvoiceStatus,
@@ -121,8 +129,14 @@ export const mapInvoice = (dto: InvoiceResponseDto): Invoice => ({
   availableCurrencies: dto.availableCurrencies.map(mapCurrency),
 });
 
+export const mapInvoiceDetail = (dto: InvoiceDetailsDtoInvoice): InvoiceDetail => ({
+  ...dto,
+  status: dto.status as InvoiceStatus,
+  availableCurrencies: dto.availableCurrencies.map(mapCurrency),
+});
+
 export const mapInvoiceDetails = (dto: InvoiceDetailsDto): InvoiceDetails => ({
-  invoice: mapInvoice(dto.invoice),
+  invoice: mapInvoiceDetail(dto.invoice),
 });
 
 export const mapInvoiceList = (dto: InvoicesResponseDto): InvoiceList => ({
@@ -168,7 +182,30 @@ export const mapDeploymentQueue = (dto: DeploymentQueueResponseDto): DeploymentQ
   page: dto.page,
   pageSize: dto.pageSize,
   nextExecutableNonce: dto.nextExecutableNonce,
+  batchableCount: dto.batchableCount,
   items: dto.items.map(mapQueueOperation),
+});
+
+export const mapBatchCandidateOperation = (
+  dto: BatchCandidatesResponseDtoCandidatesInnerOperationsInner,
+): BatchCandidateOperation => ({
+  ...dto,
+  operationType: dto.operationType as QueueOperationType,
+  status: dto.status as QueueOperationStatus,
+  calls: dto.calls.map(mapCall),
+  signatures: dto.signatures.map(mapOperationSignature),
+});
+
+export const mapBatchCandidateNonceGroup = (
+  dto: BatchCandidatesResponseDtoCandidatesInner,
+): BatchCandidateNonceGroup => ({
+  ...dto,
+  operations: dto.operations.map(mapBatchCandidateOperation),
+});
+
+export const mapBatchCandidates = (dto: BatchCandidatesResponseDto): BatchCandidates => ({
+  nextExecutableNonce: dto.nextExecutableNonce,
+  candidates: dto.candidates.map(mapBatchCandidateNonceGroup),
 });
 
 export const mapExecuteBatchOperationsResult = (): ExecuteBatchOperationsResult => ({

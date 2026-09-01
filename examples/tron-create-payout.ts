@@ -29,7 +29,6 @@ runMain(async () => {
     currencyId: currency.id,
     amount: PAYOUT_AMOUNT,
     recipient: env.PAYOUT_RECIPIENT,
-    callbackUrl: undefined,
     trackingId: undefined,
   });
 

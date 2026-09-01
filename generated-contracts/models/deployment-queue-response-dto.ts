@@ -57,6 +57,12 @@ export interface DeploymentQueueResponseDto {
      * @memberof DeploymentQueueResponseDto
      */
     nextExecutableNonce: string;
+    /**
+     * Number of consecutive nonces from `nextExecutableNonce` that have at least one fully-signed, live-status (PENDING/READY), non-expired operation. Computed across the whole queue, independent of pagination and list filters. Clients show the batch action when this is greater than 1.
+     * @type {number}
+     * @memberof DeploymentQueueResponseDto
+     */
+    batchableCount: number;
 }
 
 /**
@@ -68,6 +74,7 @@ export function instanceOfDeploymentQueueResponseDto(value: object): value is De
     if (!('pageSize' in value) || value['pageSize'] === undefined) return false;
     if (!('items' in value) || value['items'] === undefined) return false;
     if (!('nextExecutableNonce' in value) || value['nextExecutableNonce'] === undefined) return false;
+    if (!('batchableCount' in value) || value['batchableCount'] === undefined) return false;
     return true;
 }
 
@@ -86,6 +93,7 @@ export function DeploymentQueueResponseDtoFromJSONTyped(json: any, ignoreDiscrim
         'pageSize': json['pageSize'],
         'items': ((json['items'] as Array<any>).map(QueueOperationResponseDtoFromJSON)),
         'nextExecutableNonce': json['nextExecutableNonce'],
+        'batchableCount': json['batchableCount'],
     };
 }
 
@@ -105,6 +113,7 @@ export function DeploymentQueueResponseDtoToJSONTyped(value?: DeploymentQueueRes
         'pageSize': value['pageSize'],
         'items': ((value['items'] as Array<any>).map(QueueOperationResponseDtoToJSON)),
         'nextExecutableNonce': value['nextExecutableNonce'],
+        'batchableCount': value['batchableCount'],
     };
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@b2binpay/defi-sdk",
-  "version": "0.0.1",
+  "version": "1.6.0",
   "description": "TypeScript SDK for the B2BinPay DeFi API with blockchain transaction utilities built on viem",
   "private": false,
   "license": "MIT",
@@ -36,14 +36,17 @@
     "example:tron-queue-sign": "tsx examples/tron-queue-sign.ts",
     "example:tron-queue-execute": "tsx examples/tron-queue-execute.ts",
     "example:tron-queue-execute-batch": "tsx examples/tron-queue-execute-batch.ts",
-    "example:tron-full-flow": "tsx examples/tron-full-flow.ts"
+    "example:tron-full-flow": "tsx examples/tron-full-flow.ts",
+    "example:tron-staking-flow": "tsx examples/tron-staking-flow.ts",
+    "example:get-operations-v2": "tsx examples/get-operations-v2.ts",
+    "example:get-blockchain-transactions": "tsx examples/get-blockchain-transactions.ts"
   },
   "dependencies": {
-    "tronweb": "^6.0.2",
-    "viem": "^2.40.3"
+    "tronweb": "^6.2.0",
+    "viem": "^2.53.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.2",
+    "@biomejs/biome": "2.4.13",
     "@openapitools/openapi-generator-cli": "^2.34.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
@@ -66,10 +69,11 @@
   "files": [
     "dist",
     "docs",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ],
   "engines": {
-    "node": "^22.16.0",
-    "npm": "^10.9.2"
+    "node": "^24.16.0",
+    "npm": "^11.0.0"
   }
 }

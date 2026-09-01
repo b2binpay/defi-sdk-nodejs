@@ -77,28 +77,28 @@ import {
 } from './vote-payload';
 
 /**
- * @type QueueOperationResponseDtoPayload
+ * @type BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayload
  * Operation-specific data (team config changes, reject details, etc.)
  * @export
  */
-export type QueueOperationResponseDtoPayload = ClaimToRefundPayload | CrossChainTransferPayload | DappTransactionPayload | DelegatePayload | MultisigConfigChangePayload | PayoutPayload | ReclaimPayload | StakeResourcePayload | VotePayload | object;
+export type BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayload = ClaimToRefundPayload | CrossChainTransferPayload | DappTransactionPayload | DelegatePayload | MultisigConfigChangePayload | PayoutPayload | ReclaimPayload | StakeResourcePayload | VotePayload | object;
 
-export function QueueOperationResponseDtoPayloadFromJSON(json: any): QueueOperationResponseDtoPayload {
-    return QueueOperationResponseDtoPayloadFromJSONTyped(json, false);
+export function BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayloadFromJSON(json: any): BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayload {
+    return BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayloadFromJSONTyped(json, false);
 }
 
-export function QueueOperationResponseDtoPayloadFromJSONTyped(json: any, ignoreDiscriminator: boolean): QueueOperationResponseDtoPayload {
+export function BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayloadFromJSONTyped(json: any, ignoreDiscriminator: boolean): BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayload {
     if (json == null) {
         return json;
     }
     return json;
 }
 
-export function QueueOperationResponseDtoPayloadToJSON(json: any): any {
-    return QueueOperationResponseDtoPayloadToJSONTyped(json, false);
+export function BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayloadToJSON(json: any): any {
+    return BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayloadToJSONTyped(json, false);
 }
 
-export function QueueOperationResponseDtoPayloadToJSONTyped(value?: QueueOperationResponseDtoPayload | null, ignoreDiscriminator: boolean = false): any {
+export function BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayloadToJSONTyped(value?: BatchCandidatesResponseDtoCandidatesInnerOperationsInnerPayload | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }

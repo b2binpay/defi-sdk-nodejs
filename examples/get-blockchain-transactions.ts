@@ -25,6 +25,10 @@ runMain(async () => {
       status: tx.status,
       txHash: tx.txHash,
       blockNumber: tx.blockNumber,
+      // `value` and `blockchainFee` are the raw base-unit fields and are deprecated;
+      // the formatted pair is already scaled to the chain's native decimals.
+      value: tx.valueFormatted,
+      fee: tx.blockchainFeeFormatted,
     })),
   );
 

@@ -1,17 +1,20 @@
 /**
  * Queue batch execute use case:
  * - Authenticate via API key.
- * - Find the first two operations that are ready to execute (`canExecute`).
- * - Build one multisig execute transaction covering both operations, broadcast it, and wait for confirmation.
+ * - Check `batchableCount` on the queue to see whether batching is worth attempting.
+ * - Ask the backend for batch-executable candidates and pick one operation per nonce.
+ * - Build one multisig execute transaction covering all picks, broadcast it, and wait for confirmation.
  */
 import 'dotenv/config';
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { DefiClient, MultisigBlockchainClient, type QueueOperation, QueueOperationStatus } from '../src';
+import { DefiClient, MultisigBlockchainClient } from '../src';
 import { getEvmChainById } from '../src/blockchain/get-chain';
 import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
+
+const MIN_BATCHABLE_NONCES = 2;
 
 runMain(async () => {
   const env = requireEnvVars(requiredEnv);
@@ -22,34 +25,43 @@ runMain(async () => {
   const accountDetails = await client.getAccount();
   await client.selectChain(chainId);
 
-  const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 50 });
-  const operationsToExecute: QueueOperation[] = [];
+  const queue = await client.getDeploymentQueue({ pageSize: 50 });
+  console.log(`Batchable nonces from ${queue.nextExecutableNonce}: ${queue.batchableCount}`);
 
-  let currentNonce = Number(queue.nextExecutableNonce);
-  for (const item of queue.items) {
-    if (item.nonce !== currentNonce.toString()) {
+  if (queue.batchableCount < MIN_BATCHABLE_NONCES) {
+    throw new Error('Nothing to batch — fewer than two consecutive nonces are ready.');
+  }
+
+  const { candidates } = await client.getBatchCandidates({});
+
+  // Nonces must execute consecutively, so a conflicting or unsatisfiable nonce
+  // ends the batch rather than being skipped over.
+  const picks = [];
+  for (const group of candidates) {
+    if (group.conflict) {
+      console.log(`Nonce ${group.nonce} has competing operations — stopping the batch here.`);
       break;
     }
 
-    if (item.signaturesCollected < item.signaturesRequired) {
+    const eligible = group.operations.find((operation) => operation.batchEligible);
+    if (!eligible) {
       break;
     }
 
-    operationsToExecute.push(item);
-    currentNonce++;
+    picks.push(eligible);
   }
 
-  if (operationsToExecute.length === 0) {
-    throw new Error('No executable operations found in the queue.');
+  if (picks.length === 0) {
+    throw new Error('No batch-executable candidates returned for this deployment.');
   }
 
-  console.log('Found operations to execute:');
+  console.log('Picked operations to execute:');
   console.table(
-    operationsToExecute.map((op) => ({
-      id: op.id,
-      nonce: op.nonce,
-      type: op.operationType,
-      signatures: `${op.signaturesCollected}/${op.signaturesRequired}`,
+    picks.map((operation) => ({
+      id: operation.id,
+      nonce: operation.nonce,
+      type: operation.operationType,
+      signatures: `${operation.signaturesCollected}/${operation.signaturesRequired}`,
     })),
   );
 
@@ -76,7 +88,7 @@ runMain(async () => {
 
   const transaction = multisigClient.buildExecuteTransaction({
     contractAddress: accountDetails.account.contract,
-    operations: operationsToExecute,
+    operations: picks,
   });
 
   const txHash = await walletClient.sendTransaction({

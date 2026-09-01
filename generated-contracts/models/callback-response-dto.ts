@@ -111,7 +111,9 @@ export const CallbackResponseDtoTypeEnum = {
     PayoutExecuted: 'PAYOUT_EXECUTED',
     PayoutConfirmed: 'PAYOUT_CONFIRMED',
     PayoutFailed: 'PAYOUT_FAILED',
-    PayoutCancelled: 'PAYOUT_CANCELLED'
+    PayoutCancelled: 'PAYOUT_CANCELLED',
+    QueueOperation: 'QUEUE_OPERATION',
+    Operation: 'OPERATION'
 } as const;
 export type CallbackResponseDtoTypeEnum = typeof CallbackResponseDtoTypeEnum[keyof typeof CallbackResponseDtoTypeEnum];
 
@@ -131,7 +133,9 @@ export type CallbackResponseDtoStatusEnum = typeof CallbackResponseDtoStatusEnum
  */
 export const CallbackResponseDtoOperationTypeEnum = {
     Invoice: 'invoice',
-    Payout: 'payout'
+    Payout: 'payout',
+    Queue: 'queue',
+    Operation: 'operation'
 } as const;
 export type CallbackResponseDtoOperationTypeEnum = typeof CallbackResponseDtoOperationTypeEnum[keyof typeof CallbackResponseDtoOperationTypeEnum];
 

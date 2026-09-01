@@ -1,21 +1,18 @@
 /**
  * Tron: Queue batch execute use case:
  * - Authenticate via API key.
- * - Find consecutive ready-to-execute operations on the Tron network.
- * - Build one execute transaction covering all operations, sign and broadcast via TronWeb.
+ * - Check `batchableCount` on the queue to see whether batching is worth attempting.
+ * - Ask the backend for batch-executable candidates and pick one operation per nonce.
+ * - Build one execute transaction covering all picks, sign and broadcast via TronWeb.
  */
 import 'dotenv/config';
 import { TronWeb } from 'tronweb';
-import {
-  DefiClient,
-  type QueueOperation,
-  QueueOperationStatus,
-  type TronAddress,
-  TronMultisigBlockchainClient,
-} from '../src';
+import { DefiClient, type TronAddress, TronMultisigBlockchainClient } from '../src';
 import { DEFAULT_FEE_LIMIT, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
+
+const MIN_BATCHABLE_NONCES = 2;
 
 runMain(async () => {
   const env = requireEnvVars(requiredEnv);
@@ -25,32 +22,43 @@ runMain(async () => {
   const accountDetails = await client.getAccount();
   await client.selectChain(chainId);
 
-  const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Ready], pageSize: 50 });
-  const operationsToExecute: QueueOperation[] = [];
+  const queue = await client.getDeploymentQueue({ pageSize: 50 });
+  console.log(`Batchable Tron nonces from ${queue.nextExecutableNonce}: ${queue.batchableCount}`);
 
-  let currentNonce = Number(queue.nextExecutableNonce);
-  for (const item of queue.items) {
-    if (item.nonce !== currentNonce.toString()) {
-      break;
-    }
-    if (item.signaturesCollected < item.signaturesRequired) {
-      break;
-    }
-    operationsToExecute.push(item);
-    currentNonce++;
+  if (queue.batchableCount < MIN_BATCHABLE_NONCES) {
+    throw new Error('Nothing to batch — fewer than two consecutive nonces are ready.');
   }
 
-  if (operationsToExecute.length === 0) {
-    throw new Error('No executable operations found in the Tron queue.');
+  const { candidates } = await client.getBatchCandidates({});
+
+  // Nonces must execute consecutively, so a conflicting or unsatisfiable nonce
+  // ends the batch rather than being skipped over.
+  const picks = [];
+  for (const group of candidates) {
+    if (group.conflict) {
+      console.log(`Nonce ${group.nonce} has competing operations — stopping the batch here.`);
+      break;
+    }
+
+    const eligible = group.operations.find((operation) => operation.batchEligible);
+    if (!eligible) {
+      break;
+    }
+
+    picks.push(eligible);
   }
 
-  console.log('Found Tron operations to execute:');
+  if (picks.length === 0) {
+    throw new Error('No batch-executable candidates returned for this Tron deployment.');
+  }
+
+  console.log('Picked Tron operations to execute:');
   console.table(
-    operationsToExecute.map((op) => ({
-      id: op.id,
-      nonce: op.nonce,
-      type: op.operationType,
-      signatures: `${op.signaturesCollected}/${op.signaturesRequired}`,
+    picks.map((operation) => ({
+      id: operation.id,
+      nonce: operation.nonce,
+      type: operation.operationType,
+      signatures: `${operation.signaturesCollected}/${operation.signaturesRequired}`,
     })),
   );
 
@@ -76,7 +84,7 @@ runMain(async () => {
   const transaction = await tronClient.buildExecuteTransaction({
     contractAddress: accountDetails.account.contract as TronAddress,
     callerAddress: callerAddress as TronAddress,
-    operations: operationsToExecute,
+    operations: picks,
   });
 
   const signedTx = await tronWeb.trx.sign(transaction.raw as Parameters<typeof tronWeb.trx.sign>[0]);

@@ -14,6 +14,11 @@
 
 import * as runtime from '../runtime';
 import {
+    type BatchCandidatesResponseDto,
+    BatchCandidatesResponseDtoFromJSON,
+    BatchCandidatesResponseDtoToJSON,
+} from '../models/batch-candidates-response-dto';
+import {
     type CreateClaimWhitelistChangeOperationDto,
     CreateClaimWhitelistChangeOperationDtoFromJSON,
     CreateClaimWhitelistChangeOperationDtoToJSON,
@@ -72,6 +77,10 @@ export interface QueueOperationsControllerCreateRejectOperationV1Request {
 export interface QueueOperationsControllerDeleteOperationV1Request {
     deploymentId: string;
     operationId: string;
+}
+
+export interface QueueOperationsControllerGetBatchCandidatesV1Request {
+    deploymentId: string;
 }
 
 export interface QueueOperationsControllerGetDeploymentQueueV1Request {
@@ -347,6 +356,57 @@ export class QueueOperationsApi extends runtime.BaseAPI {
      */
     async queueOperationsControllerDeleteOperationV1(requestParameters: QueueOperationsControllerDeleteOperationV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.queueOperationsControllerDeleteOperationV1Raw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for queueOperationsControllerGetBatchCandidatesV1 without sending the request
+     */
+    async queueOperationsControllerGetBatchCandidatesV1RequestOpts(requestParameters: QueueOperationsControllerGetBatchCandidatesV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling queueOperationsControllerGetBatchCandidatesV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/queue/batch-candidates`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Returns the contiguous run of ready candidates from the next executable nonce, grouped by nonce and conflict-flagged, so the client can let the user pick how many to execute and which candidate to run per conflicting nonce. The backend owns readiness, contiguity, and conflict grouping; it does not pre-select the batch.
+     * Get batch-executable candidates
+     */
+    async queueOperationsControllerGetBatchCandidatesV1Raw(requestParameters: QueueOperationsControllerGetBatchCandidatesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BatchCandidatesResponseDto>> {
+        const requestOptions = await this.queueOperationsControllerGetBatchCandidatesV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => BatchCandidatesResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Returns the contiguous run of ready candidates from the next executable nonce, grouped by nonce and conflict-flagged, so the client can let the user pick how many to execute and which candidate to run per conflicting nonce. The backend owns readiness, contiguity, and conflict grouping; it does not pre-select the batch.
+     * Get batch-executable candidates
+     */
+    async queueOperationsControllerGetBatchCandidatesV1(requestParameters: QueueOperationsControllerGetBatchCandidatesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BatchCandidatesResponseDto> {
+        const response = await this.queueOperationsControllerGetBatchCandidatesV1Raw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

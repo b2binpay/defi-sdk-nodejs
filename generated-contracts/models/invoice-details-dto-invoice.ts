@@ -132,11 +132,11 @@ export interface InvoiceDetailsDtoInvoice {
      */
     trackingId: string | null;
     /**
-     * Callback URL for notifications
-     * @type {string}
+     * When true, suppresses all callbacks for this invoice and its INVOICE_DEPOSIT operations
+     * @type {boolean}
      * @memberof InvoiceDetailsDtoInvoice
      */
-    callbackUrl: string | null;
+    skipCallbacks: boolean;
     /**
      * Last update timestamp
      * @type {string}
@@ -201,7 +201,7 @@ export function instanceOfInvoiceDetailsDtoInvoice(value: object): value is Invo
     if (!('paidAmount' in value) || value['paidAmount'] === undefined) return false;
     if (!('paidAmountBaseCurrency' in value) || value['paidAmountBaseCurrency'] === undefined) return false;
     if (!('trackingId' in value) || value['trackingId'] === undefined) return false;
-    if (!('callbackUrl' in value) || value['callbackUrl'] === undefined) return false;
+    if (!('skipCallbacks' in value) || value['skipCallbacks'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
     if (!('hasRiskyNativeDeposit' in value) || value['hasRiskyNativeDeposit'] === undefined) return false;
     return true;
@@ -232,7 +232,7 @@ export function InvoiceDetailsDtoInvoiceFromJSONTyped(json: any, ignoreDiscrimin
         'paidAmount': json['paidAmount'],
         'paidAmountBaseCurrency': json['paidAmountBaseCurrency'],
         'trackingId': json['trackingId'],
-        'callbackUrl': json['callbackUrl'],
+        'skipCallbacks': json['skipCallbacks'],
         'updatedAt': json['updatedAt'],
         'riskyCurrencyIds': json['riskyCurrencyIds'] == null ? undefined : json['riskyCurrencyIds'],
         'hasRiskyNativeDeposit': json['hasRiskyNativeDeposit'],
@@ -267,7 +267,7 @@ export function InvoiceDetailsDtoInvoiceToJSONTyped(value?: InvoiceDetailsDtoInv
         'paidAmount': value['paidAmount'],
         'paidAmountBaseCurrency': value['paidAmountBaseCurrency'],
         'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
+        'skipCallbacks': value['skipCallbacks'],
         'updatedAt': value['updatedAt'],
         'riskyCurrencyIds': value['riskyCurrencyIds'],
         'hasRiskyNativeDeposit': value['hasRiskyNativeDeposit'],

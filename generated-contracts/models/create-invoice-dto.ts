@@ -32,11 +32,11 @@ export interface CreateInvoiceDto {
      */
     trackingId?: string | null;
     /**
-     * 
-     * @type {string}
+     * When true, suppresses all callbacks for this invoice and its INVOICE_DEPOSIT operations
+     * @type {boolean}
      * @memberof CreateInvoiceDto
      */
-    callbackUrl?: string | null;
+    skipCallbacks?: boolean;
     /**
      * 
      * @type {string}
@@ -85,7 +85,7 @@ export function CreateInvoiceDtoFromJSONTyped(json: any, ignoreDiscriminator: bo
         
         'requestedAmount': json['requestedAmount'],
         'trackingId': json['trackingId'] == null ? undefined : json['trackingId'],
-        'callbackUrl': json['callbackUrl'] == null ? undefined : json['callbackUrl'],
+        'skipCallbacks': json['skipCallbacks'] == null ? undefined : json['skipCallbacks'],
         'paymentPageButtonUrl': json['paymentPageButtonUrl'],
         'paymentPageButtonText': json['paymentPageButtonText'],
         'currencyIds': json['currencyIds'] == null ? undefined : json['currencyIds'],
@@ -106,7 +106,7 @@ export function CreateInvoiceDtoToJSONTyped(value?: CreateInvoiceDto | null, ign
         
         'requestedAmount': value['requestedAmount'],
         'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
+        'skipCallbacks': value['skipCallbacks'],
         'paymentPageButtonUrl': value['paymentPageButtonUrl'],
         'paymentPageButtonText': value['paymentPageButtonText'],
         'currencyIds': value['currencyIds'],

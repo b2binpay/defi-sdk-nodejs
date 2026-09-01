@@ -23,7 +23,6 @@ runMain(async () => {
   const invoice = await client.createInvoice({
     requestedAmount: '100.56',
     trackingId: `API-EXAMPLE-${Date.now()}`,
-    callbackUrl: null,
     paymentPageButtonUrl: null,
     paymentPageButtonText: null,
     currencyIds: [currency.id],

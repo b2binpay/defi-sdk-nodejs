@@ -4,6 +4,9 @@ import type {
   AssetBalanceDto,
   AssetBalancesResponseDto,
   BalanceSummaryResponseDto,
+  BatchCandidatesResponseDto,
+  BatchCandidatesResponseDtoCandidatesInner,
+  BatchCandidatesResponseDtoCandidatesInnerOperationsInner,
   BlockchainCancelUnstakingOperationResponseDto,
   BlockchainClaimOperationResponseDto,
   BlockchainClaimRewardsOperationResponseDto,
@@ -39,6 +42,8 @@ import type {
   DeploymentParamsResponseDto,
   DeploymentQueueResponseDto,
   GetCallbacksResponseDto,
+  InvoiceDetailsDtoInvoice,
+  InvoiceDetailsDtoInvoiceBlockedAmountsInner,
   InvoiceResponseDto,
   InvoicesResponseDto,
   NetworkResponseDto,
@@ -114,8 +119,20 @@ export type Invoice = Omit<InvoiceResponseDto, 'status' | 'availableCurrencies'>
   availableCurrencies: Currency[];
 };
 
+/** Aggregated amount of AML-blocked deposits for one currency. */
+export type BlockedAmount = InvoiceDetailsDtoInvoiceBlockedAmountsInner;
+
+/**
+ * The single-invoice read carries `blockedAmounts`, which the list read does not —
+ * hence a type of its own rather than a reuse of `Invoice`.
+ */
+export type InvoiceDetail = Omit<InvoiceDetailsDtoInvoice, 'status' | 'availableCurrencies'> & {
+  status: InvoiceStatus;
+  availableCurrencies: Currency[];
+};
+
 export interface InvoiceDetails {
-  invoice: Invoice;
+  invoice: InvoiceDetail;
 }
 
 export type InvoiceList = Omit<InvoicesResponseDto, 'items'> & {
@@ -205,6 +222,24 @@ export type DeploymentQueue = Omit<DeploymentQueueResponseDto, 'items'> & {
   items: QueueOperation[];
 };
 
+export type BatchCandidateOperation = Omit<
+  BatchCandidatesResponseDtoCandidatesInnerOperationsInner,
+  'operationType' | 'status' | 'calls' | 'signatures'
+> & {
+  operationType: QueueOperationType;
+  status: QueueOperationStatus;
+  calls: Call[];
+  signatures: OperationSignature[];
+};
+
+export type BatchCandidateNonceGroup = Omit<BatchCandidatesResponseDtoCandidatesInner, 'operations'> & {
+  operations: BatchCandidateOperation[];
+};
+
+export type BatchCandidates = Omit<BatchCandidatesResponseDto, 'candidates'> & {
+  candidates: BatchCandidateNonceGroup[];
+};
+
 export interface ExecuteBatchOperationsResult {
   success: boolean;
 }
@@ -245,6 +280,8 @@ export enum CallbackType {
   PayoutConfirmed = 'PAYOUT_CONFIRMED',
   PayoutFailed = 'PAYOUT_FAILED',
   PayoutCancelled = 'PAYOUT_CANCELLED',
+  QueueOperation = 'QUEUE_OPERATION',
+  Operation = 'OPERATION',
 }
 
 export enum CallbackStatus {
@@ -257,6 +294,8 @@ export enum CallbackStatus {
 export enum CallbackOperationType {
   Invoice = 'invoice',
   Payout = 'payout',
+  Queue = 'queue',
+  Operation = 'operation',
 }
 
 export type Callback = Omit<CallbackResponseDto, 'type' | 'status' | 'operationType'> & {

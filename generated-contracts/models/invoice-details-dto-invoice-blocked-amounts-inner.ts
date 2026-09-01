@@ -26,7 +26,7 @@ export interface InvoiceDetailsDtoInvoiceBlockedAmountsInner {
      */
     currencyId: string;
     /**
-     * Total blocked amount in this currency (sum of BLOCKED deposit operations)
+     * Total blocked amount in this currency, in the currency decimals (sum of BLOCKED deposit operations)
      * @type {string}
      * @memberof InvoiceDetailsDtoInvoiceBlockedAmountsInner
      */

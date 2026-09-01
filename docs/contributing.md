@@ -14,7 +14,6 @@
 - `npm run lint`: Check and format code with Biome.
 - `npm run lint:fix`: Auto-fix Biome issues.
 - `npm run generate:api`: Regenerate REST client from the remote OpenAPI spec.
-- `npm run generate:api:local`: Same as above but using `openapitools.local.json`.
 - `npx tsc --noEmit`: Type-check the project without emitting files.
 - `npm run example:get-account-info`: Run the reference example (requires `.env`).
 
@@ -27,7 +26,7 @@ cp .env.example .env
 ```
 
 Required variables: `API_BASE_URL`, `API_KEY`, `CHAIN_ID`, `RPC_URL`, `WALLET_PRIVATE_KEY`.
-See `.env.example` for the full list including optional TRON-specific variables.
+See `.env.example` for the full list. The TRON examples read the same variables — point `CHAIN_ID` and `RPC_URL` at a TVM chain.
 
 ## Workflow
 
