@@ -28,6 +28,10 @@ models/asset-balance-short-response-dto.ts
 models/asset-balances-response-dto.ts
 models/asset-chain-balance-dto.ts
 models/balance-summary-response-dto.ts
+models/batch-candidates-response-dto-candidates-inner-operations-inner-payload.ts
+models/batch-candidates-response-dto-candidates-inner-operations-inner.ts
+models/batch-candidates-response-dto-candidates-inner.ts
+models/batch-candidates-response-dto.ts
 models/blockchain-asset-balance-dto-currency.ts
 models/blockchain-asset-balance-dto.ts
 models/blockchain-balance-response-dto.ts
@@ -84,7 +88,6 @@ models/claim-item-dto.ts
 models/claim-to-refund-payload.ts
 models/claims-response-dto.ts
 models/cowswap-operation-create-response-dto.ts
-models/cowswap-payload.ts
 models/create-claim-whitelist-change-operation-dto.ts
 models/create-cowswap-operation-dto.ts
 models/create-cross-chain-transfer-dto.ts

@@ -130,7 +130,6 @@ runMain(async () => {
   const invoice = await client.createInvoice({
     requestedAmount: INVOICE_AMOUNT,
     trackingId,
-    callbackUrl: null,
     paymentPageButtonUrl: null,
     paymentPageButtonText: null,
     currencyIds: [nativeCurrency.id],

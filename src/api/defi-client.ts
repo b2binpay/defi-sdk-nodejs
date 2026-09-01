@@ -64,6 +64,7 @@ import type {
   AssetSortField,
   AssetSortOrder,
   BalanceSummary,
+  BatchCandidates,
   BlockchainTransactionDetails,
   BlockchainTransactionList,
   BlockchainTransactionSortField,
@@ -111,6 +112,7 @@ import {
   mapAccountDetails,
   mapAssetBalanceList,
   mapBalanceSummary,
+  mapBatchCandidates,
   mapBlockchainTransactionDetails,
   mapBlockchainTransactionList,
   mapCallbackList,
@@ -170,7 +172,8 @@ export interface CreatePayoutParams extends ChainScopedParams {
   amount: string;
   recipient: string;
   trackingId?: string;
-  callbackUrl?: string;
+  /** Suppress callbacks for the queue operation and its downstream operation. */
+  skipCallbacks?: boolean;
   nonce?: string;
 }
 
@@ -234,17 +237,19 @@ export interface GetInvoiceParams extends ChainScopedParams {
 export interface CreateInvoiceParams extends ChainScopedParams {
   requestedAmount?: string | null;
   trackingId?: string | null;
-  callbackUrl?: string | null;
+  /** Suppress all callbacks for this invoice and its INVOICE_DEPOSIT operations. */
+  skipCallbacks?: boolean;
   paymentPageButtonUrl?: string | null;
   paymentPageButtonText?: string | null;
   currencyIds?: string[];
+  /** Absolute expiration timestamp; a CREATED invoice becomes EXPIRED after it. Omit to never expire. */
+  expiresAt?: Date | null;
 }
 
 export interface UpdateInvoiceParams extends ChainScopedParams {
   invoiceId: string;
   requestedAmount?: string | null;
   trackingId?: string | null;
-  callbackUrl?: string | null;
   paymentPageButtonUrl?: string | null;
   paymentPageButtonText?: string | null;
   currencyIds?: string[];
@@ -279,7 +284,6 @@ export interface GetPayoutParams extends ChainScopedParams {
 export interface UpdatePayoutParams extends ChainScopedParams {
   payoutId: string;
   trackingId?: string | null;
-  callbackUrl?: string | null;
 }
 
 export interface GetClaimsParams extends ChainScopedParams {
@@ -429,6 +433,18 @@ export interface GetBlockchainTransactionsParams extends ChainScopedParams {
 export interface GetBlockchainTransactionParams extends ChainScopedParams {
   transactionId: string;
 }
+
+/** Nonces are arbitrary-precision decimal strings, so they compare as BigInt rather than Number. */
+const byNonceDescending = (left: QueueOperation, right: QueueOperation): number => {
+  const leftNonce = BigInt(left.nonce);
+  const rightNonce = BigInt(right.nonce);
+
+  if (leftNonce === rightNonce) {
+    return 0;
+  }
+
+  return leftNonce > rightNonce ? -1 : 1;
+};
 
 export class DefiClient {
   private readonly config: Configuration;
@@ -721,10 +737,11 @@ export class DefiClient {
         createInvoiceDto: {
           requestedAmount: params.requestedAmount ?? null,
           trackingId: params.trackingId ?? null,
-          callbackUrl: params.callbackUrl ?? null,
+          skipCallbacks: params.skipCallbacks,
           paymentPageButtonUrl: params.paymentPageButtonUrl ?? null,
           paymentPageButtonText: params.paymentPageButtonText ?? null,
           currencyIds: params.currencyIds,
+          expiresAt: params.expiresAt,
         },
       }),
     );
@@ -759,7 +776,7 @@ export class DefiClient {
           amount: params.amount,
           toAddress: params.recipient,
           trackingId: params.trackingId,
-          callbackUrl: params.callbackUrl,
+          skipCallbacks: params.skipCallbacks,
           nonce: params.nonce,
         },
       }),
@@ -835,6 +852,21 @@ export class DefiClient {
     );
 
     return mapDeploymentQueue(response);
+  }
+
+  /**
+   * Fetch the contiguous run of batch-executable candidates starting at the next executable nonce.
+   * Groups are returned per nonce and flagged when several operations compete for the same one —
+   * the caller picks how many nonces to execute and which candidate to run for each conflict.
+   */
+  async getBatchCandidates(params: ChainScopedParams = {}): Promise<BatchCandidates> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.queueOperationsApi.queueOperationsControllerGetBatchCandidatesV1({ deploymentId }),
+    );
+
+    return mapBatchCandidates(response);
   }
 
   /** Fetch a single queue operation by id. */
@@ -1268,7 +1300,10 @@ export class DefiClient {
   /**
    * Delete every deletable queue operation owned by this API key.
    * Server only accepts deletion for PENDING/READY; other statuses are skipped.
-   * Returns deleted operation ids.
+   * Returns deleted operation ids, highest nonce first.
+   *
+   * Narrowing `statuses` can leave a live operation above the ones being deleted,
+   * and the server rejects deleting anything below the highest live nonce.
    */
   async deleteAllQueueOperations(params: DeleteAllQueueOperationsParams = {}): Promise<string[]> {
     const statuses: DeletableQueueOperationStatus[] = params.statuses ?? [
@@ -1277,20 +1312,25 @@ export class DefiClient {
     ];
     const pageSize = 100;
     const deletedIds: string[] = [];
+    const pending: QueueOperation[] = [];
 
     /**
-     * Always fetch page 1: after deleting items, the remaining matches collapse
-     * back to page 1, so advancing the cursor would skip the survivors.
+     * The whole queue has to be collected before deleting anything: the server only
+     * accepts the highest live nonce, and page 1 holds the lowest ones.
      */
+    let page = 1;
     while (true) {
-      const queue = await this.getDeploymentQueue({ chainId: params.chainId, statuses, page: 1, pageSize });
-      if (queue.items.length === 0) {
+      const queue = await this.getDeploymentQueue({ chainId: params.chainId, statuses, page, pageSize });
+      pending.push(...queue.items);
+      if (queue.items.length < pageSize) {
         break;
       }
-      for (const op of queue.items) {
-        await this.deleteQueueOperation({ chainId: params.chainId, operationId: op.id });
-        deletedIds.push(op.id);
-      }
+      page++;
+    }
+
+    for (const operation of pending.sort(byNonceDescending)) {
+      await this.deleteQueueOperation({ chainId: params.chainId, operationId: operation.id });
+      deletedIds.push(operation.id);
     }
 
     return deletedIds;
@@ -1380,15 +1420,7 @@ export class DefiClient {
   }
 
   private buildInvoiceUpdatePayload(params: UpdateInvoiceParams): UpdateInvoiceDto {
-    const {
-      requestedAmount,
-      trackingId,
-      callbackUrl,
-      paymentPageButtonUrl,
-      paymentPageButtonText,
-      currencyIds,
-      status,
-    } = params;
+    const { requestedAmount, trackingId, paymentPageButtonUrl, paymentPageButtonText, currencyIds, status } = params;
 
     const payload: Partial<UpdateInvoiceDto> = {};
 
@@ -1398,10 +1430,6 @@ export class DefiClient {
 
     if (trackingId !== undefined) {
       payload.trackingId = trackingId;
-    }
-
-    if (callbackUrl !== undefined) {
-      payload.callbackUrl = callbackUrl;
     }
 
     if (paymentPageButtonUrl !== undefined) {
@@ -1428,15 +1456,11 @@ export class DefiClient {
   }
 
   private buildPayoutUpdatePayload(params: UpdatePayoutParams): UpdatePayoutDto {
-    const { trackingId, callbackUrl } = params;
+    const { trackingId } = params;
     const payload: Partial<UpdatePayoutDto> = {};
 
     if (trackingId !== undefined) {
       payload.trackingId = trackingId;
-    }
-
-    if (callbackUrl !== undefined) {
-      payload.callbackUrl = callbackUrl;
     }
 
     if (Object.keys(payload).length === 0) {

@@ -40,17 +40,31 @@ export interface CrossChainQuoteResponseItemDto {
      */
     routeType: string;
     /**
-     * Source amount in smallest unit (wei)
+     * Source amount in raw smallest units (wei / sun). Deprecated: use `srcAmountFormatted`.
      * @type {string}
      * @memberof CrossChainQuoteResponseItemDto
+     * @deprecated
      */
     srcAmount: string;
     /**
-     * Destination amount in smallest unit
+     * Source amount converted to the source currency decimals; null when the raw value cannot be parsed or the currency is unknown
      * @type {string}
      * @memberof CrossChainQuoteResponseItemDto
      */
+    srcAmountFormatted: string | null;
+    /**
+     * Destination amount in raw smallest units. Deprecated: use `dstAmountFormatted`.
+     * @type {string}
+     * @memberof CrossChainQuoteResponseItemDto
+     * @deprecated
+     */
     dstAmount: string;
+    /**
+     * Destination amount converted to the destination currency decimals; null when the raw value cannot be parsed or the currency is unknown
+     * @type {string}
+     * @memberof CrossChainQuoteResponseItemDto
+     */
+    dstAmountFormatted: string | null;
     /**
      * Fee in USD
      * @type {string}
@@ -90,7 +104,9 @@ export function instanceOfCrossChainQuoteResponseItemDto(value: object): value i
     if (!('id' in value) || value['id'] === undefined) return false;
     if (!('routeType' in value) || value['routeType'] === undefined) return false;
     if (!('srcAmount' in value) || value['srcAmount'] === undefined) return false;
+    if (!('srcAmountFormatted' in value) || value['srcAmountFormatted'] === undefined) return false;
     if (!('dstAmount' in value) || value['dstAmount'] === undefined) return false;
+    if (!('dstAmountFormatted' in value) || value['dstAmountFormatted'] === undefined) return false;
     if (!('feeUsd' in value) || value['feeUsd'] === undefined) return false;
     if (!('feePercent' in value) || value['feePercent'] === undefined) return false;
     if (!('estimatedDurationMs' in value) || value['estimatedDurationMs'] === undefined) return false;
@@ -112,7 +128,9 @@ export function CrossChainQuoteResponseItemDtoFromJSONTyped(json: any, ignoreDis
         'id': json['id'],
         'routeType': json['routeType'],
         'srcAmount': json['srcAmount'],
+        'srcAmountFormatted': json['srcAmountFormatted'],
         'dstAmount': json['dstAmount'],
+        'dstAmountFormatted': json['dstAmountFormatted'],
         'feeUsd': json['feeUsd'],
         'feePercent': json['feePercent'],
         'estimatedDurationMs': json['estimatedDurationMs'],
@@ -135,7 +153,9 @@ export function CrossChainQuoteResponseItemDtoToJSONTyped(value?: CrossChainQuot
         'id': value['id'],
         'routeType': value['routeType'],
         'srcAmount': value['srcAmount'],
+        'srcAmountFormatted': value['srcAmountFormatted'],
         'dstAmount': value['dstAmount'],
+        'dstAmountFormatted': value['dstAmountFormatted'],
         'feeUsd': value['feeUsd'],
         'feePercent': value['feePercent'],
         'estimatedDurationMs': value['estimatedDurationMs'],

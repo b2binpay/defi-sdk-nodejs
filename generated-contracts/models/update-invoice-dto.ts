@@ -36,12 +36,6 @@ export interface UpdateInvoiceDto {
      * @type {string}
      * @memberof UpdateInvoiceDto
      */
-    callbackUrl?: string | null;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateInvoiceDto
-     */
     paymentPageButtonUrl: string | null;
     /**
      * 
@@ -98,7 +92,6 @@ export function UpdateInvoiceDtoFromJSONTyped(json: any, ignoreDiscriminator: bo
         
         'requestedAmount': json['requestedAmount'],
         'trackingId': json['trackingId'] == null ? undefined : json['trackingId'],
-        'callbackUrl': json['callbackUrl'] == null ? undefined : json['callbackUrl'],
         'paymentPageButtonUrl': json['paymentPageButtonUrl'],
         'paymentPageButtonText': json['paymentPageButtonText'],
         'currencyIds': json['currencyIds'] == null ? undefined : json['currencyIds'],
@@ -119,7 +112,6 @@ export function UpdateInvoiceDtoToJSONTyped(value?: UpdateInvoiceDto | null, ign
         
         'requestedAmount': value['requestedAmount'],
         'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
         'paymentPageButtonUrl': value['paymentPageButtonUrl'],
         'paymentPageButtonText': value['paymentPageButtonText'],
         'currencyIds': value['currencyIds'],

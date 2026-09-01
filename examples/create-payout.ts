@@ -26,7 +26,6 @@ runMain(async () => {
     currencyId: currency.id,
     amount: '0.00005',
     recipient: env.PAYOUT_RECIPIENT,
-    callbackUrl: undefined,
     trackingId: undefined,
   });
 
@@ -39,7 +38,7 @@ runMain(async () => {
     amount: payoutDetails.amount,
     currency: payoutDetails.currency.symbol,
     queueOperationId: payoutDetails.queueOperationId,
-    callbackUrl: payoutDetails.callbackUrl,
+    skipCallbacks: payoutDetails.skipCallbacks,
     trackingId: payoutDetails.trackingId,
   });
 

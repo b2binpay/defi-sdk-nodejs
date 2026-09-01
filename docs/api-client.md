@@ -129,8 +129,8 @@ import { InvoiceStatus } from '@b2binpay/defi-sdk';
 const invoice = await client.createInvoice({
   requestedAmount: '100',
   currencyIds: [usdt.id],
-  callbackUrl: 'https://merchant.example/webhook',
   trackingId: 'order-42',
+  skipCallbacks: false, // callbacks are configured per account; true suppresses them for this invoice
   // chainId: 1  — uses selected chain if omitted
 });
 
@@ -144,7 +144,7 @@ const open = await client.getInvoices({
 // Fetch details
 const details = await client.getInvoice({ invoiceId: invoice.id });
 
-// Update (cancel, patch amount or callback URL)
+// Update (cancel, patch amount, tracking id, payment-page fields or currencies)
 await client.updateInvoice({
   invoiceId: invoice.id,
   status: InvoiceStatus.Cancelled,
@@ -162,7 +162,7 @@ const payout = await client.createPayout({
   amount: '50',
   recipient: '0xRecipientAddress',
   trackingId: 'payout-001',
-  callbackUrl: 'https://merchant.example/webhook',
+  skipCallbacks: false,
 });
 
 // List
@@ -183,6 +183,11 @@ import { QueueOperationStatus } from '@b2binpay/defi-sdk';
 // Fetch pending/ready operations
 const queue = await client.getDeploymentQueue({});
 const pending = queue.items.filter((op) => op.status === QueueOperationStatus.Pending);
+
+// Batch-executable candidates: contiguous nonces starting at the next executable one.
+// `batchableCount` on the queue response tells you whether the batch action is worth showing.
+const { candidates } = await client.getBatchCandidates({});
+const uncontested = candidates.filter((group) => !group.conflict);
 
 // Submit a signature (raw ECDSA hex — packed automatically by the SDK)
 await client.submitOperationSignature({

@@ -209,11 +209,18 @@ export interface BlockchainCrossChainTransferOperationResponseDto {
      */
     srcCurrencyId: string;
     /**
-     * Source-chain amount in raw smallest units (numeric string)
+     * Source-chain amount in raw smallest units (numeric string). Deprecated: use `srcAmountFormatted`.
+     * @type {string}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     * @deprecated
+     */
+    srcAmount: string;
+    /**
+     * Source-chain amount converted to the source currency decimals; null when the currency or raw value cannot be resolved
      * @type {string}
      * @memberof BlockchainCrossChainTransferOperationResponseDto
      */
-    srcAmount: string;
+    srcAmountFormatted: string | null;
     /**
      * Destination-chain currency id (chainId-address composite)
      * @type {string}
@@ -227,11 +234,18 @@ export interface BlockchainCrossChainTransferOperationResponseDto {
      */
     dstWalletAddress: UniversalAddress;
     /**
-     * Destination-chain amount in raw smallest units (numeric string)
+     * Destination-chain amount in raw smallest units (numeric string). Deprecated: use `dstAmountFormatted`.
+     * @type {string}
+     * @memberof BlockchainCrossChainTransferOperationResponseDto
+     * @deprecated
+     */
+    dstAmount: string;
+    /**
+     * Destination-chain amount converted to the destination currency decimals; null when the currency or raw value cannot be resolved
      * @type {string}
      * @memberof BlockchainCrossChainTransferOperationResponseDto
      */
-    dstAmount: string;
+    dstAmountFormatted: string | null;
     /**
      * Bridge fee in USD (string, 2 decimals) — null when provider did not return it
      * @type {string}
@@ -392,9 +406,11 @@ export function instanceOfBlockchainCrossChainTransferOperationResponseDto(value
     if (!('routeType' in value) || value['routeType'] === undefined) return false;
     if (!('srcCurrencyId' in value) || value['srcCurrencyId'] === undefined) return false;
     if (!('srcAmount' in value) || value['srcAmount'] === undefined) return false;
+    if (!('srcAmountFormatted' in value) || value['srcAmountFormatted'] === undefined) return false;
     if (!('dstCurrencyId' in value) || value['dstCurrencyId'] === undefined) return false;
     if (!('dstWalletAddress' in value) || value['dstWalletAddress'] === undefined) return false;
     if (!('dstAmount' in value) || value['dstAmount'] === undefined) return false;
+    if (!('dstAmountFormatted' in value) || value['dstAmountFormatted'] === undefined) return false;
     if (!('feeUsd' in value) || value['feeUsd'] === undefined) return false;
     if (!('feePercent' in value) || value['feePercent'] === undefined) return false;
     if (!('estimatedDurationMs' in value) || value['estimatedDurationMs'] === undefined) return false;
@@ -444,9 +460,11 @@ export function BlockchainCrossChainTransferOperationResponseDtoFromJSONTyped(js
         'routeType': json['routeType'],
         'srcCurrencyId': json['srcCurrencyId'],
         'srcAmount': json['srcAmount'],
+        'srcAmountFormatted': json['srcAmountFormatted'],
         'dstCurrencyId': json['dstCurrencyId'],
         'dstWalletAddress': UniversalAddressFromJSON(json['dstWalletAddress']),
         'dstAmount': json['dstAmount'],
+        'dstAmountFormatted': json['dstAmountFormatted'],
         'feeUsd': json['feeUsd'],
         'feePercent': json['feePercent'],
         'estimatedDurationMs': json['estimatedDurationMs'],
@@ -497,9 +515,11 @@ export function BlockchainCrossChainTransferOperationResponseDtoToJSONTyped(valu
         'routeType': value['routeType'],
         'srcCurrencyId': value['srcCurrencyId'],
         'srcAmount': value['srcAmount'],
+        'srcAmountFormatted': value['srcAmountFormatted'],
         'dstCurrencyId': value['dstCurrencyId'],
         'dstWalletAddress': UniversalAddressToJSON(value['dstWalletAddress']),
         'dstAmount': value['dstAmount'],
+        'dstAmountFormatted': value['dstAmountFormatted'],
         'feeUsd': value['feeUsd'],
         'feePercent': value['feePercent'],
         'estimatedDurationMs': value['estimatedDurationMs'],

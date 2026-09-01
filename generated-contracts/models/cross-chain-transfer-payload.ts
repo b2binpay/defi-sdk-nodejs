@@ -20,12 +20,6 @@ import { mapValues } from '../runtime';
  */
 export interface CrossChainTransferPayload {
     /**
-     * Reference to the cross-chain transfer operation
-     * @type {string}
-     * @memberof CrossChainTransferPayload
-     */
-    operationId: string;
-    /**
      * LayerZero user steps (TRANSACTION-only) bundled into multisend
      * @type {Array<any>}
      * @memberof CrossChainTransferPayload
@@ -37,7 +31,6 @@ export interface CrossChainTransferPayload {
  * Check if a given object implements the CrossChainTransferPayload interface.
  */
 export function instanceOfCrossChainTransferPayload(value: object): value is CrossChainTransferPayload {
-    if (!('operationId' in value) || value['operationId'] === undefined) return false;
     if (!('userSteps' in value) || value['userSteps'] === undefined) return false;
     return true;
 }
@@ -52,7 +45,6 @@ export function CrossChainTransferPayloadFromJSONTyped(json: any, ignoreDiscrimi
     }
     return {
         
-        'operationId': json['operationId'],
         'userSteps': json['userSteps'],
     };
 }
@@ -68,7 +60,6 @@ export function CrossChainTransferPayloadToJSONTyped(value?: CrossChainTransferP
 
     return {
         
-        'operationId': value['operationId'],
         'userSteps': value['userSteps'],
     };
 }

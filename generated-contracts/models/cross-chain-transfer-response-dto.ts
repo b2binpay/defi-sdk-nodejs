@@ -77,11 +77,18 @@ export interface CrossChainTransferResponseDto {
      */
     srcCurrency: CurrencyResponseDto;
     /**
-     * 
+     * Source amount in raw smallest units (wei / sun). Deprecated: use `srcAmountFormatted`.
+     * @type {string}
+     * @memberof CrossChainTransferResponseDto
+     * @deprecated
+     */
+    srcAmount: string;
+    /**
+     * Source amount converted to `srcCurrency.decimals`; null when the raw value cannot be parsed
      * @type {string}
      * @memberof CrossChainTransferResponseDto
      */
-    srcAmount: string;
+    srcAmountFormatted: string | null;
     /**
      * 
      * @type {CurrencyResponseDto}
@@ -89,11 +96,18 @@ export interface CrossChainTransferResponseDto {
      */
     dstCurrency: CurrencyResponseDto;
     /**
-     * 
+     * Destination amount in raw smallest units. Deprecated: use `dstAmountFormatted`.
+     * @type {string}
+     * @memberof CrossChainTransferResponseDto
+     * @deprecated
+     */
+    dstAmount: string;
+    /**
+     * Destination amount converted to `dstCurrency.decimals`; null when the raw value cannot be parsed
      * @type {string}
      * @memberof CrossChainTransferResponseDto
      */
-    dstAmount: string;
+    dstAmountFormatted: string | null;
     /**
      * 
      * @type {UniversalAddress}
@@ -144,8 +158,10 @@ export function instanceOfCrossChainTransferResponseDto(value: object): value is
     if (!('routeType' in value) || value['routeType'] === undefined) return false;
     if (!('srcCurrency' in value) || value['srcCurrency'] === undefined) return false;
     if (!('srcAmount' in value) || value['srcAmount'] === undefined) return false;
+    if (!('srcAmountFormatted' in value) || value['srcAmountFormatted'] === undefined) return false;
     if (!('dstCurrency' in value) || value['dstCurrency'] === undefined) return false;
     if (!('dstAmount' in value) || value['dstAmount'] === undefined) return false;
+    if (!('dstAmountFormatted' in value) || value['dstAmountFormatted'] === undefined) return false;
     if (!('dstWalletAddress' in value) || value['dstWalletAddress'] === undefined) return false;
     if (!('feeUsd' in value) || value['feeUsd'] === undefined) return false;
     if (!('feePercent' in value) || value['feePercent'] === undefined) return false;
@@ -173,8 +189,10 @@ export function CrossChainTransferResponseDtoFromJSONTyped(json: any, ignoreDisc
         'routeType': json['routeType'],
         'srcCurrency': CurrencyResponseDtoFromJSON(json['srcCurrency']),
         'srcAmount': json['srcAmount'],
+        'srcAmountFormatted': json['srcAmountFormatted'],
         'dstCurrency': CurrencyResponseDtoFromJSON(json['dstCurrency']),
         'dstAmount': json['dstAmount'],
+        'dstAmountFormatted': json['dstAmountFormatted'],
         'dstWalletAddress': UniversalAddressFromJSON(json['dstWalletAddress']),
         'feeUsd': json['feeUsd'],
         'feePercent': json['feePercent'],
@@ -203,8 +221,10 @@ export function CrossChainTransferResponseDtoToJSONTyped(value?: CrossChainTrans
         'routeType': value['routeType'],
         'srcCurrency': CurrencyResponseDtoToJSON(value['srcCurrency']),
         'srcAmount': value['srcAmount'],
+        'srcAmountFormatted': value['srcAmountFormatted'],
         'dstCurrency': CurrencyResponseDtoToJSON(value['dstCurrency']),
         'dstAmount': value['dstAmount'],
+        'dstAmountFormatted': value['dstAmountFormatted'],
         'dstWalletAddress': UniversalAddressToJSON(value['dstWalletAddress']),
         'feeUsd': value['feeUsd'],
         'feePercent': value['feePercent'],

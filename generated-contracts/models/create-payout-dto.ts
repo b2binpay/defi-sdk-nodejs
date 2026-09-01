@@ -58,11 +58,11 @@ export interface CreatePayoutDto {
      */
     trackingId?: string;
     /**
-     * 
-     * @type {string}
+     * When true, suppresses callbacks for the queue operation and its downstream operation
+     * @type {boolean}
      * @memberof CreatePayoutDto
      */
-    callbackUrl?: string;
+    skipCallbacks?: boolean;
     /**
      * Nonce (transaction ordering) as a non-negative integer string
      * @type {string}
@@ -97,7 +97,7 @@ export function CreatePayoutDtoFromJSONTyped(json: any, ignoreDiscriminator: boo
         'amount': json['amount'],
         'toAddress': UniversalAddressFromJSON(json['toAddress']),
         'trackingId': json['trackingId'] == null ? undefined : json['trackingId'],
-        'callbackUrl': json['callbackUrl'] == null ? undefined : json['callbackUrl'],
+        'skipCallbacks': json['skipCallbacks'] == null ? undefined : json['skipCallbacks'],
         'nonce': json['nonce'] == null ? undefined : json['nonce'],
     };
 }
@@ -118,7 +118,7 @@ export function CreatePayoutDtoToJSONTyped(value?: CreatePayoutDto | null, ignor
         'amount': value['amount'],
         'toAddress': UniversalAddressToJSON(value['toAddress']),
         'trackingId': value['trackingId'],
-        'callbackUrl': value['callbackUrl'],
+        'skipCallbacks': value['skipCallbacks'],
         'nonce': value['nonce'],
     };
 }

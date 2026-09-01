@@ -7,8 +7,8 @@
     "sourceMap": true,
     "outDir": "./dist",
     "emitDeclarationOnly": false,
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "types": ["node"]
   },
   "include": ["src/**/*.ts", "generated-contracts/**/*.ts"],
