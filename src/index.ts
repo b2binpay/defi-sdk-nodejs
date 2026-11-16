@@ -6,5 +6,18 @@ export {
 } from './abi-provider';
 export * from './api';
 export * from './blockchain';
-export { InsufficientCreditsError } from './errors';
+export * from './callbacks';
+export {
+  CallbackPayloadError,
+  CallbackSignatureError,
+  ChainNotSelectedError,
+  DefiApiError,
+  type DefiApiErrorInit,
+  DefiNetworkError,
+  DefiSdkError,
+  DeploymentNotFoundError,
+  InsufficientCreditsError,
+  UnexpectedStatusError,
+  WaitTimeoutError,
+} from './errors';
 export * from './utils';

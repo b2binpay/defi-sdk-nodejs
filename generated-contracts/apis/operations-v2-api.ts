@@ -2312,7 +2312,7 @@ export class OperationsV2Api extends runtime.BaseAPI {
     }
 
     /**
-     * Returns a single PAYOUT operation by id (including trackingId and callbackUrl).
+     * Returns a single PAYOUT operation by id (including trackingId).
      * Get payout operation details
      */
     async blockchainPayoutOperationsControllerGetDetailsV2Raw(requestParameters: BlockchainPayoutOperationsControllerGetDetailsV2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<BlockchainPayoutOperationResponseDto>> {
@@ -2323,7 +2323,7 @@ export class OperationsV2Api extends runtime.BaseAPI {
     }
 
     /**
-     * Returns a single PAYOUT operation by id (including trackingId and callbackUrl).
+     * Returns a single PAYOUT operation by id (including trackingId).
      * Get payout operation details
      */
     async blockchainPayoutOperationsControllerGetDetailsV2(requestParameters: BlockchainPayoutOperationsControllerGetDetailsV2Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<BlockchainPayoutOperationResponseDto> {

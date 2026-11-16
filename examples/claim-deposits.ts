@@ -6,11 +6,10 @@
  * - Fetch recent claim transactions to confirm the recorded execution.
  */
 import 'dotenv/config';
-import { type Address, createPublicClient, createWalletClient, http, zeroAddress } from 'viem';
+import { type Address, createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { DefiClient, MultisigBlockchainClient } from '../src';
-import { getEvmChainById } from '../src/blockchain/get-chain';
-import { bufferGas, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
+import { DefiClient, getEvmChainById, MultisigBlockchainClient } from '../src';
+import { assertReceiptSucceeded, bufferGas, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
 
@@ -46,7 +45,7 @@ runMain(async () => {
   // take first currency from the list
   const currency = claims.items[0].currency;
   const invoicesToClaim = claims.items.filter((item) => item.currency.id === currency.id);
-  const depositAccountIds = invoicesToClaim.map((item) => item.invoiceNonce);
+  const depositIds = invoicesToClaim.map((item) => item.invoiceNonce);
 
   const chain = getEvmChainById(chainId, rpcUrl);
   const publicClient = createPublicClient({
@@ -68,11 +67,7 @@ runMain(async () => {
     contractAbi,
   });
 
-  const erc20Address = currency.address ?? zeroAddress;
-  const claimTxData = multisigClient.buildClaimCalldata({
-    erc20: erc20Address as Address,
-    depositAccountIds,
-  });
+  const claimTxData = multisigClient.buildClaimCalldata({ erc20: currency.address, depositIds });
 
   console.log(`Will claim deposits in currency ${currency.symbol} for invoices:`);
   console.table(
@@ -98,5 +93,10 @@ runMain(async () => {
   console.log('Claim transaction broadcasted:', txHash);
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  assertReceiptSucceeded(receipt, 'Claim transaction');
   console.log('Claim transaction confirmed in block', receipt.blockNumber);
+
+  const confirmed = await client.waitForTransactionOperations({ txHash });
+  console.log('Confirmed by the API:');
+  console.table(confirmed.map((op) => ({ id: op.id, type: op.operationType, status: op.status })));
 });

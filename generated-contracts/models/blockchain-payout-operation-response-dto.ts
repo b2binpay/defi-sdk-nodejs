@@ -149,7 +149,7 @@ export interface BlockchainPayoutOperationResponseDto {
      */
     updatedAt: string;
     /**
-     * AML risk score (0–100); null when the operation has not been scored
+     * AML risk score (0–100); null when the operation has not been scored, including a deposit released with reason provider_failed or budget_exhausted
      * @type {number}
      * @memberof BlockchainPayoutOperationResponseDto
      */
@@ -197,9 +197,10 @@ export interface BlockchainPayoutOperationResponseDto {
      */
     trackingId: string | null;
     /**
-     * Callback URL for notifications
+     * Deprecated: always null. Payout webhooks come from callback settings.
      * @type {string}
      * @memberof BlockchainPayoutOperationResponseDto
+     * @deprecated
      */
     callbackUrl: string | null;
 }

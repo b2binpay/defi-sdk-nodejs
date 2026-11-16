@@ -87,7 +87,7 @@ export class CallbacksApi extends runtime.BaseAPI {
     }
 
     /**
-     * Retrieve a paginated list of callbacks for a specific operation ID
+     * Retrieve a paginated list of callbacks for a specific operation ID. Scoped to the caller\'s teams: an operation belonging to another team returns an empty page.
      * Get callbacks by operation ID
      */
     async callbacksControllerGetCallbacksV1Raw(requestParameters: CallbacksControllerGetCallbacksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<GetCallbacksResponseDto>> {
@@ -98,7 +98,7 @@ export class CallbacksApi extends runtime.BaseAPI {
     }
 
     /**
-     * Retrieve a paginated list of callbacks for a specific operation ID
+     * Retrieve a paginated list of callbacks for a specific operation ID. Scoped to the caller\'s teams: an operation belonging to another team returns an empty page.
      * Get callbacks by operation ID
      */
     async callbacksControllerGetCallbacksV1(requestParameters: CallbacksControllerGetCallbacksV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<GetCallbacksResponseDto> {

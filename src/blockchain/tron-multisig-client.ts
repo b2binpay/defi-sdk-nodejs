@@ -1,22 +1,58 @@
 import type { TronWeb } from 'tronweb';
 import type { Abi } from 'viem';
-import { concatHex, encodeFunctionData, type Hex } from 'viem';
-import type { QueueOperationResponseDto } from '../../generated-contracts';
+import { encodeFunctionData } from 'viem';
 import type { ContractAbi } from '../abi-provider';
-import { ensureHexPrefix, normalizeCalls } from '../utils/transactions/builders';
+import type { ChainIdentifier } from '../api/defi-client';
+import { DefiSdkError } from '../errors';
+import { toTronAddress } from '../utils/address-input';
+import type { ExecutableQueueOperation } from '../utils/transactions/builders';
+import { ensureHexPrefix, normalizeCalls, toExecuteOperationTuples } from '../utils/transactions/builders';
+import type { SignableQueueOperation } from '../utils/transactions/eip712';
 import {
   buildTronExecuteTypedData,
   fetchTronExecuteTypedDataDomain,
   type TronExecuteTypedDataPayload,
 } from '../utils/transactions/tron-tip712';
-import type { TronAddress } from '../utils/tron-types';
+import { TRON_ZERO_ADDRESS, type TronAddress } from '../utils/tron-types';
 
 export interface TronMultisigBlockchainClientOptions {
-  chainId: string;
+  chainId: ChainIdentifier;
   tronWeb: TronWeb;
   contractAbi: ContractAbi;
   defaultFeeLimit: number;
 }
+
+export interface TronCreateExecuteTypedDataArgs {
+  /** The multisig contract — `account.contract` from `DefiClient.getAccount()`. */
+  contractAddress: string;
+  operation: SignableQueueOperation;
+  domainOverride?: TronExecuteTypedDataPayload['domain'];
+}
+
+export interface TronBuildExecuteTransactionArgs {
+  contractAddress: string;
+  /** The address that signs and pays for the transaction. */
+  callerAddress: string;
+  operations: ExecutableQueueOperation[];
+  feeLimit?: number;
+}
+
+export interface TronBuildClaimTransactionArgs {
+  contractAddress: string;
+  callerAddress: string;
+  /** Token to claim; `null` (a native currency's `address`) claims TRX. */
+  erc20: string | null;
+  /** `invoiceNonce` of every claimable deposit to sweep — `ClaimItem.invoiceNonce`. */
+  depositIds: string[];
+  /** Recipient; omit to claim into the multisig contract itself. */
+  to?: string;
+  feeLimit?: number;
+}
+
+/** The unsigned transaction TronWeb builds; pass it to `tronWeb.trx.sign()` before broadcasting. */
+export type TronUnsignedTransaction = Awaited<
+  ReturnType<TronWeb['transactionBuilder']['triggerSmartContract']>
+>['transaction'];
 
 export interface TronPreparedTransaction {
   readonly to: TronAddress;
@@ -24,7 +60,7 @@ export interface TronPreparedTransaction {
   readonly chainId: string;
   readonly feeLimit: number;
   readonly callValue: number;
-  readonly raw: unknown;
+  readonly raw: TronUnsignedTransaction;
 }
 
 export class TronMultisigBlockchainClient {
@@ -35,7 +71,7 @@ export class TronMultisigBlockchainClient {
   private readonly executeFunctionSignature: string;
 
   constructor(options: TronMultisigBlockchainClientOptions) {
-    this.chainId = options.chainId;
+    this.chainId = String(options.chainId);
     this.tronWebInstance = options.tronWeb;
     this.abi = options.contractAbi.abi as Abi;
     this.feeLimit = options.defaultFeeLimit;
@@ -44,23 +80,19 @@ export class TronMultisigBlockchainClient {
       (item) => item.type === 'function' && item.name === 'execute',
     );
     if (!executeAbiItem) {
-      throw new Error('execute function not found in contract ABI');
+      throw new DefiSdkError('execute function not found in contract ABI');
     }
     this.executeFunctionSignature = this.buildFunctionSignature(executeAbiItem);
   }
 
-  async createExecuteTypedData(args: {
-    contractAddress: TronAddress;
-    operation: QueueOperationResponseDto;
-    domainOverride?: TronExecuteTypedDataPayload['domain'];
-  }): Promise<TronExecuteTypedDataPayload> {
+  async createExecuteTypedData(args: TronCreateExecuteTypedDataArgs): Promise<TronExecuteTypedDataPayload> {
     const calls = normalizeCalls(args.operation.calls);
 
     const domain =
       args.domainOverride ??
       (await fetchTronExecuteTypedDataDomain({
         tronWeb: this.tronWebInstance,
-        contractAddress: args.contractAddress,
+        contractAddress: toTronAddress(args.contractAddress, 'contractAddress'),
         abi: this.abi,
       }));
 
@@ -75,28 +107,15 @@ export class TronMultisigBlockchainClient {
     });
   }
 
-  async buildExecuteTransaction(params: {
-    contractAddress: TronAddress;
-    callerAddress: TronAddress;
-    operations: QueueOperationResponseDto[];
-    feeLimit?: number;
-  }): Promise<TronPreparedTransaction> {
+  async buildExecuteTransaction(params: TronBuildExecuteTransactionArgs): Promise<TronPreparedTransaction> {
     const feeLimit = params.feeLimit ?? this.feeLimit;
-
-    const operations = params.operations.map((operation) => ({
-      calls: operation.calls.map((call) => ({
-        to: call.to,
-        value: call.value ? BigInt(call.value) : 0n,
-        data: call.data ?? '0x',
-      })),
-      signatures: concatHex(operation.signatures.map((sig) => sig.sign as Hex)),
-      id: operation.executeOperationId,
-    }));
+    const contractAddress = toTronAddress(params.contractAddress, 'contractAddress');
+    const callerAddress = toTronAddress(params.callerAddress, 'callerAddress');
 
     const data = encodeFunctionData({
       abi: this.abi,
       functionName: 'execute',
-      args: [operations],
+      args: [toExecuteOperationTuples(params.operations)],
     });
 
     // Build transaction via TronWeb's triggerSmartContract with rawParameter.
@@ -105,15 +124,15 @@ export class TronMultisigBlockchainClient {
     const rawParameter = data.slice(10); // ABI-encoded params without 0x + 4-byte selector
 
     const { transaction } = await this.tronWebInstance.transactionBuilder.triggerSmartContract(
-      params.contractAddress,
+      contractAddress,
       this.executeFunctionSignature,
       { feeLimit, callValue: 0, rawParameter },
       [],
-      params.callerAddress,
+      callerAddress,
     );
 
     return {
-      to: params.contractAddress,
+      to: contractAddress,
       data,
       chainId: this.chainId,
       feeLimit,
@@ -122,44 +141,42 @@ export class TronMultisigBlockchainClient {
     };
   }
 
-  async buildClaimTransaction(params: {
-    contractAddress: TronAddress;
-    callerAddress: TronAddress;
-    erc20: TronAddress;
-    depositIds: string[];
-    to?: TronAddress;
-    feeLimit?: number;
-  }): Promise<TronPreparedTransaction> {
+  async buildClaimTransaction(params: TronBuildClaimTransactionArgs): Promise<TronPreparedTransaction> {
     if (params.depositIds.length === 0) {
-      throw new Error('No claimable deposits found for the specified parameters.');
+      throw new DefiSdkError('No claimable deposits found for the specified parameters.');
     }
 
     const feeLimit = params.feeLimit ?? this.feeLimit;
+    const contractAddress = toTronAddress(params.contractAddress, 'contractAddress');
+    const callerAddress = toTronAddress(params.callerAddress, 'callerAddress');
+    const erc20 = params.erc20 === null ? TRON_ZERO_ADDRESS : toTronAddress(params.erc20, 'erc20');
     const depositIds = params.depositIds.map(ensureHexPrefix);
 
-    const args = params.to
-      ? [
-          { type: 'address', value: params.erc20 },
-          { type: 'address', value: params.to },
-          { type: 'bytes32[]', value: depositIds },
-        ]
-      : [
-          { type: 'address', value: params.erc20 },
-          { type: 'bytes32[]', value: depositIds },
-        ];
+    const args =
+      params.to === undefined
+        ? [
+            { type: 'address', value: erc20 },
+            { type: 'bytes32[]', value: depositIds },
+          ]
+        : [
+            { type: 'address', value: erc20 },
+            { type: 'address', value: toTronAddress(params.to, 'to') },
+            { type: 'bytes32[]', value: depositIds },
+          ];
 
-    const functionSignature = params.to ? 'claimTo(address,address,bytes32[])' : 'claim(address,bytes32[])';
+    const functionSignature =
+      params.to === undefined ? 'claim(address,bytes32[])' : 'claimTo(address,address,bytes32[])';
 
     const { transaction } = await this.tronWebInstance.transactionBuilder.triggerSmartContract(
-      params.contractAddress,
+      contractAddress,
       functionSignature,
       { feeLimit, callValue: 0 },
       args,
-      params.callerAddress,
+      callerAddress,
     );
 
     return {
-      to: params.contractAddress,
+      to: contractAddress,
       data: functionSignature,
       chainId: this.chainId,
       feeLimit,

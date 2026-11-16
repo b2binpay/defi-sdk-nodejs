@@ -27,10 +27,10 @@ export function BooleanQueryFilterFromJSONTyped(json: any, ignoreDiscriminator: 
     if (json == null) {
         return json;
     }
-    if (typeof json === 'boolean') {
+    if (typeof json === 'string') {
         return json;
     }
-    if (typeof json === 'string') {
+    if (typeof json === 'boolean') {
         return json;
     }
     return {} as any;
@@ -44,10 +44,10 @@ export function BooleanQueryFilterToJSONTyped(value?: BooleanQueryFilter | null,
     if (value == null) {
         return value;
     }
-    if (typeof value === 'boolean') {
+    if (typeof value === 'string') {
         return value;
     }
-    if (typeof value === 'string') {
+    if (typeof value === 'boolean') {
         return value;
     }
     return {};

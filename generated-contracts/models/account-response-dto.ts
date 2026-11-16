@@ -20,6 +20,13 @@ import {
     AccountResponseDtoInitialConfigToJSON,
     AccountResponseDtoInitialConfigToJSONTyped,
 } from './account-response-dto-initial-config';
+import type { AccountSmartContractVersionDto } from './account-smart-contract-version-dto';
+import {
+    AccountSmartContractVersionDtoFromJSON,
+    AccountSmartContractVersionDtoFromJSONTyped,
+    AccountSmartContractVersionDtoToJSON,
+    AccountSmartContractVersionDtoToJSONTyped,
+} from './account-smart-contract-version-dto';
 
 /**
  * 
@@ -76,6 +83,12 @@ export interface AccountResponseDto {
      */
     smartContractVersionId: string;
     /**
+     * 
+     * @type {AccountSmartContractVersionDto}
+     * @memberof AccountResponseDto
+     */
+    smartContractVersion: AccountSmartContractVersionDto;
+    /**
      * TRON network chainId for TRON accounts (derived from smartContractVersionId). Null for EVM accounts.
      * @type {string}
      * @memberof AccountResponseDto
@@ -101,6 +114,7 @@ export function instanceOfAccountResponseDto(value: object): value is AccountRes
     if (!('initialConfig' in value) || value['initialConfig'] === undefined) return false;
     if (!('isTron' in value) || value['isTron'] === undefined) return false;
     if (!('smartContractVersionId' in value) || value['smartContractVersionId'] === undefined) return false;
+    if (!('smartContractVersion' in value) || value['smartContractVersion'] === undefined) return false;
     return true;
 }
 
@@ -122,6 +136,7 @@ export function AccountResponseDtoFromJSONTyped(json: any, ignoreDiscriminator: 
         'initialConfig': AccountResponseDtoInitialConfigFromJSON(json['initialConfig']),
         'isTron': json['isTron'],
         'smartContractVersionId': json['smartContractVersionId'],
+        'smartContractVersion': AccountSmartContractVersionDtoFromJSON(json['smartContractVersion']),
         'networkId': json['networkId'] == null ? undefined : json['networkId'],
         'isHidden': json['isHidden'] == null ? undefined : json['isHidden'],
     };
@@ -146,6 +161,7 @@ export function AccountResponseDtoToJSONTyped(value?: AccountResponseDto | null,
         'initialConfig': AccountResponseDtoInitialConfigToJSON(value['initialConfig']),
         'isTron': value['isTron'],
         'smartContractVersionId': value['smartContractVersionId'],
+        'smartContractVersion': AccountSmartContractVersionDtoToJSON(value['smartContractVersion']),
         'networkId': value['networkId'],
         'isHidden': value['isHidden'],
     };

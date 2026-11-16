@@ -52,6 +52,7 @@ import {
 export interface InvoicesControllerCreateInvoiceV1Request {
     deploymentId: string;
     createInvoiceDto: CreateInvoiceDto;
+    idempotencyKey?: string;
 }
 
 export interface InvoicesControllerFindInvoiceByIdV1Request {
@@ -132,6 +133,10 @@ export class InvoicesApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication

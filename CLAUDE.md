@@ -42,14 +42,13 @@ History:
 - `npm run example:get-operations-v2` - List v2 operations and fetch typed operation details
 - `npm run example:get-blockchain-transactions` - List blockchain transactions and fetch one by id
 
-All examples require environment variables (see `.env.example`) including `API_BASE_URL`, `API_KEY`, `CHAIN_ID`, `WALLET_PRIVATE_KEY`, and `RPC_URL`.
+Every example needs `API_BASE_URL` and `API_KEY` (see `.env.example`); chain-scoped ones add `CHAIN_ID`, anything that signs or broadcasts adds `RPC_URL` and `WALLET_PRIVATE_KEY`, payouts add `PAYOUT_RECIPIENT`. Examples load `.env` through `dotenv/config`; `DOTENV_CONFIG_PATH=.env.nile npm run example:…` selects another file.
 
 ## Code Architecture
 
 ### Directory Structure
 ```
 src/
-├── abi/           - Contract ABIs (e.g., MULTI_SIG_WALLET_ABI)
 ├── api/           - Hand-written API wrappers around generated client
 │   ├── defi-client.ts - Main DefiClient class with convenience methods
 │   └── models/    - Type definitions and mappers for API responses
@@ -57,10 +56,15 @@ src/
 │   ├── multisig-client.ts       - MultisigBlockchainClient (EVM, EIP-712)
 │   ├── tron-multisig-client.ts  - TronMultisigBlockchainClient (TVM, TIP-712)
 │   ├── get-chain.ts             - Chain resolver utilities
-│   └── tron-chains.ts           - TRON chain configs (Mainnet, Shasta)
+│   └── tron-chains.ts           - TRON chain configs (Mainnet, Nile)
+├── callbacks/     - Callback payload parsing and signature verification
+├── errors.ts      - SDK error classes
+├── abi-provider.ts - Contract ABI fetching and caching
 └── utils/         - Utilities
     ├── transactions/ - EIP-712 / TIP-712 builders, signature packing
-    ├── validation.ts - EVM address validation
+    ├── paginate.ts   - fetchAll / page iteration
+    ├── wait.ts       - pollUntil and wait options
+    ├── validation.ts - Address validation (EVM and TRON)
     ├── tron-validation.ts - TRON address validation
     └── tron-types.ts  - Branded TronAddress type
 
@@ -91,19 +95,22 @@ Key methods:
 - `getAccountBalanceSummary()`, `getAssetBalances()`
 - `createInvoice()`, `getInvoices()`, `getInvoice()`, `updateInvoice()`
 - `createPayout()`, `getPayouts()`, `getPayout()`, `updatePayout()`
-- `getClaims()`, `getClaimableCurrencies()`
+- `getClaims()`, `getClaimBatches()`, `getClaimableCurrencies()`
 - `getOperationsV2()`, `getOperationDetailsV2()` - logical operation history (v2)
 - `getBlockchainTransactions()`, `getBlockchainTransaction()` - on-chain transaction history
 - TRX staking: `createStakeOperation()`, `createUnstakeOperation()`, `createDelegateOperation()`, `createReclaimOperation()`, `createVoteOperation()`, `createCancelUnstakingOperation()`, `createStakingWithdrawOperation()`, `createClaimRewardsOperation()`, `getStakingSummary()`, `getStakingDelegations()`, `getStakingDelegationSummary()`, `getStakingNetworkParams()`, `getSuperRepresentatives()`, `getVotingSummary()`
 - Cross-chain: `getCrossChainChains()`, `getCrossChainSourceCurrencies()`, `getCrossChainDestinationCurrencies()`, `getCrossChainQuote()`, `createCrossChainTransfer()`
 - `findCurrencyBySymbol()`, `getNativeCurrency()`, `getCurrencies()`
 - `getDeploymentQueue()`, `getBatchCandidates()`, `submitOperationSignature()`, `deleteQueueOperation()`, `deleteAllQueueOperations()`
+- `waitForQueueOperation()`, `waitForOperationV2()`, `waitForTransactionOperations()` - poll until a status, with timeout and `AbortSignal`
+- `paginate()` / `fetchAll()` (`src/utils/paginate.ts`) - iterate any list method; `parseCallback()` / `verifyCallbackSignature()` (`src/callbacks/`) - webhook HMAC check
+- Errors: everything thrown extends `DefiSdkError` (`src/errors.ts`); HTTP failures are `DefiApiError`, transport `DefiNetworkError`
 
 #### MultisigBlockchainClient (`src/blockchain/multisig-client.ts`)
 EVM multisig operations (EIP-712 signing, execute transactions, claim calldata):
 - `createExecuteTypedData({ contractAddress, operation })` - Build EIP-712 typed data
 - `buildExecuteTransaction({ contractAddress, operations })` - Encode execute() call
-- `buildClaimCalldata({ erc20, depositAccountIds, to? })` - Generate claim calldata
+- `buildClaimCalldata({ erc20, depositIds, to? })` - Generate claim calldata (`erc20: null` = native coin)
 
 Requires a viem `PublicClient` and `AbiCacheEntry` from `client.getContractAbi()`.
 
@@ -118,7 +125,8 @@ Requires a `TronWeb` instance, `AbiCacheEntry`, and `defaultFeeLimit` (in SUN).
 #### Transaction Utilities (`src/utils/transactions/`)
 - `eip712.ts` - EIP-712 builders for EVM (createExecuteTypedData, buildExecuteTypedMessage, signExecuteTypedData)
 - `tron-tip712.ts` - TIP-712 builders for TVM (buildTronExecuteTypedData, prepareTronTypedDataForSigning)
-- `builders.ts` - Low-level transaction encoders (buildExecuteOperationsTransaction, packSignatures, packTronSignatures)
+- `builders.ts` - Low-level transaction encoders (buildExecuteOperationsTransaction)
+- `signatures.ts` - packSignatures (EVM); packTronSignatures lives in `tron-tip712.ts`
 
 ### Typical Workflow
 
@@ -154,14 +162,14 @@ See `examples/evm-full-flow.ts` and `examples/tron-full-flow.ts` for complete fl
 
 - **Address validation**: Use `validateAddress()` from `src/utils/validation.ts` before submitting payouts or operations
 - **Enum types**: Leverage generated enums like `InvoiceStatus`, `PayoutStatus`, `FiatCurrency`, `OperationTypeV2`
-- **Chain ID handling**: Chain IDs are numbers, but some APIs accept strings - conversion is handled internally
+- **Chain ID handling**: every public `chainId` is `ChainIdentifier` (`number | string`); chain-scoped methods take it inside a params object and fall back to `selectChain()`
 
 ## Code Style
 
 - **Formatter**: Biome with 120 character line width, 2-space indents, single quotes
 - **Linting**: Biome's recommended rules
 - **TypeScript**: Strict mode enabled, `NodeNext` module resolution
-- **Node Version**: Requires Node.js ^24.16.0 and npm ^11.0.0
+- **Node Version**: the repo needs Node.js ^24.16.0 and npm ^12.1.0 (`devEngines`); the published package runs on Node.js 20+ (`engines`)
 
 ## Testing Strategy
 
@@ -172,7 +180,7 @@ Run tests with `npx jest --passWithNoTests`. Config: `jest.config.mjs`.
 
 ## Publishing
 
-- The published version comes from the release tag: the `publish` workflow runs `npm version "${GITHUB_REF_NAME#v}"`, so tag `v1.6.0` publishes `1.6.0`
+- The published version comes from the release tag: the `publish` workflow runs `npm version "${GITHUB_REF_NAME#v}" --allow-same-version`, so tag `v2.0.0` publishes `2.0.0`
 - `npm run prepublishOnly` runs build automatically
 - Exported files: `dist/`, `docs/`, `README.md`
 - Entry points defined in `exports` field for CommonJS/ESM compatibility

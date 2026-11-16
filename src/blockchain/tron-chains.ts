@@ -1,3 +1,5 @@
+import type { ChainIdentifier } from '../api/defi-client';
+import { DefiSdkError } from '../errors';
 export interface TronChainConfig {
   readonly id: number;
   readonly name: string;
@@ -26,16 +28,27 @@ const TRON_CHAINS: ReadonlyMap<number, TronChainConfig> = new Map([
       rpcUrls: { default: { http: ['https://api.shasta.trongrid.io'] } },
     },
   ],
+  [
+    3448148188,
+    {
+      id: 3448148188,
+      name: 'Tron Nile Testnet',
+      network: 'nile',
+      rpcUrls: { default: { http: ['https://nile.trongrid.io'] } },
+    },
+  ],
 ]);
 
 export const TRON_CHAIN_IDS: ReadonlySet<number> = new Set(TRON_CHAINS.keys());
 
-export function getTronChainById(chainId: string, rpcUrl?: string): TronChainConfig {
+export function getTronChainById(chainId: ChainIdentifier, rpcUrl?: string): TronChainConfig {
   const id = Number(chainId);
   const chain = TRON_CHAINS.get(id);
 
   if (!chain) {
-    throw new Error(`Unsupported Tron chain ID: ${chainId}. Known Tron chains: ${[...TRON_CHAIN_IDS].join(', ')}`);
+    throw new DefiSdkError(
+      `Unsupported Tron chain ID: ${chainId}. Known Tron chains: ${[...TRON_CHAIN_IDS].join(', ')}`,
+    );
   }
 
   if (!rpcUrl) {

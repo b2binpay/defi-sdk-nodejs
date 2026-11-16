@@ -74,7 +74,7 @@ export interface CallbackResponseDto {
      */
     responseCode: number | null;
     /**
-     * HTTP response body from the callback endpoint
+     * Delivery outcome message when no HTTP response was received (timeout, refused target, network error); null whenever the endpoint answered. The endpoint response body is never returned
      * @type {string}
      * @memberof CallbackResponseDto
      */

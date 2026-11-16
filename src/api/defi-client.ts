@@ -48,15 +48,23 @@ import {
   OperationsV2Api,
   PayoutsApi,
   QueueOperationsApi,
-  ResponseError,
   SmartContractVersionsApi,
   TRXStakingApi,
 } from '../../generated-contracts';
 import { type AbiCacheEntry, AbiProvider, type SmartContractCapabilities } from '../abi-provider';
 import { TRON_CHAIN_IDS } from '../blockchain/tron-chains';
-import { formatCreditsWarning, parseCreditsError } from '../errors';
+import {
+  ChainNotSelectedError,
+  DefiSdkError,
+  DeploymentNotFoundError,
+  InsufficientCreditsError,
+  toDefiError,
+  UnexpectedStatusError,
+} from '../errors';
+import { fetchAll } from '../utils/paginate';
 import { packSignatures } from '../utils/transactions/signatures';
 import { TRON_ADDRESS_PREFIX, tronToEvmHex } from '../utils/tron-validation';
+import { pollUntil, type WaitOptions } from '../utils/wait';
 import type {
   AccountDeployment,
   AccountDetails,
@@ -70,6 +78,7 @@ import type {
   BlockchainTransactionSortField,
   BlockchainTransactionStatus,
   CallbackList,
+  ClaimBatches,
   ClaimsResponse,
   ClaimsSortField,
   CrossChainChain,
@@ -86,10 +95,10 @@ import type {
   InvoiceStatus,
   Network,
   NonceInfo,
+  OperationV2,
   OperationV2Details,
   OperationV2List,
   OperationV2SortField,
-  OperationV2Status,
   Payout,
   PayoutDetail,
   PayoutList,
@@ -107,7 +116,7 @@ import type {
   SuperRepresentatives,
   VotingSummary,
 } from './models';
-import { OperationTypeV2, QueueOperationStatus } from './models';
+import { OperationTypeV2, OperationV2Status, QueueOperationStatus } from './models';
 import {
   mapAccountDetails,
   mapAssetBalanceList,
@@ -116,6 +125,7 @@ import {
   mapBlockchainTransactionDetails,
   mapBlockchainTransactionList,
   mapCallbackList,
+  mapClaimBatches,
   mapClaimsResponse,
   mapCrossChainChain,
   mapCrossChainQuotes,
@@ -149,13 +159,28 @@ export interface DefiClientOptions {
   credentials?: RequestCredentials;
   queryParamsStringify?: (params: Record<string, unknown>) => string;
   abiCacheDir?: string;
+  /** Receives SDK diagnostics (e.g. an insufficient-credits warning). The SDK logs nothing when omitted. */
+  logger?: DefiClientLogger;
 }
 
-type ChainIdentifier = number | string;
+export interface DefiClientLogger {
+  warn(message: string): void;
+}
 
-export interface GetAccountBalanceSummaryParams {
+/** A chain id as a number (`11155111`) or a decimal string (`'11155111'`); both are accepted everywhere. */
+export type ChainIdentifier = number | string;
+
+/** A timestamp filter: a `Date` or an ISO 8601 string. */
+export type DateInput = Date | string;
+
+const toIsoString = (value: DateInput | undefined): string | undefined =>
+  value instanceof Date ? value.toISOString() : value;
+
+const toDate = (value: DateInput | null | undefined): Date | null | undefined =>
+  typeof value === 'string' ? new Date(value) : value;
+
+export interface GetAccountBalanceSummaryParams extends ChainScopedParams {
   baseCurrency: FiatCurrency;
-  chainId: number;
 }
 
 export interface FindCurrencyBySymbolParams {
@@ -163,11 +188,18 @@ export interface FindCurrencyBySymbolParams {
   chainId?: ChainIdentifier;
 }
 
-interface ChainScopedParams {
+/** Every chain-scoped method takes `chainId`; omit it to use the chain picked with `selectChain()`. */
+export interface ChainScopedParams {
   chainId?: ChainIdentifier;
 }
 
-export interface CreatePayoutParams extends ChainScopedParams {
+/** Params of a create call the API deduplicates: a retry with the same key returns the original result. */
+export interface IdempotentCreateParams extends ChainScopedParams {
+  /** Unique key (e.g. a UUID) sent as `Idempotency-Key`; reuse it only to retry the same request. */
+  idempotencyKey?: string;
+}
+
+export interface CreatePayoutParams extends IdempotentCreateParams {
   currencyId: string;
   amount: string;
   recipient: string;
@@ -203,24 +235,14 @@ export interface SubmitOperationSignatureParams extends ChainScopedParams {
   signerAddress: string;
 }
 
-export interface ExecuteOperationParams extends ChainScopedParams {
-  operationId: string;
-  txHash: string;
-}
-
-export interface ExecuteBatchOperationsParams extends ChainScopedParams {
-  operationIds: string[];
-  txHash: string;
-}
-
 export interface GetInvoicesParams extends ChainScopedParams {
   id?: string;
-  createdFrom?: string;
-  createdTo?: string;
-  updatedFrom?: string;
-  updatedTo?: string;
-  expiresFrom?: string;
-  expiresTo?: string;
+  createdFrom?: DateInput;
+  createdTo?: DateInput;
+  updatedFrom?: DateInput;
+  updatedTo?: DateInput;
+  expiresFrom?: DateInput;
+  expiresTo?: DateInput;
   currencyIds?: string[];
   statuses?: InvoiceStatus[];
   trackingId?: string;
@@ -234,7 +256,7 @@ export interface GetInvoiceParams extends ChainScopedParams {
   invoiceId: string;
 }
 
-export interface CreateInvoiceParams extends ChainScopedParams {
+export interface CreateInvoiceParams extends IdempotentCreateParams {
   requestedAmount?: string | null;
   trackingId?: string | null;
   /** Suppress all callbacks for this invoice and its INVOICE_DEPOSIT operations. */
@@ -243,7 +265,7 @@ export interface CreateInvoiceParams extends ChainScopedParams {
   paymentPageButtonText?: string | null;
   currencyIds?: string[];
   /** Absolute expiration timestamp; a CREATED invoice becomes EXPIRED after it. Omit to never expire. */
-  expiresAt?: Date | null;
+  expiresAt?: DateInput | null;
 }
 
 export interface UpdateInvoiceParams extends ChainScopedParams {
@@ -256,16 +278,12 @@ export interface UpdateInvoiceParams extends ChainScopedParams {
   status?: InvoiceStatus;
 }
 
-export interface CancelInvoiceParams extends ChainScopedParams {
-  invoiceId: string;
-}
-
 export interface GetPayoutsParams extends ChainScopedParams {
   id?: string;
-  createdFrom?: string;
-  createdTo?: string;
-  updatedFrom?: string;
-  updatedTo?: string;
+  createdFrom?: DateInput;
+  createdTo?: DateInput;
+  updatedFrom?: DateInput;
+  updatedTo?: DateInput;
   currencyIds?: string[];
   statuses?: PayoutStatus[];
   trackingId?: string;
@@ -286,11 +304,18 @@ export interface UpdatePayoutParams extends ChainScopedParams {
   trackingId?: string | null;
 }
 
-export interface GetClaimsParams extends ChainScopedParams {
-  createdFrom?: string;
-  createdTo?: string;
-  updatedFrom?: string;
-  updatedTo?: string;
+/** Narrows claimable deposits by the flags of their currency; omitted flags do not filter. */
+export interface ClaimCurrencyFilters {
+  currencyIsScam?: boolean;
+  currencyIsVerified?: boolean;
+  currencyIsHidden?: boolean;
+}
+
+export interface GetClaimsParams extends ChainScopedParams, ClaimCurrencyFilters {
+  createdFrom?: DateInput;
+  createdTo?: DateInput;
+  updatedFrom?: DateInput;
+  updatedTo?: DateInput;
   currencyIds?: string[];
   invoiceId?: string;
   sortBy?: ClaimsSortField;
@@ -299,17 +324,7 @@ export interface GetClaimsParams extends ChainScopedParams {
   pageSize?: number;
 }
 
-export interface ExecuteClaimParams extends ChainScopedParams {
-  invoiceId: string;
-  currencyId: string;
-  txHash: string;
-}
-
-export interface ExecuteBatchClaimParams extends ChainScopedParams {
-  invoiceIds: string[];
-  currencyId: string;
-  txHash: string;
-}
+export interface GetClaimBatchesParams extends ChainScopedParams, ClaimCurrencyFilters {}
 
 export interface GetAssetBalancesParams extends ChainScopedParams {
   baseCurrency: FiatCurrency;
@@ -336,17 +351,17 @@ export interface GetQueueOperationParams extends ChainScopedParams {
   operationId: string;
 }
 
-export interface CreateStakeOperationParams extends ChainScopedParams {
+export interface CreateStakeOperationParams extends IdempotentCreateParams {
   amount: string;
   resourceType: StakingResourceType;
 }
 
-export interface CreateUnstakeOperationParams extends ChainScopedParams {
+export interface CreateUnstakeOperationParams extends IdempotentCreateParams {
   amount: string;
   resourceType: StakingResourceType;
 }
 
-export interface CreateDelegateOperationParams extends ChainScopedParams {
+export interface CreateDelegateOperationParams extends IdempotentCreateParams {
   amount: string;
   resourceType: StakingResourceType;
   recipient: string;
@@ -354,13 +369,13 @@ export interface CreateDelegateOperationParams extends ChainScopedParams {
   lock?: boolean;
 }
 
-export interface CreateReclaimOperationParams extends ChainScopedParams {
+export interface CreateReclaimOperationParams extends IdempotentCreateParams {
   amount: string;
   resourceType: StakingResourceType;
   recipient: string;
 }
 
-export interface CreateVoteOperationParams extends ChainScopedParams {
+export interface CreateVoteOperationParams extends IdempotentCreateParams {
   /** Map of super-representative address to vote count. */
   allocation: Record<string, string>;
 }
@@ -381,7 +396,7 @@ export interface GetCrossChainQuoteParams extends ChainScopedParams {
   amount: string;
 }
 
-export interface CreateCrossChainTransferParams extends ChainScopedParams {
+export interface CreateCrossChainTransferParams extends IdempotentCreateParams {
   quoteId: string;
   routeType: string;
   srcCurrencyId: string;
@@ -393,7 +408,7 @@ export interface CreateCrossChainTransferParams extends ChainScopedParams {
   feeUsd?: string | null;
   feePercent?: string | null;
   estimatedDurationMs?: number | null;
-  expiresAt?: Date | null;
+  expiresAt?: DateInput | null;
   nonce?: string;
 }
 
@@ -404,10 +419,10 @@ export interface GetOperationsV2Params extends ChainScopedParams {
   txHash?: string;
   txId?: string;
   currencyIds?: string[];
-  createdFrom?: string;
-  createdTo?: string;
-  updatedFrom?: string;
-  updatedTo?: string;
+  createdFrom?: DateInput;
+  createdTo?: DateInput;
+  updatedFrom?: DateInput;
+  updatedTo?: DateInput;
   sortBy?: OperationV2SortField;
   sortOrder?: SortOrder;
   page?: number;
@@ -432,6 +447,51 @@ export interface GetBlockchainTransactionsParams extends ChainScopedParams {
 
 export interface GetBlockchainTransactionParams extends ChainScopedParams {
   transactionId: string;
+}
+
+export interface WaitForQueueOperationParams extends ChainScopedParams {
+  operationId: string;
+  /** Statuses that end the wait successfully. Defaults to `READY` — enough signatures to execute. */
+  statuses?: QueueOperationStatus[];
+}
+
+export interface WaitForOperationV2Params extends ChainScopedParams {
+  id: string;
+  /** Statuses that end the wait successfully. Defaults to `CONFIRMED`. */
+  statuses?: OperationV2Status[];
+}
+
+export interface WaitForTransactionOperationsParams extends ChainScopedParams {
+  txHash: string;
+  /** Only wait for operations of this type; the others the transaction carries are ignored. */
+  type?: OperationTypeV2;
+  /** Statuses that end the wait successfully, for every operation. Defaults to `CONFIRMED`. */
+  statuses?: OperationV2Status[];
+}
+
+const QUEUE_TERMINAL_STATUSES: ReadonlySet<QueueOperationStatus> = new Set([
+  QueueOperationStatus.Executed,
+  QueueOperationStatus.Failed,
+  QueueOperationStatus.Cancelled,
+]);
+
+const OPERATION_V2_TERMINAL_STATUSES: ReadonlySet<string> = new Set([
+  OperationV2Status.Confirmed,
+  OperationV2Status.Blocked,
+  OperationV2Status.Refunded,
+  OperationV2Status.Failed,
+  OperationV2Status.Cancelled,
+]);
+
+/** True once the operation is in a wanted status; throws when it settled in an unwanted terminal one. */
+function isSettled(operation: OperationV2, statuses: ReadonlySet<string>): boolean {
+  if (statuses.has(operation.status)) {
+    return true;
+  }
+  if (OPERATION_V2_TERMINAL_STATUSES.has(operation.status)) {
+    throw new UnexpectedStatusError(`operation ${operation.id}`, operation.status);
+  }
+  return false;
 }
 
 /** Nonces are arbitrary-precision decimal strings, so they compare as BigInt rather than Number. */
@@ -472,14 +532,17 @@ export class DefiClient {
   }>;
   private selectedDeployment?: AccountDeployment;
   private selectedChainId?: string;
+  private readonly logger?: DefiClientLogger;
 
   constructor(options: DefiClientOptions) {
     const basePath = options.baseUrl.replace(/\/+$/, '');
     const apiKey = options.apiKey.trim();
 
     if (!apiKey) {
-      throw new Error('apiKey is required when instantiating DefiClient.');
+      throw new DefiSdkError('apiKey is required when instantiating DefiClient.');
     }
+
+    this.logger = options.logger;
 
     const headers: HTTPHeaders = {
       ...(options.defaultHeaders ?? {}),
@@ -534,13 +597,13 @@ export class DefiClient {
 
   async getAssetBalances(params: GetAssetBalancesParams): Promise<AssetBalanceList> {
     const accountId = await this.resolveAccountId();
-    const chainId = params.chainId ?? (await this.resolveDeployment()).chainId;
+    const { chainId } = await this.resolveDeployment(params.chainId);
 
     const response = await this.callApi(() =>
       this.accountsApi.accountsControllerGetAssetBalancesV1({
         accountId,
         baseCurrency: params.baseCurrency as AccountsControllerGetAssetBalancesV1BaseCurrencyEnum,
-        chainId: chainId.toString(),
+        chainId,
         sortBy: params.sortBy as AccountsControllerGetAssetBalancesV1SortByEnum | undefined,
         sortOrder: params.sortOrder as AccountsControllerGetAssetBalancesV1SortOrderEnum | undefined,
         currencyIds: params.currencyIds,
@@ -592,7 +655,7 @@ export class DefiClient {
     const deployment = resolvedAccountDetails.deployments.find((item) => item.chainId === normalizedChainId);
 
     if (!deployment) {
-      throw new Error(`Deployment for chain ${normalizedChainId} not found on this account.`);
+      throw new DeploymentNotFoundError(normalizedChainId);
     }
 
     return deployment;
@@ -600,11 +663,12 @@ export class DefiClient {
 
   async getAccountBalanceSummary(params: GetAccountBalanceSummaryParams): Promise<BalanceSummary> {
     const resolvedAccountId = await this.resolveAccountId();
+    const { chainId } = await this.resolveDeployment(params.chainId);
     const summary = await this.callApi(() =>
       this.accountsApi.accountsControllerGetBalanceSummaryV1({
         accountId: resolvedAccountId,
         baseCurrency: params.baseCurrency as AccountsControllerGetBalanceSummaryV1BaseCurrencyEnum,
-        chainId: params.chainId.toString(),
+        chainId,
       }),
     );
     return mapBalanceSummary(summary);
@@ -632,7 +696,7 @@ export class DefiClient {
     const targetChain = params.chainId ? this.normalizeChainId(params.chainId) : this.selectedChainId;
 
     if (!normalizedSymbol) {
-      throw new Error('Symbol is required when calling findCurrencyBySymbol.');
+      throw new DefiSdkError('Symbol is required when calling findCurrencyBySymbol.');
     }
 
     const currencies = await this.getCurrencies();
@@ -659,13 +723,13 @@ export class DefiClient {
     });
 
     if (matches.length === 0) {
-      throw new Error(
+      throw new DefiSdkError(
         `Currency with symbol "${normalizedSymbol}"${targetChain ? ` on chain ${targetChain}` : ''} not found.`,
       );
     }
 
     if (matches.length > 1) {
-      throw new Error(
+      throw new DefiSdkError(
         `Multiple currencies with symbol "${normalizedSymbol}"${
           targetChain ? ` on chain ${targetChain}` : ''
         } found. Please specify currencyId instead.`,
@@ -675,15 +739,16 @@ export class DefiClient {
     return matches[0];
   }
 
-  async getNativeCurrency(chainId: number | string): Promise<Currency> {
-    const normalizedChainId = this.normalizeChainId(chainId);
+  /** The chain's native coin (ETH, BNB, TRX, …) — the currency with no token address. */
+  async getNativeCurrency(params: ChainScopedParams = {}): Promise<Currency> {
+    const { chainId: normalizedChainId } = await this.resolveDeployment(params.chainId);
     const currencies = await this.getCurrencies();
     const nativeCurrency = currencies.find(
       (currency) => currency.chainId === normalizedChainId && currency.address == null,
     );
 
     if (!nativeCurrency) {
-      throw new Error(`Native currency for chain ${normalizedChainId} not found.`);
+      throw new DefiSdkError(`Native currency for chain ${normalizedChainId} not found.`);
     }
 
     return nativeCurrency;
@@ -696,12 +761,12 @@ export class DefiClient {
       this.invoicesApi.invoicesControllerFindInvoicesByDeploymentV1({
         deploymentId,
         id: params.id,
-        createdFrom: params.createdFrom,
-        createdTo: params.createdTo,
-        updatedFrom: params.updatedFrom,
-        updatedTo: params.updatedTo,
-        expiresFrom: params.expiresFrom,
-        expiresTo: params.expiresTo,
+        createdFrom: toIsoString(params.createdFrom),
+        createdTo: toIsoString(params.createdTo),
+        updatedFrom: toIsoString(params.updatedFrom),
+        updatedTo: toIsoString(params.updatedTo),
+        expiresFrom: toIsoString(params.expiresFrom),
+        expiresTo: toIsoString(params.expiresTo),
         currencyIds: params.currencyIds,
         statuses: params.statuses as InvoicesControllerFindInvoicesByDeploymentV1StatusesEnum[] | undefined,
         trackingId: params.trackingId,
@@ -734,6 +799,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.invoicesApi.invoicesControllerCreateInvoiceV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         createInvoiceDto: {
           requestedAmount: params.requestedAmount ?? null,
           trackingId: params.trackingId ?? null,
@@ -741,7 +807,7 @@ export class DefiClient {
           paymentPageButtonUrl: params.paymentPageButtonUrl ?? null,
           paymentPageButtonText: params.paymentPageButtonText ?? null,
           currencyIds: params.currencyIds,
-          expiresAt: params.expiresAt,
+          expiresAt: toDate(params.expiresAt),
         },
       }),
     );
@@ -770,6 +836,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.payoutsApi.payoutsControllerCreateV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         createPayoutDto: {
           deploymentId,
           currencyId: params.currencyId,
@@ -792,10 +859,10 @@ export class DefiClient {
       this.payoutsApi.payoutsControllerFindAllV1({
         deploymentId,
         id: params.id,
-        createdFrom: params.createdFrom,
-        createdTo: params.createdTo,
-        updatedFrom: params.updatedFrom,
-        updatedTo: params.updatedTo,
+        createdFrom: toIsoString(params.createdFrom),
+        createdTo: toIsoString(params.createdTo),
+        updatedFrom: toIsoString(params.updatedFrom),
+        updatedTo: toIsoString(params.updatedTo),
         currencyIds: params.currencyIds,
         statuses: params.statuses as PayoutsControllerFindAllV1StatusesEnum[] | undefined,
         trackingId: params.trackingId,
@@ -893,6 +960,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateStakeV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         stakeBodyDto: {
           amount: params.amount,
           resourceType: params.resourceType as StakeBodyDtoResourceTypeEnum,
@@ -910,6 +978,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateUnstakeV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         unstakeBodyDto: {
           amount: params.amount,
           resourceType: params.resourceType as UnstakeBodyDtoResourceTypeEnum,
@@ -927,6 +996,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateDelegateV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         delegateBodyDto: {
           amount: params.amount,
           resourceType: params.resourceType as DelegateBodyDtoResourceTypeEnum,
@@ -946,6 +1016,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateReclaimV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         reclaimBodyDto: {
           amount: params.amount,
           resourceType: params.resourceType as ReclaimBodyDtoResourceTypeEnum,
@@ -964,6 +1035,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateVoteV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         voteBodyDto: {
           allocation: params.allocation,
         },
@@ -974,12 +1046,13 @@ export class DefiClient {
   }
 
   /** Create a TRON cancel-unstaking operation. Returns a signable queue operation. */
-  async createCancelUnstakingOperation(params: ChainScopedParams = {}): Promise<QueueOperation> {
+  async createCancelUnstakingOperation(params: IdempotentCreateParams = {}): Promise<QueueOperation> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateCancelUnstakingV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
       }),
     );
 
@@ -987,12 +1060,13 @@ export class DefiClient {
   }
 
   /** Create a TRON staking-withdraw operation. Returns a signable queue operation. */
-  async createStakingWithdrawOperation(params: ChainScopedParams = {}): Promise<QueueOperation> {
+  async createStakingWithdrawOperation(params: IdempotentCreateParams = {}): Promise<QueueOperation> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateStakingWithdrawV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
       }),
     );
 
@@ -1000,12 +1074,13 @@ export class DefiClient {
   }
 
   /** Create a TRON claim-rewards operation. Returns a signable queue operation. */
-  async createClaimRewardsOperation(params: ChainScopedParams = {}): Promise<QueueOperation> {
+  async createClaimRewardsOperation(params: IdempotentCreateParams = {}): Promise<QueueOperation> {
     const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingOperationsControllerCreateClaimRewardsV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
       }),
     );
 
@@ -1013,8 +1088,8 @@ export class DefiClient {
   }
 
   /** Read the account's TRON staking summary. */
-  async getStakingSummary(chainId?: ChainIdentifier): Promise<StakingSummary> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getStakingSummary(params: ChainScopedParams = {}): Promise<StakingSummary> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingViewsControllerGetSummaryV1({ deploymentId }),
@@ -1039,8 +1114,8 @@ export class DefiClient {
   }
 
   /** Read the aggregated delegation summary. */
-  async getStakingDelegationSummary(chainId?: ChainIdentifier): Promise<StakingDelegationSummary> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getStakingDelegationSummary(params: ChainScopedParams = {}): Promise<StakingDelegationSummary> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingViewsControllerGetDelegationSummaryV1({ deploymentId }),
@@ -1050,8 +1125,8 @@ export class DefiClient {
   }
 
   /** Read TRON staking network params (e.g. unstaking period, resource prices). */
-  async getStakingNetworkParams(chainId?: ChainIdentifier): Promise<StakingNetworkParams> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getStakingNetworkParams(params: ChainScopedParams = {}): Promise<StakingNetworkParams> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingViewsControllerGetNetworkParamsV1({ deploymentId }),
@@ -1061,8 +1136,8 @@ export class DefiClient {
   }
 
   /** Read the list of super representatives available for voting. */
-  async getSuperRepresentatives(chainId?: ChainIdentifier): Promise<SuperRepresentatives> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getSuperRepresentatives(params: ChainScopedParams = {}): Promise<SuperRepresentatives> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingViewsControllerGetSuperRepresentativesV1({ deploymentId }),
@@ -1072,8 +1147,8 @@ export class DefiClient {
   }
 
   /** Read the account's current voting summary. */
-  async getVotingSummary(chainId?: ChainIdentifier): Promise<VotingSummary> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getVotingSummary(params: ChainScopedParams = {}): Promise<VotingSummary> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.trxStakingApi.deploymentStakingViewsControllerGetVotingSummaryV1({ deploymentId }),
@@ -1089,8 +1164,8 @@ export class DefiClient {
   }
 
   /** List currencies usable as the source of a cross-chain transfer. */
-  async getCrossChainSourceCurrencies(chainId?: ChainIdentifier): Promise<Currency[]> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getCrossChainSourceCurrencies(params: ChainScopedParams = {}): Promise<Currency[]> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.crossChainApi.deploymentCrossChainControllerListSourceCurrenciesV1({ deploymentId }),
@@ -1142,6 +1217,7 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.crossChainApi.deploymentCrossChainControllerCreateTransferV1({
         deploymentId,
+        idempotencyKey: params.idempotencyKey,
         createCrossChainTransferDto: {
           quoteId: params.quoteId,
           routeType: params.routeType,
@@ -1154,7 +1230,7 @@ export class DefiClient {
           feeUsd: params.feeUsd,
           feePercent: params.feePercent,
           estimatedDurationMs: params.estimatedDurationMs,
-          expiresAt: params.expiresAt,
+          expiresAt: toDate(params.expiresAt),
           nonce: params.nonce,
         },
       }),
@@ -1176,10 +1252,10 @@ export class DefiClient {
         txHash: params.txHash,
         txId: params.txId,
         currencyIds: params.currencyIds,
-        createdFrom: params.createdFrom,
-        createdTo: params.createdTo,
-        updatedFrom: params.updatedFrom,
-        updatedTo: params.updatedTo,
+        createdFrom: toIsoString(params.createdFrom),
+        createdTo: toIsoString(params.createdTo),
+        updatedFrom: toIsoString(params.updatedFrom),
+        updatedTo: toIsoString(params.updatedTo),
         sortBy: params.sortBy as BlockchainOperationsControllerListGenericV2SortByEnum | undefined,
         sortOrder: params.sortOrder as BlockchainOperationsControllerListGenericV2SortOrderEnum | undefined,
         page: params.page,
@@ -1234,7 +1310,7 @@ export class DefiClient {
 
     const fetchDetails = dispatch[params.type];
     if (!fetchDetails) {
-      throw new Error(`Unsupported operation type for details: ${params.type}`);
+      throw new DefiSdkError(`Unsupported operation type for details: ${params.type}`);
     }
 
     return this.callApi(() => fetchDetails(params.operationId));
@@ -1276,13 +1352,85 @@ export class DefiClient {
   }
 
   /** Fetch the current and last-executed nonce for the deployment. */
-  async getNonceInfo(chainId?: ChainIdentifier): Promise<NonceInfo> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  async getNonceInfo(params: ChainScopedParams = {}): Promise<NonceInfo> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     return this.callApi(() =>
       this.accountsApi.accountDeploymentsControllerGetNonceInfoV1({
         deploymentId,
       }),
+    );
+  }
+
+  /**
+   * Poll a queue operation until it reaches one of `statuses` (default `READY`). Rejects with
+   * `UnexpectedStatusError` when it settles elsewhere (e.g. `CANCELLED`), `WaitTimeoutError` on timeout.
+   */
+  async waitForQueueOperation(params: WaitForQueueOperationParams, options?: WaitOptions): Promise<QueueOperation> {
+    const statuses = new Set(params.statuses ?? [QueueOperationStatus.Ready]);
+    const label = `queue operation ${params.operationId}`;
+
+    return pollUntil(
+      label,
+      async () => {
+        const operation = await this.getQueueOperation(params);
+        if (statuses.has(operation.status)) {
+          return operation;
+        }
+        if (QUEUE_TERMINAL_STATUSES.has(operation.status)) {
+          throw new UnexpectedStatusError(label, operation.status);
+        }
+        return undefined;
+      },
+      options,
+    );
+  }
+
+  /**
+   * Poll the v2 operation history until operation `id` reaches one of `statuses` (default `CONFIRMED`).
+   * Rejects with `UnexpectedStatusError` when it settles in another terminal status.
+   */
+  async waitForOperationV2(params: WaitForOperationV2Params, options?: WaitOptions): Promise<OperationV2> {
+    const statuses = new Set<string>(params.statuses ?? [OperationV2Status.Confirmed]);
+
+    return pollUntil(
+      `operation ${params.id}`,
+      async () => {
+        const { items } = await this.getOperationsV2({ chainId: params.chainId, id: params.id, pageSize: 1 });
+        const [operation] = items;
+        return operation && isSettled(operation, statuses) ? operation : undefined;
+      },
+      options,
+    );
+  }
+
+  /**
+   * Poll until every v2 operation a transaction carries reaches one of `statuses` (default `CONFIRMED`),
+   * then resolve with all of them. A batch `execute` carries one operation per executed queue entry; pass
+   * `type` to wait for one kind only. The list may be empty at first — the indexer has to see the
+   * transaction — and the wait continues until it is not. Rejects with `UnexpectedStatusError` as soon as
+   * any of them settles in another terminal status.
+   */
+  async waitForTransactionOperations(
+    params: WaitForTransactionOperationsParams,
+    options?: WaitOptions,
+  ): Promise<OperationV2[]> {
+    const statuses = new Set<string>(params.statuses ?? [OperationV2Status.Confirmed]);
+
+    return pollUntil(
+      `operations of transaction ${params.txHash}`,
+      async () => {
+        const operations = await fetchAll((page) => this.getOperationsV2(page), {
+          chainId: params.chainId,
+          txHash: params.txHash,
+          types: params.type ? [params.type] : undefined,
+        });
+        // Check every operation, not just up to the first pending one, so a failed sibling rejects now.
+        const settled = operations.map((operation) => isSettled(operation, statuses));
+        const isDone = operations.length > 0 && settled.every(Boolean);
+        return isDone ? operations : undefined;
+      },
+      options,
     );
   }
 
@@ -1310,23 +1458,13 @@ export class DefiClient {
       QueueOperationStatus.Pending,
       QueueOperationStatus.Ready,
     ];
-    const pageSize = 100;
     const deletedIds: string[] = [];
-    const pending: QueueOperation[] = [];
 
     /**
      * The whole queue has to be collected before deleting anything: the server only
      * accepts the highest live nonce, and page 1 holds the lowest ones.
      */
-    let page = 1;
-    while (true) {
-      const queue = await this.getDeploymentQueue({ chainId: params.chainId, statuses, page, pageSize });
-      pending.push(...queue.items);
-      if (queue.items.length < pageSize) {
-        break;
-      }
-      page++;
-    }
+    const pending = await fetchAll((page) => this.getDeploymentQueue(page), { chainId: params.chainId, statuses });
 
     for (const operation of pending.sort(byNonceDescending)) {
       await this.deleteQueueOperation({ chainId: params.chainId, operationId: operation.id });
@@ -1369,12 +1507,15 @@ export class DefiClient {
     const response = await this.callApi(() =>
       this.claimsApi.claimsControllerGetClaimsV1({
         deploymentId,
-        createdFrom: params.createdFrom,
-        createdTo: params.createdTo,
-        updatedFrom: params.updatedFrom,
-        updatedTo: params.updatedTo,
+        createdFrom: toIsoString(params.createdFrom),
+        createdTo: toIsoString(params.createdTo),
+        updatedFrom: toIsoString(params.updatedFrom),
+        updatedTo: toIsoString(params.updatedTo),
         currencyIds: params.currencyIds,
         invoiceId: params.invoiceId,
+        currencyIsScam: params.currencyIsScam,
+        currencyIsVerified: params.currencyIsVerified,
+        currencyIsHidden: params.currencyIsHidden,
         sortBy: params.sortBy as ClaimsControllerGetClaimsV1SortByEnum | undefined,
         sortOrder: params.sortOrder as ClaimsControllerGetClaimsV1SortOrderEnum | undefined,
         page: params.page,
@@ -1385,8 +1526,27 @@ export class DefiClient {
     return mapClaimsResponse(response);
   }
 
-  async getClaimableCurrencies(chainId?: ChainIdentifier): Promise<Currency[]> {
-    const deploymentId = await this.resolveDeploymentId(chainId);
+  /**
+   * Claimable deposits grouped by currency across invoices, with what each batch sweeps along and
+   * which invoices must be claimed individually — the input for a batch claim.
+   */
+  async getClaimBatches(params: GetClaimBatchesParams = {}): Promise<ClaimBatches> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
+
+    const response = await this.callApi(() =>
+      this.claimsApi.claimsControllerGetClaimBatchesV1({
+        deploymentId,
+        currencyIsScam: params.currencyIsScam,
+        currencyIsVerified: params.currencyIsVerified,
+        currencyIsHidden: params.currencyIsHidden,
+      }),
+    );
+
+    return mapClaimBatches(response);
+  }
+
+  async getClaimableCurrencies(params: ChainScopedParams = {}): Promise<Currency[]> {
+    const deploymentId = await this.resolveDeploymentId(params.chainId);
 
     const response = await this.callApi(() =>
       this.claimsApi.claimsControllerGetClaimableCurrenciesV1({
@@ -1449,7 +1609,7 @@ export class DefiClient {
     }
 
     if (Object.keys(payload).length === 0) {
-      throw new Error('At least one invoice field must be provided when updating an invoice.');
+      throw new DefiSdkError('At least one invoice field must be provided when updating an invoice.');
     }
 
     return payload as UpdateInvoiceDto;
@@ -1464,7 +1624,7 @@ export class DefiClient {
     }
 
     if (Object.keys(payload).length === 0) {
-      throw new Error('At least one payout field must be provided when updating a payout.');
+      throw new DefiSdkError('At least one payout field must be provided when updating a payout.');
     }
 
     return payload as UpdatePayoutDto;
@@ -1490,7 +1650,7 @@ export class DefiClient {
     const firstAccount = accounts[0];
 
     if (!firstAccount) {
-      throw new Error('No accounts are linked to this API key.');
+      throw new DefiSdkError('No accounts are linked to this API key.');
     }
 
     const raw = await this.callApi(() =>
@@ -1526,7 +1686,7 @@ export class DefiClient {
       return this.selectedDeployment;
     }
 
-    throw new Error('Chain is not selected. Call selectChain() or provide chainId in the method call.');
+    throw new ChainNotSelectedError();
   }
 
   private async resolveDeploymentId(chainId?: ChainIdentifier): Promise<string> {
@@ -1542,14 +1702,13 @@ export class DefiClient {
     try {
       return await fn();
     } catch (err) {
-      if (err instanceof ResponseError) {
-        const creditsError = await parseCreditsError(err);
-        if (creditsError) {
-          console.warn(formatCreditsWarning(creditsError.required, creditsError.available));
-          throw creditsError;
-        }
+      const mapped = await toDefiError(err);
+      if (mapped instanceof InsufficientCreditsError) {
+        this.logger?.warn(
+          `Insufficient credits: required ${mapped.required ?? 'unknown'}, available ${mapped.available ?? 'unknown'}.`,
+        );
       }
-      throw err;
+      throw mapped;
     }
   }
 }

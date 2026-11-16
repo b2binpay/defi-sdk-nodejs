@@ -1,15 +1,17 @@
 import type { Chain } from 'viem';
 import * as viemChains from 'viem/chains';
+import type { ChainIdentifier } from '../api/defi-client';
+import { DefiSdkError } from '../errors';
 import { getTronChainById, TRON_CHAIN_IDS, type TronChainConfig } from './tron-chains';
 
 /**
  * Resolves an EVM chain by ID. Returns a viem `Chain` type.
  * Throws if the chain ID is not a known EVM chain.
  */
-export function getEvmChainById(chainId: string, rpcUrl?: string): Chain {
-  const chain = Object.values(viemChains).find((item) => item.id.toString() === chainId);
+export function getEvmChainById(chainId: ChainIdentifier, rpcUrl?: string): Chain {
+  const chain = Object.values(viemChains).find((item) => item.id.toString() === String(chainId));
   if (!chain) {
-    throw new Error(`Unsupported EVM chain ID: ${chainId}. Specified chain is not preconfigured in viem.`);
+    throw new DefiSdkError(`Unsupported EVM chain ID: ${chainId}. Specified chain is not preconfigured in viem.`);
   }
 
   if (!rpcUrl) {
@@ -37,8 +39,8 @@ export const getTvmChainById = getTronChainById;
  * Returns `Chain | TronChainConfig`. Use `getEvmChainById` or `getTvmChainById`
  * when you need a narrowed return type.
  */
-export function getChainById(chainId: string, rpcUrl?: string): Chain | TronChainConfig {
-  const evmChain = Object.values(viemChains).find((item) => item.id.toString() === chainId);
+export function getChainById(chainId: ChainIdentifier, rpcUrl?: string): Chain | TronChainConfig {
+  const evmChain = Object.values(viemChains).find((item) => item.id.toString() === String(chainId));
 
   if (evmChain) {
     return getEvmChainById(chainId, rpcUrl);
@@ -49,5 +51,5 @@ export function getChainById(chainId: string, rpcUrl?: string): Chain | TronChai
     return getTronChainById(chainId, rpcUrl);
   }
 
-  throw new Error(`Unsupported chain ID: ${chainId}. Not a known EVM or Tron chain.`);
+  throw new DefiSdkError(`Unsupported chain ID: ${chainId}. Not a known EVM or Tron chain.`);
 }

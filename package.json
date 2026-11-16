@@ -1,6 +1,6 @@
 {
   "name": "@b2binpay/defi-sdk",
-  "version": "1.6.0",
+  "version": "2.0.0",
   "description": "TypeScript SDK for the B2BinPay DeFi API with blockchain transaction utilities built on viem",
   "private": false,
   "license": "MIT",
@@ -42,19 +42,19 @@
     "example:get-blockchain-transactions": "tsx examples/get-blockchain-transactions.ts"
   },
   "dependencies": {
-    "tronweb": "^6.2.0",
-    "viem": "^2.53.1"
+    "tronweb": "^6.5.1",
+    "viem": "^2.57.17"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.13",
-    "@openapitools/openapi-generator-cli": "^2.34.0",
+    "@biomejs/biome": "2.5.15",
+    "@openapitools/openapi-generator-cli": "^2.42.1",
     "@types/jest": "^30.0.0",
-    "@types/node": "^24.10.1",
-    "dotenv": "^17.2.3",
-    "jest": "^30.2.0",
-    "ts-jest": "^29.4.6",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "@types/node": "^24.19.2",
+    "dotenv": "^18.0.10",
+    "jest": "^30.5.2",
+    "ts-jest": "^29.4.15",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
   },
   "main": "./dist/src/index.js",
   "types": "./dist/src/index.d.ts",
@@ -73,7 +73,32 @@
     "CHANGELOG.md"
   ],
   "engines": {
-    "node": "^24.16.0",
-    "npm": "^11.0.0"
+    "node": ">=20"
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^24.16.0",
+      "onFail": "error"
+    },
+    "packageManager": {
+      "name": "npm",
+      "version": "^12.1.0",
+      "onFail": "error"
+    }
+  },
+  "overrides": {
+    "axios": "^1.20.0",
+    "basic-ftp": "^6.2.1",
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "^4.1.1"
+    }
+  },
+  "allowScripts": {
+    "unrs-resolver": true,
+    "esbuild": false,
+    "@parcel/watcher": false,
+    "fsevents": false,
+    "@openapitools/openapi-generator-cli": false
   }
 }

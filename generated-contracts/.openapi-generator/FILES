@@ -21,6 +21,7 @@ models/account-deployment-dto.ts
 models/account-details-dto.ts
 models/account-response-dto-initial-config.ts
 models/account-response-dto.ts
+models/account-smart-contract-version-dto.ts
 models/asset-aggregated-balance-response-dto-currency.ts
 models/asset-aggregated-balance-response-dto.ts
 models/asset-balance-dto.ts
@@ -84,6 +85,11 @@ models/blockchain-vote-operation-response-dto.ts
 models/boolean-query-filter.ts
 models/call-dto.ts
 models/callback-response-dto.ts
+models/claim-batch-companion-dto.ts
+models/claim-batch-currency-amount-dto.ts
+models/claim-batch-dto.ts
+models/claim-batch-invoice-dto.ts
+models/claim-batches-response-dto.ts
 models/claim-item-dto.ts
 models/claim-to-refund-payload.ts
 models/claims-response-dto.ts
@@ -123,7 +129,6 @@ models/network-response-dto.ts
 models/network-short-response-dto.ts
 models/networks-response-dto.ts
 models/nonce-info-response-dto.ts
-models/operation-signature-dto.ts
 models/payout-detail-response-dto.ts
 models/payout-list-response-dto.ts
 models/payout-payload.ts
@@ -131,6 +136,7 @@ models/payout-response-dto.ts
 models/queue-operation-response-dto-dapp-metadata.ts
 models/queue-operation-response-dto-payload.ts
 models/queue-operation-response-dto.ts
+models/queue-signer-dto.ts
 models/quote-request-dto.ts
 models/reclaim-body-dto.ts
 models/reclaim-payload.ts

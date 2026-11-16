@@ -20,7 +20,7 @@ import { mapValues } from '../runtime';
  */
 export interface DappTransactionPayload {
     /**
-     * Decoded operation details from frontend
+     * Decoded call (functionName, selector, args, to, value), derived by the server from the call
      * @type {Array<any>}
      * @memberof DappTransactionPayload
      */

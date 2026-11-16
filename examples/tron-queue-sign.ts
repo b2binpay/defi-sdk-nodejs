@@ -6,7 +6,7 @@
  */
 import 'dotenv/config';
 import { TronWeb } from 'tronweb';
-import { DefiClient, type TronAddress, TronMultisigBlockchainClient, transactions } from '../src';
+import { DefiClient, TronMultisigBlockchainClient, transactions } from '../src';
 import { DEFAULT_FEE_LIMIT, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
@@ -31,10 +31,7 @@ runMain(async () => {
   await client.selectChain(chainId);
 
   const queue = await client.getDeploymentQueue({ pageSize: 50 });
-  const operation = queue.items.find((item) => {
-    const signed = item.signatures.some((sig) => sig.user.toLowerCase() === signerAddress.toLowerCase());
-    return !signed;
-  });
+  const operation = queue.items.find((item) => item.canSign && !item.userSigned);
 
   if (!operation) {
     throw new Error('No signable operations found in the Tron queue.');
@@ -59,7 +56,7 @@ runMain(async () => {
   });
 
   const typedData = await tronClient.createExecuteTypedData({
-    contractAddress: accountDetails.account.contract as TronAddress,
+    contractAddress: accountDetails.account.contract,
     operation,
   });
 

@@ -156,7 +156,7 @@ export interface BlockchainDappTransactionOperationResponseDto {
      */
     updatedAt: string;
     /**
-     * AML risk score (0–100); null when the operation has not been scored
+     * AML risk score (0–100); null when the operation has not been scored, including a deposit released with reason provider_failed or budget_exhausted
      * @type {number}
      * @memberof BlockchainDappTransactionOperationResponseDto
      */

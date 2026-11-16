@@ -25,32 +25,21 @@
  *   POLL_TIMEOUT_MS    — maximum polling time in ms (default: 300000 / 5 min)
  */
 import 'dotenv/config';
-import {
-  type Address,
-  createPublicClient,
-  createWalletClient,
-  http,
-  type PublicClient,
-  parseEther,
-  zeroAddress,
-} from 'viem';
+import { type Address, createPublicClient, createWalletClient, http, parseEther } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { instanceOfPayoutPayload } from '../generated-contracts';
 import {
   AssetSortField,
   AssetSortOrder,
   type ClaimItem,
   DefiClient,
   FiatCurrency,
+  getEvmChainById,
   MultisigBlockchainClient,
   OperationTypeV2,
-  type OperationV2,
-  OperationV2Status,
-  type QueueOperation,
   QueueOperationStatus,
+  type WaitOptions,
 } from '../src';
-import { getEvmChainById } from '../src/blockchain/get-chain';
-import { bufferGas, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
+import { assertReceiptSucceeded, bufferGas, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const REQUIRED_ENV = [
   'API_BASE_URL',
@@ -65,14 +54,15 @@ const PAYOUT_AMOUNT = '0.00005';
 const INVOICE_AMOUNT = '0.0001';
 const BASE_CURRENCY = FiatCurrency.Usd;
 const TX_RECEIPT_TIMEOUT_MS = 360_000;
-const TX_RECEIPT_POLL_MS = 3_000;
 
 runMain(async () => {
   const env = requireEnvVars(REQUIRED_ENV);
   const chainId = parseChainId(env.CHAIN_ID);
   const rpcUrl = env.RPC_URL;
-  const pollInterval = Number(process.env.POLL_INTERVAL_MS ?? '5000');
-  const pollTimeout = Number(process.env.POLL_TIMEOUT_MS ?? '300000');
+  const waitOptions: WaitOptions = {
+    intervalMs: Number(process.env.POLL_INTERVAL_MS ?? '5000'),
+    timeoutMs: Number(process.env.POLL_TIMEOUT_MS ?? '300000'),
+  };
 
   // ─── Step 1: Setup ───────────────────────────────────────────────────────────
   console.log('\n═══ Step 1: Setup ═══');
@@ -94,7 +84,6 @@ runMain(async () => {
   const contractAbi = await client.getContractAbi();
   const multisigClient = new MultisigBlockchainClient({ chainId, publicClient, contractAbi });
 
-  const chainIdNumber = Number.parseInt(chainId, 10);
   const initialBalances = await client.getAssetBalances({
     chainId,
     baseCurrency: BASE_CURRENCY,
@@ -111,7 +100,7 @@ runMain(async () => {
     console.log('Initial balances: all zero.');
   }
 
-  const summary = await client.getAccountBalanceSummary({ chainId: chainIdNumber, baseCurrency: BASE_CURRENCY });
+  const summary = await client.getAccountBalanceSummary({ chainId, baseCurrency: BASE_CURRENCY });
   console.log('Balance summary (USD):');
   console.table({
     total: summary.totalBalance,
@@ -122,7 +111,7 @@ runMain(async () => {
   // ─── Step 2: Invoice ─────────────────────────────────────────────────────────
   console.log('\n═══ Step 2: Create invoice ═══');
 
-  const nativeCurrency = await client.getNativeCurrency(chainId);
+  const nativeCurrency = await client.getNativeCurrency({ chainId });
   console.log(`Native currency: ${nativeCurrency.symbol} (${nativeCurrency.id})`);
 
   const trackingId = `EVM-FULL-FLOW-${Date.now()}`;
@@ -151,18 +140,19 @@ runMain(async () => {
     value: parseEther(INVOICE_AMOUNT),
   });
   console.log('Deposit tx broadcasted:', depositTxHash);
-  const depositReceipt = await waitForReceipt(publicClient, depositTxHash);
+  const depositReceipt = await publicClient.waitForTransactionReceipt({
+    hash: depositTxHash,
+    timeout: TX_RECEIPT_TIMEOUT_MS,
+  });
+  assertReceiptSucceeded(depositReceipt, 'Deposit');
   console.log('Deposit tx included in block:', depositReceipt.blockNumber.toString());
 
   // ─── Step 3: Wait for deposit ─────────────────────────────────────────────────
   console.log('\n═══ Step 3: Waiting for deposit ═══');
 
-  const confirmedTx = await waitForTxConfirmation(
-    client,
-    depositTxHash,
-    OperationTypeV2.InvoiceDeposit,
-    pollInterval,
-    pollTimeout,
+  const [confirmedTx] = await client.waitForTransactionOperations(
+    { txHash: depositTxHash, type: OperationTypeV2.InvoiceDeposit },
+    waitOptions,
   );
 
   console.log('Deposit confirmed:');
@@ -195,10 +185,8 @@ runMain(async () => {
 
   for (const [, items] of currencyGroups) {
     const currency = items[0].currency;
-    const depositAccountIds = items.map((item) => item.invoiceNonce);
-    const erc20Address = (currency.address ?? zeroAddress) as Address;
-
-    const claimCalldata = multisigClient.buildClaimCalldata({ erc20: erc20Address, depositAccountIds });
+    const depositIds = items.map((item) => item.invoiceNonce);
+    const claimCalldata = multisigClient.buildClaimCalldata({ erc20: currency.address, depositIds });
 
     console.log(`Claiming ${currency.symbol} for ${items.length} invoice(s)...`);
 
@@ -217,16 +205,17 @@ runMain(async () => {
 
     console.log('Claim tx broadcasted:', claimTxHash);
 
-    const claimReceipt = await waitForReceipt(publicClient, claimTxHash);
+    const claimReceipt = await publicClient.waitForTransactionReceipt({
+      hash: claimTxHash,
+      timeout: TX_RECEIPT_TIMEOUT_MS,
+    });
+    assertReceiptSucceeded(claimReceipt, 'Claim');
     console.log('Claim included in block:', claimReceipt.blockNumber.toString());
 
     console.log('Waiting for claim transaction confirmation via API...');
-    const confirmedClaim = await waitForTxConfirmation(
-      client,
-      claimTxHash,
-      OperationTypeV2.Claim,
-      pollInterval,
-      pollTimeout,
+    const [confirmedClaim] = await client.waitForTransactionOperations(
+      { txHash: claimTxHash, type: OperationTypeV2.Claim },
+      waitOptions,
     );
     console.log(`Claim confirmed: ${confirmedClaim.confirmations} confirmations`);
   }
@@ -272,23 +261,10 @@ runMain(async () => {
     recipient: payout.toAddress,
   });
 
-  // Find the associated queue operation
-  const payoutOperation = await poll<QueueOperation>(
-    'payout queue operation',
-    async () => {
-      const queue = await client.getDeploymentQueue({ pageSize: 100 });
-      const op = queue.items.find(
-        (item) =>
-          item.operationType === 'PAYOUT' &&
-          item.payload != null &&
-          instanceOfPayoutPayload(item.payload) &&
-          item.payload.payoutId === payout.id,
-      );
-      return op ?? null;
-    },
-    pollInterval,
-    pollTimeout,
-  );
+  if (!payout.queueOperationId) {
+    throw new Error(`Payout ${payout.id} was created without a queue operation.`);
+  }
+  const payoutOperation = await client.getQueueOperation({ operationId: payout.queueOperationId });
 
   console.log('Queue operation:');
   console.table({
@@ -303,7 +279,7 @@ runMain(async () => {
   console.log('\n═══ Step 6: Sign ═══');
 
   const typedData = await multisigClient.createExecuteTypedData({
-    contractAddress: accountDetails.account.contract as Address,
+    contractAddress: accountDetails.account.contract,
     operation: payoutOperation,
   });
 
@@ -326,36 +302,9 @@ runMain(async () => {
   // ─── Step 7: Execute ──────────────────────────────────────────────────────────
   console.log('\n═══ Step 7: Execute ═══');
 
-  // Wait until our payout operation is ready (signaturesCollected >= signaturesRequired),
-  // then collect all consecutive ready operations from nextExecutableNonce and execute them
-  // in a single batch tx. This handles the case where previous nonces are blocking our operation.
-  const operationsToExecute = await poll<QueueOperation[]>(
-    'executable operation',
-    async () => {
-      const queue = await client.getDeploymentQueue({ pageSize: 100 });
-
-      const ourOp = queue.items.find((item) => item.id === payoutOperation.id);
-      assertQueueOperationNotFailed(ourOp?.status);
-
-      const readyItems = queue.items.filter((item) => item.status === QueueOperationStatus.Ready);
-      const payoutReady = readyItems.some((item) => item.id === payoutOperation.id);
-      if (!payoutReady) return null;
-
-      const batch: QueueOperation[] = [];
-      let currentNonce = Number(queue.nextExecutableNonce);
-      for (const item of readyItems) {
-        if (item.nonce !== currentNonce.toString()) break;
-        if (item.signaturesCollected < item.signaturesRequired) break;
-        batch.push(item);
-        currentNonce++;
-      }
-
-      const includesOurOp = batch.some((item) => item.id === payoutOperation.id);
-      return includesOurOp ? batch : null;
-    },
-    pollInterval,
-    pollTimeout,
-  );
+  // The queue was emptied before the payout was created, so no earlier nonce can block it.
+  const readyOperation = await client.waitForQueueOperation({ operationId: payoutOperation.id }, waitOptions);
+  const operationsToExecute = [readyOperation];
 
   console.log(`Executing ${operationsToExecute.length} operation(s) in batch:`);
   console.table(operationsToExecute.map((op) => ({ id: op.id, nonce: op.nonce, type: op.operationType })));
@@ -374,16 +323,17 @@ runMain(async () => {
 
   console.log('Execute tx broadcasted:', executeTxHash);
 
-  const executeReceipt = await waitForReceipt(publicClient, executeTxHash);
+  const executeReceipt = await publicClient.waitForTransactionReceipt({
+    hash: executeTxHash,
+    timeout: TX_RECEIPT_TIMEOUT_MS,
+  });
+  assertReceiptSucceeded(executeReceipt, 'Execute');
   console.log('Execute included in block:', executeReceipt.blockNumber.toString());
 
   console.log('Waiting for payout transaction confirmation via API...');
-  const confirmedPayout = await waitForTxConfirmation(
-    client,
-    executeTxHash,
-    OperationTypeV2.Payout,
-    pollInterval,
-    pollTimeout,
+  const [confirmedPayout] = await client.waitForTransactionOperations(
+    { txHash: executeTxHash, type: OperationTypeV2.Payout },
+    waitOptions,
   );
   console.log(`Payout confirmed: ${confirmedPayout.confirmations} confirmations`);
 
@@ -405,7 +355,7 @@ runMain(async () => {
     console.log('All balances are zero after the flow.');
   }
 
-  const finalSummary = await client.getAccountBalanceSummary({ chainId: chainIdNumber, baseCurrency: BASE_CURRENCY });
+  const finalSummary = await client.getAccountBalanceSummary({ chainId, baseCurrency: BASE_CURRENCY });
   console.log('Final balance summary (USD):');
   console.table({
     total: finalSummary.totalBalance,
@@ -415,94 +365,3 @@ runMain(async () => {
 
   console.log('\n✓ Full EVM flow completed successfully.');
 });
-
-async function waitForReceipt(client: PublicClient, hash: `0x${string}`) {
-  const deadline = Date.now() + TX_RECEIPT_TIMEOUT_MS;
-
-  while (Date.now() < deadline) {
-    try {
-      const receipt = await client.getTransactionReceipt({ hash });
-      return receipt;
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, TX_RECEIPT_POLL_MS));
-    }
-  }
-
-  throw new Error(`Transaction receipt for ${hash} not found after ${TX_RECEIPT_TIMEOUT_MS / 1000}s`);
-}
-
-async function waitForTxConfirmation(
-  apiClient: DefiClient,
-  txHash: string,
-  operationType: OperationTypeV2,
-  pollIntervalMs: number,
-  pollTimeoutMs: number,
-): Promise<OperationV2> {
-  const operation = await poll<OperationV2>(
-    `${operationType} operation`,
-    async () => {
-      const result = await apiClient.getOperationsV2({ types: [operationType], pageSize: 50 });
-      return result.items.find((item) => item.txHash === txHash) ?? null;
-    },
-    pollIntervalMs,
-    pollTimeoutMs,
-  );
-
-  assertOperationNotFailed(operationType, operation.status);
-  if (operation.status === OperationV2Status.Confirmed) return operation;
-
-  return poll<OperationV2>(
-    `${operationType} confirmation`,
-    async () => {
-      const result = await apiClient.getOperationsV2({ types: [operationType], pageSize: 50 });
-      const found = result.items.find((item) => item.id === operation.id);
-      if (!found) return null;
-      console.log(`  confirmations: ${found.confirmations}, status: ${found.status}`);
-      assertOperationNotFailed(operationType, found.status);
-      return found.status === OperationV2Status.Confirmed ? found : null;
-    },
-    pollIntervalMs,
-    pollTimeoutMs,
-  );
-}
-
-const TERMINAL_FAILURE_STATUSES = new Set<OperationV2['status']>([
-  OperationV2Status.Failed,
-  OperationV2Status.Cancelled,
-  OperationV2Status.Blocked,
-  OperationV2Status.Refunded,
-]);
-
-function assertOperationNotFailed(operationType: OperationTypeV2, status: OperationV2['status']): void {
-  if (TERMINAL_FAILURE_STATUSES.has(status)) {
-    throw new Error(`${operationType} operation reached terminal status ${status} on-chain — aborting flow.`);
-  }
-}
-
-const TERMINAL_QUEUE_FAILURE_STATUSES = new Set<QueueOperationStatus>([
-  QueueOperationStatus.Failed,
-  QueueOperationStatus.Cancelled,
-]);
-
-function assertQueueOperationNotFailed(status: QueueOperationStatus | undefined): void {
-  if (status != null && TERMINAL_QUEUE_FAILURE_STATUSES.has(status)) {
-    throw new Error(`Payout queue operation reached terminal status ${status} — aborting flow.`);
-  }
-}
-
-async function poll<T>(label: string, fn: () => Promise<T | null>, intervalMs: number, timeoutMs: number): Promise<T> {
-  const deadline = Date.now() + timeoutMs;
-
-  while (Date.now() < deadline) {
-    const result = await fn();
-    if (result !== null) {
-      return result;
-    }
-
-    const remaining = Math.round((deadline - Date.now()) / 1000);
-    console.log(`[${label}] not ready — retrying in ${intervalMs / 1000}s (${remaining}s remaining)...`);
-    await new Promise((resolve) => setTimeout(resolve, intervalMs));
-  }
-
-  throw new Error(`[${label}] timed out after ${timeoutMs / 1000}s`);
-}

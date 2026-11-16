@@ -1,6 +1,7 @@
 import type { Abi, Address, Hex, PublicClient, SignTypedDataParameters, TypedData, TypedDataDomain } from 'viem';
 import type { Account } from 'viem/accounts';
 import type { CallDto, QueueOperationResponseDto } from '../../../generated-contracts';
+import { DefiSdkError } from '../../errors';
 
 export const EXECUTE_EIP712_TYPES = {
   Execute: [
@@ -58,8 +59,11 @@ export function buildExecuteTypedData(params: {
   } as ExecuteTypedDataPayload;
 }
 
+/** The fields the `execute` typed data is derived from. */
+export type SignableQueueOperation = Pick<QueueOperationResponseDto, 'calls' | 'nonce'>;
+
 export interface CreateExecuteTypedDataParams {
-  operation: QueueOperationResponseDto;
+  operation: SignableQueueOperation;
   contractAddress: Address;
   publicClient: PublicClient;
   abi: Abi;
@@ -127,7 +131,7 @@ export async function signExecuteTypedData(params: SignExecuteTypedDataParams): 
   const signTypedData = account.signTypedData;
 
   if (typeof signTypedData !== 'function') {
-    throw new Error('The provided account does not support typed data signing.');
+    throw new DefiSdkError('The provided account does not support typed data signing.');
   }
 
   return signTypedData(typedData);

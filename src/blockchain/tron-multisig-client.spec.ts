@@ -1,12 +1,15 @@
-import type { Abi } from 'viem';
+import { type Abi, decodeFunctionData, type Hex } from 'viem';
 import type { AbiCacheEntry, SmartContractCapabilities } from '../abi-provider';
-import type { TronAddress } from '../utils/tron-validation';
+import { DefiSdkError } from '../errors';
+import { TRON_ZERO_ADDRESS, type TronAddress } from '../utils/tron-types';
 import { TronMultisigBlockchainClient } from './tron-multisig-client';
 
 const CONTRACT: TronAddress = 'TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t' as TronAddress;
 const CALLER: TronAddress = 'TRKAeHHtjKTfmKYVpt1K7vf4dHCrdNtAdv' as TronAddress;
 const RECIPIENT: TronAddress = 'TNPeeaaFB7K9cmo4uQpcU32zGK8G1NYqeL' as TronAddress;
 const TOKEN: TronAddress = 'TJCnKsPa7y5okkXvQAidZBzqx3QyQ6sxMW' as TronAddress;
+const EVM_RECIPIENT = '0x2222222222222222222222222222222222222222';
+const BLOB: Hex = `0x${'ab'.repeat(65)}` as Hex;
 
 const MOCK_ABI: Abi = [
   {
@@ -149,6 +152,61 @@ describe('TronMultisigBlockchainClient', () => {
     });
   });
 
+  describe('buildExecuteTransaction', () => {
+    function executeClient() {
+      const triggerSmartContract = jest.fn().mockResolvedValue({
+        transaction: { txID: 'abc123', raw_data: {} },
+      });
+
+      const client = new TronMultisigBlockchainClient({
+        chainId: '728126428',
+        tronWeb: { transactionBuilder: { triggerSmartContract } } as never,
+        contractAbi: mockAbiEntry,
+        defaultFeeLimit: 150_000_000,
+      });
+
+      return { client, triggerSmartContract };
+    }
+
+    function operation(overrides: { id?: string; signatureBlob?: string | null } = {}) {
+      return {
+        id: '900000000000000001',
+        executeOperationId: `0x${'0'.repeat(64)}`,
+        calls: [{ to: EVM_RECIPIENT, value: '0', data: '0x' }],
+        signatureBlob: BLOB,
+        ...overrides,
+      } as never;
+    }
+
+    it('executes from the blob alone', async () => {
+      const { client, triggerSmartContract } = executeClient();
+
+      const result = await client.buildExecuteTransaction({
+        contractAddress: CONTRACT,
+        callerAddress: CALLER,
+        operations: [operation()],
+      });
+
+      const { args } = decodeFunctionData({ abi: MOCK_ABI, data: result.data as Hex });
+      expect((args as [Array<{ signatures: Hex }>])[0][0].signatures).toBe(BLOB);
+      expect(result.to).toBe(CONTRACT);
+      expect(triggerSmartContract).toHaveBeenCalled();
+    });
+
+    it('refuses to build when an operation has not reached its signing threshold', async () => {
+      const { client, triggerSmartContract } = executeClient();
+
+      await expect(
+        client.buildExecuteTransaction({
+          contractAddress: CONTRACT,
+          callerAddress: CALLER,
+          operations: [operation(), operation({ id: '900000000000000002', signatureBlob: null })],
+        }),
+      ).rejects.toThrow(/900000000000000002/);
+      expect(triggerSmartContract).not.toHaveBeenCalled();
+    });
+  });
+
   describe('buildClaimTransaction', () => {
     it('builds claim transaction with correct function name', async () => {
       const mockTrigger = jest.fn().mockResolvedValue({
@@ -233,6 +291,47 @@ describe('TronMultisigBlockchainClient', () => {
           depositIds: [],
         }),
       ).rejects.toThrow('No claimable deposits');
+    });
+
+    it('claims native TRX when erc20 is null, accepting a numeric chainId', async () => {
+      const mockTrigger = jest.fn().mockResolvedValue({ transaction: { txID: 'abc123', raw_data: {} } });
+      const client = new TronMultisigBlockchainClient({
+        chainId: 728126428,
+        tronWeb: { transactionBuilder: { triggerSmartContract: mockTrigger } } as never,
+        contractAbi: mockAbiEntry,
+        defaultFeeLimit: 150_000_000,
+      });
+
+      const result = await client.buildClaimTransaction({
+        contractAddress: CONTRACT,
+        callerAddress: CALLER,
+        erc20: null,
+        depositIds: ['0x01'],
+      });
+
+      expect(result.chainId).toBe('728126428');
+      const [, signature, , args] = mockTrigger.mock.calls[0];
+      expect(signature).toBe('claim(address,bytes32[])');
+      expect(args[0]).toEqual({ type: 'address', value: TRON_ZERO_ADDRESS });
+    });
+
+    it('rejects an EVM address passed where a TRON address is expected', async () => {
+      const client = new TronMultisigBlockchainClient({
+        chainId: '728126428',
+        tronWeb: {} as never,
+        contractAbi: mockAbiEntry,
+        defaultFeeLimit: 150_000_000,
+      });
+
+      await expect(
+        client.buildClaimTransaction({
+          contractAddress: CONTRACT,
+          callerAddress: CALLER,
+          erc20: TOKEN,
+          depositIds: ['0x01'],
+          to: EVM_RECIPIENT,
+        }),
+      ).rejects.toBeInstanceOf(DefiSdkError);
     });
   });
 });

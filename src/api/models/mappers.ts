@@ -13,6 +13,11 @@ import type {
   BlockchainTransactionListResponseDto,
   CallbackResponseDto,
   CallDto,
+  ClaimBatchCompanionDto,
+  ClaimBatchCurrencyAmountDto,
+  ClaimBatchDto,
+  ClaimBatchesResponseDto,
+  ClaimBatchInvoiceDto,
   ClaimItemDto,
   ClaimsResponseDto,
   CrossChainChainResponseDto,
@@ -27,11 +32,11 @@ import type {
   InvoiceResponseDto,
   InvoicesResponseDto,
   NetworkResponseDto,
-  OperationSignatureDto,
   PayoutDetailResponseDto,
   PayoutListResponseDto,
   PayoutResponseDto,
   QueueOperationResponseDto,
+  QueueSignerDto,
   SignatureResponseDto,
   StakingDelegationsResponse,
   StakingNetworkParamsResponse,
@@ -58,6 +63,11 @@ import type {
   CallbackOperationType,
   CallbackStatus,
   CallbackType,
+  ClaimBatch,
+  ClaimBatchCompanion,
+  ClaimBatchCurrencyAmount,
+  ClaimBatches,
+  ClaimBatchInvoice,
   ClaimItem,
   ClaimsResponse,
   CrossChainChain,
@@ -72,7 +82,6 @@ import type {
   InvoiceList,
   InvoiceStatus,
   Network,
-  OperationSignature,
   OperationV2,
   OperationV2List,
   Payout,
@@ -82,6 +91,7 @@ import type {
   QueueOperation,
   QueueOperationStatus,
   QueueOperationType,
+  QueueSigner,
   Signature,
   StakingDelegationSummary,
   StakingDelegations,
@@ -165,16 +175,16 @@ export const mapPayoutList = (dto: PayoutListResponseDto): PayoutList => ({
   items: dto.items.map(mapPayout),
 });
 
-export const mapOperationSignature = (dto: OperationSignatureDto): OperationSignature => clone(dto);
-
 export const mapCall = (dto: CallDto): Call => clone(dto);
+
+export const mapQueueSigner = (dto: QueueSignerDto): QueueSigner => clone(dto);
 
 export const mapQueueOperation = (dto: QueueOperationResponseDto): QueueOperation => ({
   ...dto,
   operationType: dto.operationType as QueueOperationType,
   status: dto.status as QueueOperationStatus,
   calls: dto.calls.map(mapCall),
-  signatures: dto.signatures.map(mapOperationSignature),
+  signers: dto.signers.map(mapQueueSigner),
 });
 
 export const mapDeploymentQueue = (dto: DeploymentQueueResponseDto): DeploymentQueue => ({
@@ -193,7 +203,7 @@ export const mapBatchCandidateOperation = (
   operationType: dto.operationType as QueueOperationType,
   status: dto.status as QueueOperationStatus,
   calls: dto.calls.map(mapCall),
-  signatures: dto.signatures.map(mapOperationSignature),
+  signers: dto.signers.map(mapQueueSigner),
 });
 
 export const mapBatchCandidateNonceGroup = (
@@ -214,7 +224,7 @@ export const mapExecuteBatchOperationsResult = (): ExecuteBatchOperationsResult 
 
 export const mapSignature = (dto: SignatureResponseDto): Signature => ({
   ...dto,
-  signatures: dto.signatures.map(mapOperationSignature),
+  signers: dto.signers.map(mapQueueSigner),
 });
 
 export const mapClaimItem = (dto: ClaimItemDto): ClaimItem => ({
@@ -227,6 +237,33 @@ export const mapClaimsResponse = (dto: ClaimsResponseDto): ClaimsResponse => ({
   page: dto.page,
   pageSize: dto.pageSize,
   items: dto.items.map(mapClaimItem),
+});
+
+export const mapClaimBatchCurrencyAmount = (dto: ClaimBatchCurrencyAmountDto): ClaimBatchCurrencyAmount => ({
+  ...dto,
+  currency: mapCurrency(dto.currency),
+});
+
+export const mapClaimBatchCompanion = (dto: ClaimBatchCompanionDto): ClaimBatchCompanion => ({
+  ...dto,
+  currency: mapCurrency(dto.currency),
+});
+
+export const mapClaimBatchInvoice = (dto: ClaimBatchInvoiceDto): ClaimBatchInvoice => ({
+  ...dto,
+  companions: dto.companions.map(mapClaimBatchCompanion),
+});
+
+export const mapClaimBatch = (dto: ClaimBatchDto): ClaimBatch => ({
+  ...dto,
+  currency: mapCurrency(dto.currency),
+  sweptNativeTotals: dto.sweptNativeTotals.map(mapClaimBatchCurrencyAmount),
+  companionCurrencies: dto.companionCurrencies.map(mapCurrency),
+  invoices: dto.invoices.map(mapClaimBatchInvoice),
+});
+
+export const mapClaimBatches = (dto: ClaimBatchesResponseDto): ClaimBatches => ({
+  items: dto.items.map(mapClaimBatch),
 });
 
 export const mapOperationV2 = (dto: BlockchainOperationListResponseDto['items'][number]): OperationV2 => clone(dto);

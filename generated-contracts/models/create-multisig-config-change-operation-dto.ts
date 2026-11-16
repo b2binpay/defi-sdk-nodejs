@@ -47,11 +47,11 @@ export interface CreateMultisigConfigChangeOperationDto {
      */
     threshold: number;
     /**
-     * 
+     * Deprecated: omit it and the server encodes setConfig(approvers, threshold) itself. When sent, it must be exactly that zero-value call on the account contract.
      * @type {Array<CallDto>}
      * @memberof CreateMultisigConfigChangeOperationDto
      */
-    calls: Array<CallDto>;
+    calls?: Array<CallDto>;
 }
 
 /**
@@ -60,7 +60,6 @@ export interface CreateMultisigConfigChangeOperationDto {
 export function instanceOfCreateMultisigConfigChangeOperationDto(value: object): value is CreateMultisigConfigChangeOperationDto {
     if (!('approvers' in value) || value['approvers'] === undefined) return false;
     if (!('threshold' in value) || value['threshold'] === undefined) return false;
-    if (!('calls' in value) || value['calls'] === undefined) return false;
     return true;
 }
 
@@ -76,7 +75,7 @@ export function CreateMultisigConfigChangeOperationDtoFromJSONTyped(json: any, i
         
         'approvers': ((json['approvers'] as Array<any>).map(UniversalAddressFromJSON)),
         'threshold': json['threshold'],
-        'calls': ((json['calls'] as Array<any>).map(CallDtoFromJSON)),
+        'calls': json['calls'] == null ? undefined : ((json['calls'] as Array<any>).map(CallDtoFromJSON)),
     };
 }
 
@@ -93,7 +92,7 @@ export function CreateMultisigConfigChangeOperationDtoToJSONTyped(value?: Create
         
         'approvers': ((value['approvers'] as Array<any>).map(UniversalAddressToJSON)),
         'threshold': value['threshold'],
-        'calls': ((value['calls'] as Array<any>).map(CallDtoToJSON)),
+        'calls': value['calls'] == null ? undefined : ((value['calls'] as Array<any>).map(CallDtoToJSON)),
     };
 }
 

@@ -1,4 +1,5 @@
 import { type Address, bytesToHex, concatHex, type Hex, hexToBytes } from 'viem';
+import { DefiSdkError } from '../../errors';
 import { CONTRACT_VERSION_LEGACY } from './contract-versions';
 
 export interface SignatureEntry {
@@ -42,7 +43,7 @@ function packSignaturesV1(signatures: ReadonlyArray<SignatureEntry>): Hex {
 function packSignaturesV1_1(signatures: ReadonlyArray<SignatureEntry>): Hex {
   const uniqueSigners = new Set(signatures.map((s) => s.user.toLowerCase()));
   if (uniqueSigners.size !== signatures.length) {
-    throw new Error('Duplicate signer addresses detected in signatures array');
+    throw new DefiSdkError('Duplicate signer addresses detected in signatures array');
   }
 
   const sorted = [...signatures].sort((a, b) => {

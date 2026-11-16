@@ -13,13 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
-import type { OperationSignatureDto } from './operation-signature-dto';
+import type { QueueSignerDto } from './queue-signer-dto';
 import {
-    OperationSignatureDtoFromJSON,
-    OperationSignatureDtoFromJSONTyped,
-    OperationSignatureDtoToJSON,
-    OperationSignatureDtoToJSONTyped,
-} from './operation-signature-dto';
+    QueueSignerDtoFromJSON,
+    QueueSignerDtoFromJSONTyped,
+    QueueSignerDtoToJSON,
+    QueueSignerDtoToJSONTyped,
+} from './queue-signer-dto';
 
 /**
  * 
@@ -52,11 +52,17 @@ export interface SignatureResponseDto {
      */
     userSigned: boolean;
     /**
-     * Array of signatures for this operation, ordered by signer address ascending
-     * @type {Array<OperationSignatureDto>}
+     * Every approver on the operation's deployment with their signing state, in approver order. Empty on a creation response — nothing has been signed yet.
+     * @type {Array<QueueSignerDto>}
      * @memberof SignatureResponseDto
      */
-    signatures: Array<OperationSignatureDto>;
+    signers: Array<QueueSignerDto>;
+    /**
+     * Pre-built signature blob ready for the on-chain `execute` call (signers ordered ascending) — the only executable artifact the API exposes; individual signatures are never returned. Null until the required number of signatures is collected, and always null for a viewer who is not an approver on the deployment.
+     * @type {string}
+     * @memberof SignatureResponseDto
+     */
+    signatureBlob: string | null;
     /**
      * Queue operation unique identifier
      * @type {string}
@@ -73,7 +79,8 @@ export function instanceOfSignatureResponseDto(value: object): value is Signatur
     if (!('signaturesRequired' in value) || value['signaturesRequired'] === undefined) return false;
     if (!('canExecute' in value) || value['canExecute'] === undefined) return false;
     if (!('userSigned' in value) || value['userSigned'] === undefined) return false;
-    if (!('signatures' in value) || value['signatures'] === undefined) return false;
+    if (!('signers' in value) || value['signers'] === undefined) return false;
+    if (!('signatureBlob' in value) || value['signatureBlob'] === undefined) return false;
     if (!('operationId' in value) || value['operationId'] === undefined) return false;
     return true;
 }
@@ -92,7 +99,8 @@ export function SignatureResponseDtoFromJSONTyped(json: any, ignoreDiscriminator
         'signaturesRequired': json['signaturesRequired'],
         'canExecute': json['canExecute'],
         'userSigned': json['userSigned'],
-        'signatures': ((json['signatures'] as Array<any>).map(OperationSignatureDtoFromJSON)),
+        'signers': ((json['signers'] as Array<any>).map(QueueSignerDtoFromJSON)),
+        'signatureBlob': json['signatureBlob'],
         'operationId': json['operationId'],
     };
 }
@@ -112,7 +120,8 @@ export function SignatureResponseDtoToJSONTyped(value?: SignatureResponseDto | n
         'signaturesRequired': value['signaturesRequired'],
         'canExecute': value['canExecute'],
         'userSigned': value['userSigned'],
-        'signatures': ((value['signatures'] as Array<any>).map(OperationSignatureDtoToJSON)),
+        'signers': ((value['signers'] as Array<any>).map(QueueSignerDtoToJSON)),
+        'signatureBlob': value['signatureBlob'],
         'operationId': value['operationId'],
     };
 }
