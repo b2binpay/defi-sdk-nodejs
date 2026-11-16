@@ -33,6 +33,10 @@ import type {
   BlockchainVoteOperationResponseDto,
   CallbackResponseDto,
   CallDto,
+  ClaimBatchCompanionDto,
+  ClaimBatchCurrencyAmountDto,
+  ClaimBatchDto,
+  ClaimBatchInvoiceDto,
   ClaimItemDto,
   CrossChainChainResponseDto,
   CrossChainQuotesResponseDto,
@@ -48,11 +52,11 @@ import type {
   InvoicesResponseDto,
   NetworkResponseDto,
   NonceInfoResponseDto,
-  OperationSignatureDto,
   PayoutDetailResponseDto,
   PayoutListResponseDto,
   PayoutResponseDto,
   QueueOperationResponseDto,
+  QueueSignerDto,
   ResendCallbacksResponseDto,
   SignatureResponseDto,
   StakingDelegationsResponse,
@@ -182,8 +186,6 @@ export enum PayoutSortField {
 
 export type Call = CallDto;
 
-export type OperationSignature = OperationSignatureDto;
-
 export enum QueueOperationType {
   MultisigConfigChange = 'MULTISIG_CONFIG_CHANGE',
   Reject = 'REJECT',
@@ -211,11 +213,14 @@ export enum QueueOperationStatus {
   Cancelled = 'CANCELLED',
 }
 
-export type QueueOperation = Omit<QueueOperationResponseDto, 'operationType' | 'status' | 'calls' | 'signatures'> & {
+/** A deployment approver and whether they have signed the operation. */
+export type QueueSigner = QueueSignerDto;
+
+export type QueueOperation = Omit<QueueOperationResponseDto, 'operationType' | 'status' | 'calls' | 'signers'> & {
   operationType: QueueOperationType;
   status: QueueOperationStatus;
   calls: Call[];
-  signatures: OperationSignature[];
+  signers: QueueSigner[];
 };
 
 export type DeploymentQueue = Omit<DeploymentQueueResponseDto, 'items'> & {
@@ -224,12 +229,12 @@ export type DeploymentQueue = Omit<DeploymentQueueResponseDto, 'items'> & {
 
 export type BatchCandidateOperation = Omit<
   BatchCandidatesResponseDtoCandidatesInnerOperationsInner,
-  'operationType' | 'status' | 'calls' | 'signatures'
+  'operationType' | 'status' | 'calls' | 'signers'
 > & {
   operationType: QueueOperationType;
   status: QueueOperationStatus;
   calls: Call[];
-  signatures: OperationSignature[];
+  signers: QueueSigner[];
 };
 
 export type BatchCandidateNonceGroup = Omit<BatchCandidatesResponseDtoCandidatesInner, 'operations'> & {
@@ -245,8 +250,8 @@ export interface ExecuteBatchOperationsResult {
 }
 
 /** @deprecated Use `operationType` to determine transaction direction instead. */
-export type Signature = Omit<SignatureResponseDto, 'signatures'> & {
-  signatures: OperationSignature[];
+export type Signature = Omit<SignatureResponseDto, 'signers'> & {
+  signers: QueueSigner[];
 };
 
 export type ClaimItem = Omit<ClaimItemDto, 'currency'> & {
@@ -258,6 +263,30 @@ export interface ClaimsResponse {
   page: number;
   pageSize: number;
   items: ClaimItem[];
+}
+
+export type ClaimBatchCurrencyAmount = Omit<ClaimBatchCurrencyAmountDto, 'currency'> & {
+  currency: Currency;
+};
+
+export type ClaimBatchCompanion = Omit<ClaimBatchCompanionDto, 'currency'> & {
+  currency: Currency;
+};
+
+export type ClaimBatchInvoice = Omit<ClaimBatchInvoiceDto, 'companions'> & {
+  companions: ClaimBatchCompanion[];
+};
+
+/** Claimable deposits of one currency grouped across invoices, for claiming them in one transaction. */
+export type ClaimBatch = Omit<ClaimBatchDto, 'currency' | 'sweptNativeTotals' | 'companionCurrencies' | 'invoices'> & {
+  currency: Currency;
+  sweptNativeTotals: ClaimBatchCurrencyAmount[];
+  companionCurrencies: Currency[];
+  invoices: ClaimBatchInvoice[];
+};
+
+export interface ClaimBatches {
+  items: ClaimBatch[];
 }
 
 export enum ClaimsSortField {

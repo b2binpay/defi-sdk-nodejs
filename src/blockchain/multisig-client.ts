@@ -1,10 +1,12 @@
-import type { Abi, Account, Address, Hex, PublicClient, TypedDataDomain } from 'viem';
-import { encodeFunctionData } from 'viem';
-import type { QueueOperationResponseDto } from '../../generated-contracts';
+import type { Abi, Account, Hex, PublicClient, TypedDataDomain } from 'viem';
+import { encodeFunctionData, zeroAddress } from 'viem';
 import type { ContractAbi } from '../abi-provider';
-import type { PreparedTransaction } from '../utils/transactions/builders';
+import type { ChainIdentifier } from '../api/defi-client';
+import { DefiSdkError } from '../errors';
+import { toEvmAddress } from '../utils/address-input';
+import type { ExecutableQueueOperation, PreparedTransaction } from '../utils/transactions/builders';
 import { buildExecuteOperationsTransaction, ensureHexPrefix, normalizeCalls } from '../utils/transactions/builders';
-import type { ExecuteTypedDataPayload } from '../utils/transactions/eip712';
+import type { ExecuteTypedDataPayload, SignableQueueOperation } from '../utils/transactions/eip712';
 import {
   buildExecuteTypedData,
   buildExecuteTypedMessage,
@@ -12,15 +14,30 @@ import {
 } from '../utils/transactions/eip712';
 
 export interface MultisigBlockchainClientOptions {
-  chainId: string;
+  chainId: ChainIdentifier;
   publicClient: PublicClient;
   contractAbi: ContractAbi;
 }
 
 export interface CreateExecuteTypedDataArgs {
-  contractAddress: Address;
-  operation: QueueOperationResponseDto;
+  /** The multisig contract — `account.contract` from `DefiClient.getAccount()`. */
+  contractAddress: string;
+  operation: SignableQueueOperation;
   domainOverride?: TypedDataDomain;
+}
+
+export interface BuildExecuteTransactionArgs {
+  contractAddress: string;
+  operations: ExecutableQueueOperation[];
+}
+
+export interface BuildClaimCalldataArgs {
+  /** Token to claim; `null` (a native currency's `address`) claims the native coin. */
+  erc20: string | null;
+  /** `invoiceNonce` of every claimable deposit to sweep — `ClaimItem.invoiceNonce`. */
+  depositIds: string[];
+  /** Recipient; omit to claim into the multisig contract itself. */
+  to?: string;
 }
 
 export interface SignExecuteTypedDataArgs {
@@ -52,31 +69,35 @@ export class MultisigBlockchainClient {
     }
 
     return createExecuteTypedDataUtil({
-      contractAddress: args.contractAddress,
+      contractAddress: toEvmAddress(args.contractAddress, 'contractAddress'),
       operation: args.operation,
       publicClient: this.publicClientInstance,
       abi: this.abi,
     });
   }
 
-  buildExecuteTransaction(params: {
-    contractAddress: string;
-    operations: QueueOperationResponseDto[];
-  }): PreparedTransaction {
+  buildExecuteTransaction(args: BuildExecuteTransactionArgs): PreparedTransaction {
     return buildExecuteOperationsTransaction({
-      contractAddress: params.contractAddress as Address,
+      contractAddress: toEvmAddress(args.contractAddress, 'contractAddress'),
       chainId: this.chainIdNumber,
-      operations: params.operations,
+      operations: args.operations,
       abi: this.abi,
     });
   }
 
-  buildClaimCalldata(params: { erc20: Address; depositAccountIds: Array<string>; to?: Address }): Hex {
-    const depositIds = params.depositAccountIds.map(ensureHexPrefix);
-    return encodeFunctionData({
-      abi: this.abi,
-      functionName: params.to ? 'claimTo' : 'claim',
-      args: params.to ? [params.erc20, params.to, depositIds] : [params.erc20, depositIds],
-    });
+  buildClaimCalldata(args: BuildClaimCalldataArgs): Hex {
+    if (args.depositIds.length === 0) {
+      throw new DefiSdkError('No claimable deposits found for the specified parameters.');
+    }
+
+    const erc20 = args.erc20 === null ? zeroAddress : toEvmAddress(args.erc20, 'erc20');
+    const depositIds = args.depositIds.map(ensureHexPrefix);
+
+    if (args.to === undefined) {
+      return encodeFunctionData({ abi: this.abi, functionName: 'claim', args: [erc20, depositIds] });
+    }
+
+    const to = toEvmAddress(args.to, 'to');
+    return encodeFunctionData({ abi: this.abi, functionName: 'claimTo', args: [erc20, to, depositIds] });
   }
 }

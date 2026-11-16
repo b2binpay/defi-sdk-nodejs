@@ -52,6 +52,7 @@ export interface CrossChainControllerListDestinationCurrenciesV1Request {
 export interface DeploymentCrossChainControllerCreateTransferV1Request {
     deploymentId: string;
     createCrossChainTransferDto: CreateCrossChainTransferDto;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentCrossChainControllerGetQuoteV1Request {
@@ -181,6 +182,10 @@ export class CrossChainTransfersApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication

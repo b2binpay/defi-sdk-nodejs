@@ -12,13 +12,13 @@ This document covers the blockchain interaction layer: EIP-712/TIP-712 typed-dat
 import { createPublicClient, http } from 'viem';
 import { MultisigBlockchainClient, getEvmChainById } from '@b2binpay/defi-sdk';
 
-const chain = getEvmChainById(String(CHAIN_ID), process.env.RPC_URL!);
+const chain = getEvmChainById(CHAIN_ID, process.env.RPC_URL!);
 const publicClient = createPublicClient({ chain, transport: http(process.env.RPC_URL!) });
 
 const contractAbi = await client.getContractAbi(); // from DefiClient
 
 const multisig = new MultisigBlockchainClient({
-  chainId: String(CHAIN_ID),
+  chainId: CHAIN_ID, // number or string
   publicClient,
   contractAbi,
 });
@@ -32,7 +32,7 @@ Builds an EIP-712 typed-data payload for signing a pending multisig operation.
 
 ```ts
 const typedData = await multisig.createExecuteTypedData({
-  contractAddress: deployment.contract as `0x${string}`,
+  contractAddress: account.contract, // `account` from client.getAccount(); validated by the client
   operation,               // QueueOperation from getDeploymentQueue()
   domainOverride,          // optional: skip on-chain domain fetch
 });
@@ -46,7 +46,7 @@ Encodes a `MultiSigWallet.execute()` call for one or more ready operations.
 
 ```ts
 const tx = multisig.buildExecuteTransaction({
-  contractAddress: deployment.contract as `0x${string}`,
+  contractAddress: account.contract,
   operations: [op1, op2], // one or more QueueOperations
 });
 // tx: { to, data, chainId, value }
@@ -55,13 +55,14 @@ await walletClient.sendTransaction(tx);
 
 #### `buildClaimCalldata(params)`
 
-Generates calldata for `claim(erc20, depositIds)` or `claimTo(erc20, depositIds, recipient)`.
+Generates calldata for `claim(erc20, depositIds)` or, with `to`, `claimTo(erc20, to, depositIds)`. Throws on an
+empty `depositIds`; `erc20: null` claims the native coin.
 
 ```ts
 const calldata = multisig.buildClaimCalldata({
-  erc20: currency.address as `0x${string}`,
-  depositAccountIds: claims.items.map((c) => c.invoiceNonce),
-  to: recipientAddress, // optional: uses contract default if omitted
+  erc20: currency.address, // null for the native coin
+  depositIds: claims.items.map((c) => c.invoiceNonce),
+  to: recipientAddress, // optional: omitted, the deposits are claimed into the multisig itself
 });
 ```
 
@@ -74,8 +75,8 @@ const calldata = multisig.buildClaimCalldata({
 ### Construction
 
 ```ts
-import TronWeb from 'tronweb';
-import { TronMultisigBlockchainClient } from '@b2binpay/defi-sdk';
+import { TronWeb } from 'tronweb';
+import { TronMultisigBlockchainClient, transactions } from '@b2binpay/defi-sdk';
 
 const tronWeb = new TronWeb({
   fullHost: process.env.RPC_URL!,
@@ -83,7 +84,7 @@ const tronWeb = new TronWeb({
 });
 
 const multisig = new TronMultisigBlockchainClient({
-  chainId: String(CHAIN_ID),
+  chainId: CHAIN_ID, // number or string
   tronWeb,
   contractAbi, // from client.getContractAbi()
   defaultFeeLimit: 150_000_000, // 150 TRX in SUN
@@ -98,11 +99,12 @@ Builds a TIP-712 typed-data payload for signing.
 
 ```ts
 const typedData = await multisig.createExecuteTypedData({
-  contractAddress: deployment.contract, // Tron base58 address
+  contractAddress: account.contract, // `account` from client.getAccount(); validated by the client
   operation,
 });
 
-const signature = await tronWeb.trx.signMessageV2(typedData.message);
+const { domain, types, message } = transactions.prepareTronTypedDataForSigning(typedData);
+const signature = await tronWeb.trx._signTypedData(domain, types, message);
 ```
 
 #### `buildExecuteTransaction(params)`
@@ -111,12 +113,12 @@ Encodes a TRON `execute()` transaction.
 
 ```ts
 const tx = await multisig.buildExecuteTransaction({
-  contractAddress: deployment.contract,
-  callerAddress: tronWeb.defaultAddress.base58,
+  contractAddress: account.contract,
+  callerAddress: signerAddress, // tronWeb.defaultAddress.base58, checked for `false`
   operations: [readyOp],
   feeLimit: 200_000_000, // optional override
 });
-await tronWeb.trx.sendRawTransaction(tx.raw);
+await tronWeb.trx.sendRawTransaction(await tronWeb.trx.sign(tx.raw));
 ```
 
 #### `buildClaimTransaction(params)`
@@ -125,12 +127,12 @@ Encodes a TRON claim transaction.
 
 ```ts
 const tx = await multisig.buildClaimTransaction({
-  contractAddress: deployment.contract,
-  callerAddress: tronWeb.defaultAddress.base58,
+  contractAddress: account.contract,
+  callerAddress: signerAddress, // tronWeb.defaultAddress.base58, checked for `false`
   erc20: currency.address,
   depositIds: claims.items.map((c) => c.invoiceNonce),
 });
-await tronWeb.trx.sendRawTransaction(tx.raw);
+await tronWeb.trx.sendRawTransaction(await tronWeb.trx.sign(tx.raw));
 ```
 
 ---
@@ -143,7 +145,7 @@ import { getEvmChainById, getTronChainById, getChainById } from '@b2binpay/defi-
 // Returns a viem Chain object for known EVM chains; throws on unknown IDs
 const chain = getEvmChainById('11155111', process.env.RPC_URL);
 
-// Returns a TronChainConfig (fullHost, chainId, etc.)
+// Returns a TronChainConfig ({ id, name, network, rpcUrls })
 const tronChain = getTronChainById('728126428');
 
 // Universal resolver — returns viem Chain or TronChainConfig
@@ -166,6 +168,7 @@ const typedData = await transactions.createExecuteTypedData({
   contractAddress,
   operation,
   publicClient,
+  abi: contractAbi.abi, // from client.getContractAbi()
 });
 
 // Build a typed message directly (no RPC call)
@@ -183,8 +186,7 @@ import { transactions } from '@b2binpay/defi-sdk';
 const typedData = transactions.buildTronExecuteTypedData({
   domain,
   calls,
-  nonce,
-  contractVersion,
+  nonce, // bigint
 });
 
 // Prepare for TronWeb signing (converts BigInt to string)
@@ -199,7 +201,7 @@ Signatures are packed automatically by `submitOperationSignature`. If you need d
 import { transactions } from '@b2binpay/defi-sdk';
 
 // EVM
-const packed = transactions.packSignatures([{ signer, signature }], contractVersion);
+const packed = transactions.packSignatures([{ user: signer, sign: signature }], contractVersion);
 
 // TVM
 const packedTron = transactions.packTronSignatures([{ signer, signature }], contractVersion);
@@ -223,7 +225,7 @@ wallet.signTypedData()      — sign off-chain
     ↓
 submitOperationSignature()  — submit to API (auto-packs signature)
     ↓
-getDeploymentQueue()        — poll until status = Ready
+waitForQueueOperation()     — wait until status = Ready
     ↓
 buildExecuteTransaction()   — encode on-chain call
     ↓

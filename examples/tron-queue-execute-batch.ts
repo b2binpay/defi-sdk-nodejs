@@ -7,8 +7,15 @@
  */
 import 'dotenv/config';
 import { TronWeb } from 'tronweb';
-import { DefiClient, type TronAddress, TronMultisigBlockchainClient } from '../src';
-import { DEFAULT_FEE_LIMIT, parseChainId, requireEnvVars, runMain } from './utils';
+import { DefiClient, TronMultisigBlockchainClient } from '../src';
+import {
+  assertTronBroadcast,
+  DEFAULT_FEE_LIMIT,
+  parseChainId,
+  requireEnvVars,
+  runMain,
+  waitForTronReceipt,
+} from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
 
@@ -82,13 +89,17 @@ runMain(async () => {
   }
 
   const transaction = await tronClient.buildExecuteTransaction({
-    contractAddress: accountDetails.account.contract as TronAddress,
-    callerAddress: callerAddress as TronAddress,
+    contractAddress: accountDetails.account.contract,
+    callerAddress: callerAddress,
     operations: picks,
   });
 
-  const signedTx = await tronWeb.trx.sign(transaction.raw as Parameters<typeof tronWeb.trx.sign>[0]);
-  const result = await tronWeb.trx.sendRawTransaction(signedTx as Parameters<typeof tronWeb.trx.sendRawTransaction>[0]);
+  const signedTx = await tronWeb.trx.sign(transaction.raw);
+  const txId = assertTronBroadcast(await tronWeb.trx.sendRawTransaction(signedTx), 'Tron batch execution');
+  console.log('Tron batch execution broadcasted:', txId);
 
-  console.log('Tron batch execution broadcasted:', result.txid);
+  await waitForTronReceipt(tronWeb, txId, 'Tron batch execution');
+  const confirmed = await client.waitForTransactionOperations({ txHash: txId });
+  console.log('Confirmed by the API:');
+  console.table(confirmed.map((op) => ({ id: op.id, type: op.operationType, status: op.status })));
 });

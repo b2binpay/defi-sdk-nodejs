@@ -26,7 +26,7 @@ export interface CreateCowswapOperationDto {
      */
     orderUid: string;
     /**
-     * Order expiry (`validTo`) as a unix timestamp in seconds
+     * Order expiry (`validTo`) as a unix timestamp in seconds — must match the `validTo` encoded in `orderUid`
      * @type {number}
      * @memberof CreateCowswapOperationDto
      */

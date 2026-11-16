@@ -6,7 +6,7 @@
  */
 import 'dotenv/config';
 import { AssetSortField, AssetSortOrder, DefiClient, FiatCurrency, TRON_CHAIN_IDS } from '../src';
-import { requireEnvVars, runMain } from './utils';
+import { formatConvertedBalance, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY'] as const;
 
@@ -29,11 +29,10 @@ runMain(async () => {
   console.log(`Found ${tronDeployments.length} Tron deployment(s). Fetching balances...`);
 
   for (const deployment of tronDeployments) {
-    const chainIdNumber = Number.parseInt(deployment.chainId, 10);
     console.log(`\nTron Chain ${deployment.chainId}`);
 
     const summary = await client.getAccountBalanceSummary({
-      chainId: chainIdNumber,
+      chainId: deployment.chainId,
       baseCurrency,
     });
 
@@ -62,7 +61,7 @@ runMain(async () => {
       nonZeroBalances.map((item) => ({
         symbol: item.currency.symbol,
         balance: item.balance,
-        converted: `${item.convertedBalance} ${baseCurrency.toUpperCase()}`,
+        converted: formatConvertedBalance(item.convertedBalance, baseCurrency),
       })),
     );
   }

@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-- Node.js `^24.16.0` and npm `^11.0.0`
+- Node.js `^24.16.0` and npm `^12.1.0` for working on this repository (`devEngines`); the published
+  package itself runs on Node.js 20+ (`engines`)
 - Access to the OpenAPI specification for regenerating `generated-contracts/`
 - A wallet private key and API credentials for running integration examples
 
@@ -13,7 +14,7 @@
 - `npm test`: Run the test suite (`jest`).
 - `npm run lint`: Check and format code with Biome.
 - `npm run lint:fix`: Auto-fix Biome issues.
-- `npm run generate:api`: Regenerate REST client from the remote OpenAPI spec.
+- `npm run generate:api`: Regenerate the REST client from the production OpenAPI spec.
 - `npx tsc --noEmit`: Type-check the project without emitting files.
 - `npm run example:get-account-info`: Run the reference example (requires `.env`).
 
@@ -25,8 +26,9 @@ Copy `.env.example` to `.env` and fill in the required values:
 cp .env.example .env
 ```
 
-Required variables: `API_BASE_URL`, `API_KEY`, `CHAIN_ID`, `RPC_URL`, `WALLET_PRIVATE_KEY`.
-See `.env.example` for the full list. The TRON examples read the same variables — point `CHAIN_ID` and `RPC_URL` at a TVM chain.
+Every example needs `API_BASE_URL` and `API_KEY`; chain-scoped ones add `CHAIN_ID`, anything that signs or
+broadcasts adds `RPC_URL` and `WALLET_PRIVATE_KEY`, payouts add `PAYOUT_RECIPIENT`. See `.env.example` for the
+optional variables. `DOTENV_CONFIG_PATH=<file>` selects an env file other than `.env`.
 
 ## Workflow
 
@@ -57,6 +59,6 @@ npm run generate:api
 - Ensure `generated-contracts/` is up to date and committed.
 - Verify all examples run against the target environment.
 - Run `npm test`, `npm run lint`, and `npx tsc --noEmit`.
-- Version is managed by CI — do not modify it manually in `package.json`.
+- Push a `vX.Y.Z` tag on `main`: the publish workflow sets the version from the tag and publishes to npm.
 
 For architectural orientation review `docs/overview.md` first, then reference module-specific guides.

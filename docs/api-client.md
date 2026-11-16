@@ -25,6 +25,7 @@ All constructor options:
 | `credentials`          | no       | Fetch `credentials` setting                             |
 | `queryParamsStringify` | no       | Custom query parameter serializer                       |
 | `abiCacheDir`          | no       | Directory for persistent ABI disk cache                 |
+| `logger`               | no       | `{ warn(message) }` receiving SDK diagnostics; silent if omitted |
 
 ## Authentication
 
@@ -90,7 +91,7 @@ The API remains the authority: a gated call still returns `400` if the flags are
 ## Balances & Assets
 
 ```ts
-import { FiatCurrency, AssetSortField, SortOrder } from '@b2binpay/defi-sdk';
+import { AssetSortField, AssetSortOrder, FiatCurrency } from '@b2binpay/defi-sdk';
 
 // Fiat-converted totals for a chain
 const summary = await client.getAccountBalanceSummary({ chainId: 1, baseCurrency: FiatCurrency.Usd });
@@ -99,8 +100,8 @@ const summary = await client.getAccountBalanceSummary({ chainId: 1, baseCurrency
 const assets = await client.getAssetBalances({
   chainId: 1,
   baseCurrency: FiatCurrency.Usd,
-  sortField: AssetSortField.Balance,
-  sortOrder: SortOrder.Desc,
+  sortBy: AssetSortField.Balance,
+  sortOrder: AssetSortOrder.Desc,
   pageSize: 20,
 });
 ```
@@ -112,13 +113,13 @@ const assets = await client.getAssetBalances({
 const currencies = await client.getCurrencies();
 
 // Native coin for a chain (address === null)
-const eth = await client.getNativeCurrency(1);
+const eth = await client.getNativeCurrency({ chainId: 1 });
 
 // Lookup by ticker (throws if zero or multiple matches)
 const usdt = await client.findCurrencyBySymbol({ symbol: 'USDT', chainId: 1 });
 ```
 
-> **Note (TRON):** On TRON, `getCurrencies()` may return stale EVM-format entries. Use `getNativeCurrency(chainId)` to get TRX reliably.
+> **Note (TRON):** On TRON, `getCurrencies()` may return stale EVM-format entries. Use `getNativeCurrency({ chainId })` to get TRX reliably.
 
 ## Invoices
 
@@ -144,10 +145,11 @@ const open = await client.getInvoices({
 // Fetch details
 const details = await client.getInvoice({ invoiceId: invoice.id });
 
-// Update (cancel, patch amount, tracking id, payment-page fields or currencies)
+// Update (expire, patch amount, tracking id, payment-page fields or currencies).
+// An invoice is cancelled by moving it to EXPIRED.
 await client.updateInvoice({
   invoiceId: invoice.id,
-  status: InvoiceStatus.Cancelled,
+  status: InvoiceStatus.Expired,
 });
 ```
 
@@ -191,7 +193,7 @@ const uncontested = candidates.filter((group) => !group.conflict);
 
 // Submit a signature (raw ECDSA hex — packed automatically by the SDK)
 await client.submitOperationSignature({
-  operationId: operation.executeOperationId,
+  operationId: operation.id, // the API id, not the on-chain executeOperationId
   signature: rawSignature,
   signerAddress: account.address, // required for v1.1.0 contracts
 });
@@ -224,34 +226,103 @@ const txList = await client.getBlockchainTransactions({ pageSize: 20 });
 const tx = await client.getBlockchainTransaction({ transactionId: txList.items[0].id });
 ```
 
-> **Deprecated:** the v1 `getTransactions()` / `getTransaction()` methods and `Transaction*` types are superseded by the two APIs above and will be removed in a future release.
-
 ## Claims
 
 ```ts
-// List claimable deposits
-const claims = await client.getClaims({ pageSize: 50 });
+// List claimable deposits, leaving out scam-flagged currencies
+const claims = await client.getClaims({ pageSize: 50, currencyIsScam: false });
 
 // Currencies with claimable balances
 const claimable = await client.getClaimableCurrencies();
+
+// Claimable deposits grouped by currency, ready for a batch claim
+const { items: batches } = await client.getClaimBatches({ currencyIsScam: false });
+for (const batch of batches.filter((b) => b.canBatch)) {
+  // Invoices whose chain native coin is risky are excluded from the totals and must be claimed one by one
+  const invoiceNonces = batch.invoices.filter((i) => i.isBatchable).map((i) => i.invoiceNonce);
+  console.log(batch.currency.symbol, batch.totalAmount, invoiceNonces, batch.sweptNativeTotals);
+}
 ```
+
+`getClaimBatches()` also reports what a batch moves besides its own currency: `sweptNativeTotals` is the
+native balance a token claim carries along, and `companionCurrencies` lists currencies on the same
+invoices that the batch does **not** move. `currencyIsScam`, `currencyIsVerified` and `currencyIsHidden`
+filter both `getClaims()` and `getClaimBatches()`; an omitted flag does not filter.
 
 Broadcasting claim transactions is done off-chain through `MultisigBlockchainClient.buildClaimCalldata` (EVM) or `TronMultisigBlockchainClient.buildClaimTransaction` (TRON). See [`examples/claim-deposits.ts`](../examples/claim-deposits.ts) and [`examples/tron-claim-deposits.ts`](../examples/tron-claim-deposits.ts).
 
-## Error Handling
+## Pagination
 
-All API methods throw `ResponseError` on non-2xx responses. Parse the response body for details:
+List methods return one page (`items`, `total`, `page`, `pageSize`). To walk all of them, hand the method
+to `paginate`, which fetches pages lazily and keeps your filters on every request:
 
 ```ts
-import { ResponseError } from '@b2binpay/defi-sdk';
+import { fetchAll, InvoiceStatus, paginate } from '@b2binpay/defi-sdk';
+
+for await (const invoice of paginate((p) => client.getInvoices(p), { statuses: [InvoiceStatus.Paid] })) {
+  console.log(invoice.id);
+}
+
+const allPayouts = await fetchAll((p) => client.getPayouts(p), { trackingId: 'order-42' });
+```
+
+`pageSize` defaults to 100. Iteration stops at the first short page or once `total` items have been
+seen; breaking out of the loop stops further requests.
+
+## Waiting for State Changes
+
+Signing, execution and confirmation happen asynchronously. Instead of writing polling loops, wait on
+the state you need:
+
+```ts
+// Until the queue operation has enough signatures to execute
+const ready = await client.waitForQueueOperation({ operationId: payout.queueOperationId! });
+
+// Until the indexer confirms every operation a transaction you broadcast carries
+// (a batch execute carries one per queue entry; `type` narrows them)
+const confirmed = await client.waitForTransactionOperations({ txHash, type: OperationTypeV2.Payout });
+
+// Or a single v2 operation you already know by id
+const operation = await client.waitForOperationV2({ id: operationId });
+```
+
+All three take `{ timeoutMs, intervalMs, signal }` (defaults: 5 minutes, 5 seconds). They reject with
+`WaitTimeoutError` on timeout, `UnexpectedStatusError` (`status`) when the entity settles in a status you
+did not ask for — e.g. `CANCELLED` while waiting for `READY` — and with `signal.reason` when aborted.
+Pass `statuses` to wait for something other than the default. `pollUntil(label, check, options)` is
+exported for waiting on anything else.
+
+## Error Handling
+
+Every error the SDK throws extends `DefiSdkError`, so one `instanceof` check separates SDK failures from
+bugs in your own code. Narrow further by class:
+
+| Class | When | Useful fields |
+| --- | --- | --- |
+| `DefiApiError` | the API answered with a non-2xx status | `status`, `message` (from the API body), `body`, `url` |
+| `InsufficientCreditsError` | HTTP 402 — the account cannot pay for the operation (extends `DefiApiError`) | `required`, `available` |
+| `DefiNetworkError` | no response at all: DNS, TLS, connection reset | `cause` |
+| `ChainNotSelectedError` | a chain-scoped call without `chainId` before `selectChain()` | — |
+| `DeploymentNotFoundError` | the account has no deployment on that chain | `chainId` |
+| `WaitTimeoutError` | a `waitFor*` helper ran out of time | `label`, `timeoutMs` |
+| `UnexpectedStatusError` | a `waitFor*` helper saw the entity settle in an unwanted status | `label`, `status` |
+| `CallbackSignatureError` | `parseCallback`: signature missing or wrong — answer 401 | — |
+| `CallbackPayloadError` | `parseCallback`: signed, but not JSON or not a known event — answer 2xx and log | `body` |
+
+```ts
+import { DefiApiError, InsufficientCreditsError } from '@b2binpay/defi-sdk';
 
 try {
   await client.createPayout({ ... });
 } catch (err) {
-  if (err instanceof ResponseError) {
-    const body = await err.response.json();
-    console.error('API error:', body);
+  if (err instanceof InsufficientCreditsError) {
+    console.error(`Top up credits: need ${err.required}, have ${err.available}`);
+  } else if (err instanceof DefiApiError && err.status === 400) {
+    console.error('Rejected by the API:', err.message);
   }
   throw err;
 }
 ```
+
+The SDK writes nothing to the console. Pass `logger` (anything with a `warn(message)` method, e.g.
+`console` or a pino instance) to `DefiClient` to receive its diagnostics.

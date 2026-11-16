@@ -76,39 +76,47 @@ import {
 
 export interface DeploymentStakingOperationsControllerCreateCancelUnstakingV1Request {
     deploymentId: string;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateClaimRewardsV1Request {
     deploymentId: string;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateDelegateV1Request {
     deploymentId: string;
     delegateBodyDto: DelegateBodyDto;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateReclaimV1Request {
     deploymentId: string;
     reclaimBodyDto: ReclaimBodyDto;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateStakeV1Request {
     deploymentId: string;
     stakeBodyDto: StakeBodyDto;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateStakingWithdrawV1Request {
     deploymentId: string;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateUnstakeV1Request {
     deploymentId: string;
     unstakeBodyDto: UnstakeBodyDto;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingOperationsControllerCreateVoteV1Request {
     deploymentId: string;
     voteBodyDto: VoteBodyDto;
+    idempotencyKey?: string;
 }
 
 export interface DeploymentStakingViewsControllerGetDelegationSummaryV1Request {
@@ -156,6 +164,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
@@ -205,6 +217,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
@@ -263,6 +279,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
@@ -323,6 +343,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
         }
@@ -382,6 +406,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
         }
@@ -431,6 +459,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
@@ -490,6 +522,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
         }
@@ -548,6 +584,10 @@ export class TRXStakingApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication

@@ -16,6 +16,14 @@ describe('getTronChainById', () => {
       expect(chain.name).toBe('Tron Shasta Testnet');
       expect(chain.network).toBe('shasta');
     });
+
+    it('resolves Nile Testnet (3448148188)', () => {
+      const chain = getTronChainById('3448148188');
+      expect(chain.id).toBe(3448148188);
+      expect(chain.name).toBe('Tron Nile Testnet');
+      expect(chain.network).toBe('nile');
+      expect(chain.rpcUrls.default.http).toEqual(['https://nile.trongrid.io']);
+    });
   });
 
   describe('custom RPC override', () => {
@@ -42,6 +50,7 @@ describe('TRON_CHAIN_IDS', () => {
   it('contains known Tron chain IDs', () => {
     expect(TRON_CHAIN_IDS.has(728126428)).toBe(true);
     expect(TRON_CHAIN_IDS.has(2494104990)).toBe(true);
+    expect(TRON_CHAIN_IDS.has(3448148188)).toBe(true);
   });
 
   it('does not contain EVM chain IDs', () => {
@@ -54,6 +63,10 @@ describe('isTronChain', () => {
   it('returns true for TronChainConfig', () => {
     const chain = getTronChainById('728126428');
     expect(isTronChain(chain)).toBe(true);
+  });
+
+  it('returns true for the Nile Testnet config', () => {
+    expect(isTronChain(getTronChainById('3448148188'))).toBe(true);
   });
 
   it('returns false for viem Chain-like object', () => {

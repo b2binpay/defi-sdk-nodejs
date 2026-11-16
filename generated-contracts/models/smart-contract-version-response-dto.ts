@@ -20,13 +20,13 @@ import { mapValues } from '../runtime';
  */
 export interface SmartContractVersionResponseDto {
     /**
-     * 
+     * Composite identifier {version}-{network_type}
      * @type {string}
      * @memberof SmartContractVersionResponseDto
      */
     id: string;
     /**
-     * 
+     * Human-readable contract version
      * @type {string}
      * @memberof SmartContractVersionResponseDto
      */
@@ -68,6 +68,18 @@ export interface SmartContractVersionResponseDto {
      */
     supportsInvoices: boolean;
     /**
+     * True when support marked this version outdated. Informational — nothing is blocked.
+     * @type {boolean}
+     * @memberof SmartContractVersionResponseDto
+     */
+    isDeprecated: boolean;
+    /**
+     * True when support marked this version as carrying a vulnerability or comparable defect. Informational — nothing is blocked.
+     * @type {boolean}
+     * @memberof SmartContractVersionResponseDto
+     */
+    isVulnerable: boolean;
+    /**
      * 
      * @type {Date}
      * @memberof SmartContractVersionResponseDto
@@ -98,6 +110,8 @@ export function instanceOfSmartContractVersionResponseDto(value: object): value 
     if (!('supportsStaking' in value) || value['supportsStaking'] === undefined) return false;
     if (!('supportsWhitelist' in value) || value['supportsWhitelist'] === undefined) return false;
     if (!('supportsInvoices' in value) || value['supportsInvoices'] === undefined) return false;
+    if (!('isDeprecated' in value) || value['isDeprecated'] === undefined) return false;
+    if (!('isVulnerable' in value) || value['isVulnerable'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     return true;
 }
@@ -120,6 +134,8 @@ export function SmartContractVersionResponseDtoFromJSONTyped(json: any, ignoreDi
         'supportsStaking': json['supportsStaking'],
         'supportsWhitelist': json['supportsWhitelist'],
         'supportsInvoices': json['supportsInvoices'],
+        'isDeprecated': json['isDeprecated'],
+        'isVulnerable': json['isVulnerable'],
         'createdAt': (new Date(json['createdAt'])),
     };
 }
@@ -142,6 +158,8 @@ export function SmartContractVersionResponseDtoToJSONTyped(value?: Omit<SmartCon
         'supportsStaking': value['supportsStaking'],
         'supportsWhitelist': value['supportsWhitelist'],
         'supportsInvoices': value['supportsInvoices'],
+        'isDeprecated': value['isDeprecated'],
+        'isVulnerable': value['isVulnerable'],
         'createdAt': value['createdAt'].toISOString(),
     };
 }

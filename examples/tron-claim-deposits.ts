@@ -7,8 +7,15 @@
  */
 import 'dotenv/config';
 import { TronWeb } from 'tronweb';
-import { DefiClient, TRON_ZERO_ADDRESS, type TronAddress, TronMultisigBlockchainClient } from '../src';
-import { DEFAULT_FEE_LIMIT, parseChainId, requireEnvVars, runMain } from './utils';
+import { DefiClient, TronMultisigBlockchainClient } from '../src';
+import {
+  assertTronBroadcast,
+  DEFAULT_FEE_LIMIT,
+  parseChainId,
+  requireEnvVars,
+  runMain,
+  waitForTronReceipt,
+} from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
 
@@ -58,8 +65,7 @@ runMain(async () => {
     defaultFeeLimit: DEFAULT_FEE_LIMIT,
   });
 
-  const contractAddress = accountDetails.account.contract as TronAddress;
-  const erc20Address = (currency.address ?? TRON_ZERO_ADDRESS) as TronAddress;
+  const contractAddress = accountDetails.account.contract;
 
   const callerAddress = TronWeb.address.fromPrivateKey(env.WALLET_PRIVATE_KEY);
   if (!callerAddress) {
@@ -68,15 +74,19 @@ runMain(async () => {
 
   const claimTx = await tronClient.buildClaimTransaction({
     contractAddress,
-    callerAddress: callerAddress as TronAddress,
-    erc20: erc20Address,
+    callerAddress: callerAddress,
+    erc20: currency.address,
     depositIds,
   });
 
   console.log(`Claiming deposits in ${currency.symbol} for ${invoicesToClaim.length} invoices...`);
 
-  const signedTx = await tronWeb.trx.sign(claimTx.raw as Parameters<typeof tronWeb.trx.sign>[0]);
-  const result = await tronWeb.trx.sendRawTransaction(signedTx as Parameters<typeof tronWeb.trx.sendRawTransaction>[0]);
+  const signedTx = await tronWeb.trx.sign(claimTx.raw);
+  const txId = assertTronBroadcast(await tronWeb.trx.sendRawTransaction(signedTx), 'Claim transaction');
+  console.log('Claim transaction broadcasted:', txId);
 
-  console.log('Claim transaction broadcasted:', result.txid);
+  await waitForTronReceipt(tronWeb, txId, 'Claim transaction');
+  const confirmed = await client.waitForTransactionOperations({ txHash: txId });
+  console.log('Confirmed by the API:');
+  console.table(confirmed.map((op) => ({ id: op.id, type: op.operationType, status: op.status })));
 });

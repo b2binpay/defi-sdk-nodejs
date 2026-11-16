@@ -42,6 +42,7 @@ import {
 export interface BlockchainCowswapOperationsControllerCreateV2Request {
     deploymentId: string;
     createCowswapOperationDto: CreateCowswapOperationDto;
+    idempotencyKey?: string;
 }
 
 export interface BlockchainCowswapOperationsControllerGetDetailsV2Request {
@@ -96,6 +97,10 @@ export class OperationsCowswapApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication

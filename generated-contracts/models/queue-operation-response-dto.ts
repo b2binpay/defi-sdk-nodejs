@@ -20,13 +20,6 @@ import {
     UniversalAddressToJSON,
     UniversalAddressToJSONTyped,
 } from './universal-address';
-import type { OperationSignatureDto } from './operation-signature-dto';
-import {
-    OperationSignatureDtoFromJSON,
-    OperationSignatureDtoFromJSONTyped,
-    OperationSignatureDtoToJSON,
-    OperationSignatureDtoToJSONTyped,
-} from './operation-signature-dto';
 import type { CallDto } from './call-dto';
 import {
     CallDtoFromJSON,
@@ -48,6 +41,13 @@ import {
     QueueOperationResponseDtoDappMetadataToJSON,
     QueueOperationResponseDtoDappMetadataToJSONTyped,
 } from './queue-operation-response-dto-dapp-metadata';
+import type { QueueSignerDto } from './queue-signer-dto';
+import {
+    QueueSignerDtoFromJSON,
+    QueueSignerDtoFromJSONTyped,
+    QueueSignerDtoToJSON,
+    QueueSignerDtoToJSONTyped,
+} from './queue-signer-dto';
 
 /**
  * 
@@ -164,13 +164,13 @@ export interface QueueOperationResponseDto {
      */
     createdBy: UniversalAddress;
     /**
-     * Array of signatures for this operation, ordered by signer address ascending
-     * @type {Array<OperationSignatureDto>}
+     * Every approver on the operation's deployment with their signing state, in approver order. Empty on a creation response — nothing has been signed yet.
+     * @type {Array<QueueSignerDto>}
      * @memberof QueueOperationResponseDto
      */
-    signatures: Array<OperationSignatureDto>;
+    signers: Array<QueueSignerDto>;
     /**
-     * Pre-built signature blob ready for the on-chain `execute` call (signers ordered ascending). Null until the required number of signatures is collected.
+     * Pre-built signature blob ready for the on-chain `execute` call (signers ordered ascending) — the only executable artifact the API exposes; individual signatures are never returned. Null until the required number of signatures is collected, and always null for a viewer who is not an approver on the deployment.
      * @type {string}
      * @memberof QueueOperationResponseDto
      */
@@ -248,7 +248,7 @@ export function instanceOfQueueOperationResponseDto(value: object): value is Que
     if (!('isBlocked' in value) || value['isBlocked'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('createdBy' in value) || value['createdBy'] === undefined) return false;
-    if (!('signatures' in value) || value['signatures'] === undefined) return false;
+    if (!('signers' in value) || value['signers'] === undefined) return false;
     if (!('signatureBlob' in value) || value['signatureBlob'] === undefined) return false;
     return true;
 }
@@ -281,7 +281,7 @@ export function QueueOperationResponseDtoFromJSONTyped(json: any, ignoreDiscrimi
         'isBlocked': json['isBlocked'],
         'createdAt': json['createdAt'],
         'createdBy': UniversalAddressFromJSON(json['createdBy']),
-        'signatures': ((json['signatures'] as Array<any>).map(OperationSignatureDtoFromJSON)),
+        'signers': ((json['signers'] as Array<any>).map(QueueSignerDtoFromJSON)),
         'signatureBlob': json['signatureBlob'],
         'expiresAt': json['expiresAt'] == null ? undefined : json['expiresAt'],
         'dappMetadata': json['dappMetadata'] == null ? undefined : QueueOperationResponseDtoDappMetadataFromJSON(json['dappMetadata']),
@@ -317,7 +317,7 @@ export function QueueOperationResponseDtoToJSONTyped(value?: QueueOperationRespo
         'isBlocked': value['isBlocked'],
         'createdAt': value['createdAt'],
         'createdBy': UniversalAddressToJSON(value['createdBy']),
-        'signatures': ((value['signatures'] as Array<any>).map(OperationSignatureDtoToJSON)),
+        'signers': ((value['signers'] as Array<any>).map(QueueSignerDtoToJSON)),
         'signatureBlob': value['signatureBlob'],
         'expiresAt': value['expiresAt'],
         'dappMetadata': QueueOperationResponseDtoDappMetadataToJSON(value['dappMetadata']),

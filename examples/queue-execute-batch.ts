@@ -8,9 +8,8 @@
 import 'dotenv/config';
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { DefiClient, MultisigBlockchainClient } from '../src';
-import { getEvmChainById } from '../src/blockchain/get-chain';
-import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
+import { DefiClient, getEvmChainById, MultisigBlockchainClient } from '../src';
+import { assertReceiptSucceeded, normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
 
@@ -101,5 +100,10 @@ runMain(async () => {
   console.log('Batch execution broadcasted:', txHash);
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+  assertReceiptSucceeded(receipt, 'Batch execution');
   console.log('Batch execution confirmed in block', receipt.blockNumber);
+
+  const confirmed = await client.waitForTransactionOperations({ txHash });
+  console.log('Confirmed by the API:');
+  console.table(confirmed.map((op) => ({ id: op.id, type: op.operationType, status: op.status })));
 });

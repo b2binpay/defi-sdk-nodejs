@@ -23,6 +23,8 @@ function createApi(overrides: Partial<SmartContractVersionResponseDto> = {}) {
     networkType: SmartContractVersionResponseDtoNetworkTypeEnum.Tvm,
     accountAbi: ABI,
     isLatest: true,
+    isDeprecated: false,
+    isVulnerable: false,
     ...ALL_CAPABILITIES,
     createdAt: new Date('2026-08-05T00:00:00.000Z'),
     ...overrides,
@@ -82,18 +84,17 @@ describe('AbiProvider', () => {
     });
   });
 
-  it.each([
-    'supportsInvoices',
-    'supportsWhitelist',
-    'supportsStaking',
-  ] as const)('reports capabilities as unknown when the API omits %s', async (flag) => {
-    const { api } = createApiWithoutFlag(flag);
+  it.each(['supportsInvoices', 'supportsWhitelist', 'supportsStaking'] as const)(
+    'reports capabilities as unknown when the API omits %s',
+    async (flag) => {
+      const { api } = createApiWithoutFlag(flag);
 
-    const entry = await new AbiProvider(api).getAbi(VERSION_ID);
+      const entry = await new AbiProvider(api).getAbi(VERSION_ID);
 
-    expect(entry.abi).toEqual(ABI);
-    expect(entry.capabilities).toBeUndefined();
-  });
+      expect(entry.abi).toEqual(ABI);
+      expect(entry.capabilities).toBeUndefined();
+    },
+  );
 
   it('reuses a disk cache entry that carries capabilities', async () => {
     const { api, getByVersionId } = createApi();

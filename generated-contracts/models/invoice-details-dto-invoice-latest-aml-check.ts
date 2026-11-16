@@ -20,7 +20,7 @@ import { mapValues } from '../runtime';
  */
 export interface InvoiceDetailsDtoInvoiceLatestAmlCheck {
     /**
-     * Risk score (0–100) of the latest concluded AML scan
+     * Risk score (0–100) of the latest concluded AML scan; null when the provider produced no verdict
      * @type {number}
      * @memberof InvoiceDetailsDtoInvoiceLatestAmlCheck
      */

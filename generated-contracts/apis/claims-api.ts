@@ -19,6 +19,11 @@ import {
     BooleanQueryFilterToJSON,
 } from '../models/boolean-query-filter';
 import {
+    type ClaimBatchesResponseDto,
+    ClaimBatchesResponseDtoFromJSON,
+    ClaimBatchesResponseDtoToJSON,
+} from '../models/claim-batches-response-dto';
+import {
     type ClaimsResponseDto,
     ClaimsResponseDtoFromJSON,
     ClaimsResponseDtoToJSON,
@@ -28,6 +33,13 @@ import {
     CurrencyResponseDtoFromJSON,
     CurrencyResponseDtoToJSON,
 } from '../models/currency-response-dto';
+
+export interface ClaimsControllerGetClaimBatchesV1Request {
+    deploymentId: string;
+    currencyIsScam?: BooleanQueryFilter;
+    currencyIsVerified?: BooleanQueryFilter;
+    currencyIsHidden?: BooleanQueryFilter;
+}
 
 export interface ClaimsControllerGetClaimableCurrenciesV1Request {
     deploymentId: string;
@@ -55,6 +67,69 @@ export interface ClaimsControllerGetClaimsV1Request {
  * 
  */
 export class ClaimsApi extends runtime.BaseAPI {
+
+    /**
+     * Creates request options for claimsControllerGetClaimBatchesV1 without sending the request
+     */
+    async claimsControllerGetClaimBatchesV1RequestOpts(requestParameters: ClaimsControllerGetClaimBatchesV1Request): Promise<runtime.RequestOpts> {
+        if (requestParameters['deploymentId'] == null) {
+            throw new runtime.RequiredError(
+                'deploymentId',
+                'Required parameter "deploymentId" was null or undefined when calling claimsControllerGetClaimBatchesV1().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['currencyIsScam'] != null) {
+            queryParameters['currencyIsScam'] = requestParameters['currencyIsScam'];
+        }
+
+        if (requestParameters['currencyIsVerified'] != null) {
+            queryParameters['currencyIsVerified'] = requestParameters['currencyIsVerified'];
+        }
+
+        if (requestParameters['currencyIsHidden'] != null) {
+            queryParameters['currencyIsHidden'] = requestParameters['currencyIsHidden'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.apiKey) {
+            headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
+        }
+
+
+        let urlPath = `/api/v1/deployments/{deploymentId}/claims/batches`;
+        urlPath = urlPath.replace('{deploymentId}', encodeURIComponent(String(requestParameters['deploymentId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     * Returns one entry per claimable currency with the batch totals, the invoices behind them, and what a batch of that currency additionally sweeps — so a client renders the batch dialog without aggregating the paginated claims list itself. Risky-native invoices are listed but excluded from the totals.
+     * Get batch-claim aggregates
+     */
+    async claimsControllerGetClaimBatchesV1Raw(requestParameters: ClaimsControllerGetClaimBatchesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ClaimBatchesResponseDto>> {
+        const requestOptions = await this.claimsControllerGetClaimBatchesV1RequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ClaimBatchesResponseDtoFromJSON(jsonValue));
+    }
+
+    /**
+     * Returns one entry per claimable currency with the batch totals, the invoices behind them, and what a batch of that currency additionally sweeps — so a client renders the batch dialog without aggregating the paginated claims list itself. Risky-native invoices are listed but excluded from the totals.
+     * Get batch-claim aggregates
+     */
+    async claimsControllerGetClaimBatchesV1(requestParameters: ClaimsControllerGetClaimBatchesV1Request, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ClaimBatchesResponseDto> {
+        const response = await this.claimsControllerGetClaimBatchesV1Raw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Creates request options for claimsControllerGetClaimableCurrenciesV1 without sending the request

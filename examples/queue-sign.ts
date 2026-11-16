@@ -5,10 +5,9 @@
  * - Build EIP-712 typed data for that operation and submit the signature.
  */
 import 'dotenv/config';
-import { type Address, createPublicClient, http } from 'viem';
+import { createPublicClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { DefiClient, MultisigBlockchainClient, QueueOperationStatus } from '../src';
-import { getEvmChainById } from '../src/blockchain/get-chain';
+import { DefiClient, getEvmChainById, MultisigBlockchainClient, QueueOperationStatus } from '../src';
 import { normalizePrivateKey, parseChainId, requireEnvVars, runMain } from './utils';
 
 const requiredEnv = ['API_BASE_URL', 'API_KEY', 'CHAIN_ID', 'RPC_URL', 'WALLET_PRIVATE_KEY'] as const;
@@ -25,11 +24,7 @@ runMain(async () => {
   await client.selectChain(chainId);
 
   const queue = await client.getDeploymentQueue({ statuses: [QueueOperationStatus.Pending], pageSize: 50 });
-  const operation = queue.items.find((item) => {
-    const signed = item.signatures.some((sig) => sig.user.toLowerCase() === signer.address.toLowerCase());
-
-    return !signed;
-  });
+  const operation = queue.items.find((item) => item.canSign && !item.userSigned);
 
   if (!operation) {
     throw new Error(
@@ -60,7 +55,7 @@ runMain(async () => {
   });
 
   const typedData = await multisigClient.createExecuteTypedData({
-    contractAddress: accountDetails.account.contract as Address,
+    contractAddress: accountDetails.account.contract,
     operation,
   });
 

@@ -52,18 +52,6 @@ export interface ClaimItemDto {
      */
     updatedAt: string;
     /**
-     * 
-     * @type {CurrencyResponseDto}
-     * @memberof ClaimItemDto
-     */
-    currency: CurrencyResponseDto;
-    /**
-     * Total claimable amount
-     * @type {string}
-     * @memberof ClaimItemDto
-     */
-    amount: string;
-    /**
      * Number of DEPOSITED transactions summed
      * @type {number}
      * @memberof ClaimItemDto
@@ -75,6 +63,18 @@ export interface ClaimItemDto {
      * @memberof ClaimItemDto
      */
     hasRiskyNativeDeposit: boolean;
+    /**
+     * 
+     * @type {CurrencyResponseDto}
+     * @memberof ClaimItemDto
+     */
+    currency: CurrencyResponseDto;
+    /**
+     * Total claimable amount
+     * @type {string}
+     * @memberof ClaimItemDto
+     */
+    amount: string;
 }
 
 /**
@@ -85,10 +85,10 @@ export function instanceOfClaimItemDto(value: object): value is ClaimItemDto {
     if (!('invoiceNonce' in value) || value['invoiceNonce'] === undefined) return false;
     if (!('createdAt' in value) || value['createdAt'] === undefined) return false;
     if (!('updatedAt' in value) || value['updatedAt'] === undefined) return false;
-    if (!('currency' in value) || value['currency'] === undefined) return false;
-    if (!('amount' in value) || value['amount'] === undefined) return false;
     if (!('transactions' in value) || value['transactions'] === undefined) return false;
     if (!('hasRiskyNativeDeposit' in value) || value['hasRiskyNativeDeposit'] === undefined) return false;
+    if (!('currency' in value) || value['currency'] === undefined) return false;
+    if (!('amount' in value) || value['amount'] === undefined) return false;
     return true;
 }
 
@@ -106,10 +106,10 @@ export function ClaimItemDtoFromJSONTyped(json: any, ignoreDiscriminator: boolea
         'invoiceNonce': json['invoiceNonce'],
         'createdAt': json['createdAt'],
         'updatedAt': json['updatedAt'],
-        'currency': CurrencyResponseDtoFromJSON(json['currency']),
-        'amount': json['amount'],
         'transactions': json['transactions'],
         'hasRiskyNativeDeposit': json['hasRiskyNativeDeposit'],
+        'currency': CurrencyResponseDtoFromJSON(json['currency']),
+        'amount': json['amount'],
     };
 }
 
@@ -128,10 +128,10 @@ export function ClaimItemDtoToJSONTyped(value?: ClaimItemDto | null, ignoreDiscr
         'invoiceNonce': value['invoiceNonce'],
         'createdAt': value['createdAt'],
         'updatedAt': value['updatedAt'],
-        'currency': CurrencyResponseDtoToJSON(value['currency']),
-        'amount': value['amount'],
         'transactions': value['transactions'],
         'hasRiskyNativeDeposit': value['hasRiskyNativeDeposit'],
+        'currency': CurrencyResponseDtoToJSON(value['currency']),
+        'amount': value['amount'],
     };
 }
 

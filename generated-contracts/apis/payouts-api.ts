@@ -42,6 +42,7 @@ import {
 export interface PayoutsControllerCreateV1Request {
     deploymentId: string;
     createPayoutDto: CreatePayoutDto;
+    idempotencyKey?: string;
 }
 
 export interface PayoutsControllerFindAllV1Request {
@@ -101,6 +102,10 @@ export class PayoutsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication

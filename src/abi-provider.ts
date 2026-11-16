@@ -2,6 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import type { Abi } from 'viem';
 import type { SmartContractVersionResponseDto, SmartContractVersionsApi } from '../generated-contracts';
+import { DefiSdkError } from './errors';
 
 /** Feature flags reported by the API for a multisig contract version. */
 export interface SmartContractCapabilities {
@@ -139,7 +140,7 @@ export class AbiProvider {
     });
 
     if (!Array.isArray(response.accountAbi)) {
-      throw new Error(`Invalid ABI received from API for version "${versionId}": expected an array.`);
+      throw new DefiSdkError(`Invalid ABI received from API for version "${versionId}": expected an array.`);
     }
 
     const entry: AbiCacheEntry = {

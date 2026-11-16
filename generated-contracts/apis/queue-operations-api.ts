@@ -62,16 +62,19 @@ import {
 export interface QueueOperationsControllerCreateClaimWhitelistChangeOperationV1Request {
     deploymentId: string;
     createClaimWhitelistChangeOperationDto: CreateClaimWhitelistChangeOperationDto;
+    idempotencyKey?: string;
 }
 
 export interface QueueOperationsControllerCreateMultisigConfigChangeOperationV1Request {
     deploymentId: string;
     createMultisigConfigChangeOperationDto: CreateMultisigConfigChangeOperationDto;
+    idempotencyKey?: string;
 }
 
 export interface QueueOperationsControllerCreateRejectOperationV1Request {
     deploymentId: string;
     createRejectOperationDto: CreateRejectOperationDto;
+    idempotencyKey?: string;
 }
 
 export interface QueueOperationsControllerDeleteOperationV1Request {
@@ -141,6 +144,10 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
         }
@@ -202,6 +209,10 @@ export class QueueOperationsApi extends runtime.BaseAPI {
 
         headerParameters['Content-Type'] = 'application/json';
 
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
+
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication
         }
@@ -262,6 +273,10 @@ export class QueueOperationsApi extends runtime.BaseAPI {
         const headerParameters: runtime.HTTPHeaders = {};
 
         headerParameters['Content-Type'] = 'application/json';
+
+        if (requestParameters['idempotencyKey'] != null) {
+            headerParameters['Idempotency-Key'] = String(requestParameters['idempotencyKey']);
+        }
 
         if (this.configuration && this.configuration.apiKey) {
             headerParameters["x-api-key"] = await this.configuration.apiKey("x-api-key"); // ApiKeyAuth authentication

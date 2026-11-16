@@ -12,10 +12,15 @@
 │   ├── multisig-client.ts        – MultisigBlockchainClient (EVM)
 │   ├── tron-multisig-client.ts   – TronMultisigBlockchainClient (TVM)
 │   ├── get-chain.ts              – Chain resolver utilities
-│   └── tron-chains.ts            – TRON chain configs (Mainnet, Shasta)
+│   └── tron-chains.ts            – TRON chain configs (Mainnet, Nile)
+├── src/callbacks/        – Callback payload parsing and signature verification
+├── src/errors.ts         – DefiSdkError, DefiApiError, DefiNetworkError and friends
+├── src/abi-provider.ts   – Contract ABI fetching and caching
 ├── src/utils/
-│   ├── transactions/     – EIP-712 / TIP-712 builders and helpers
-│   ├── validation.ts     – EVM address validation
+│   ├── transactions/     – EIP-712 / TIP-712 builders, signature packing
+│   ├── paginate.ts       – fetchAll / page iteration helpers
+│   ├── wait.ts           – pollUntil and wait options
+│   ├── validation.ts     – Address validation (EVM and TRON)
 │   ├── tron-validation.ts – TRON address validation
 │   └── tron-types.ts     – Branded TronAddress type
 └── generated-contracts/  – OpenAPI-generated DTOs and API classes
@@ -81,6 +86,6 @@ The npm package exports:
 - `validateAddress` — address + network validator
 - Transaction helpers under the `transactions` namespace
 - `AbiProvider`, `AbiCacheEntry`, `ContractAbi` and `SmartContractCapabilities` — ABI fetching, caching and contract version feature flags
-- Enums: `FiatCurrency`, `InvoiceStatus`, `PayoutStatus`, `QueueOperationType`, `QueueOperationStatus`, `OperationTypeV2`, `OperationV2Status`, `BlockchainTransactionStatus`, `StakingResourceType`, and more (`TransactionOperationType` and other v1 transaction enums are deprecated)
+- Enums: `FiatCurrency`, `InvoiceStatus`, `PayoutStatus`, `QueueOperationType`, `QueueOperationStatus`, `OperationTypeV2`, `OperationV2Status`, `BlockchainTransactionStatus`, `StakingResourceType`, and more
 
 Refer to [`docs/api-client.md`](api-client.md) and [`docs/transactions.md`](transactions.md) for detailed reference.
